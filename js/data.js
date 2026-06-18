@@ -4,6 +4,7 @@ const STORAGE_KEY = 'diet_pk_data';
 const ACCOUNTS_KEY = 'diet_pk_accounts';
 const NICKNAMES_KEY = 'diet_pk_nicknames';
 const AI_CONFIG_KEY = 'diet_pk_ai_config';
+const SETUP_KEY = 'diet_pk_setup_completed';
 
 // 跨设备同步：指向工作区 output/diet-pk/pk-sync.json
 const SYNC_DATA_FILE = './pk-sync.json';
@@ -42,14 +43,14 @@ const EXERCISE_CAL_MAP = {
 function getDefaultAccounts() {
   return {
     husband: {
-      name: '老公',
+      name: '燃脂侠',
       icon: '',
       dailyCalorieBudget: 2000,
       initialWeight: 80,
       targetWeight: 72
     },
     wife: {
-      name: '老婆',
+      name: '甩肉酱',
       icon: '',
       dailyCalorieBudget: 1500,
       initialWeight: 60,
@@ -455,12 +456,49 @@ function getDisplayName(account) {
   return (accounts[account] && accounts[account].name) || account;
 }
 
+function getDefaultAccountName(account) {
+  const accounts = loadAccounts();
+  return (accounts[account] && accounts[account].name) || account;
+}
+
+// ========== 首次引导设置 ==========
+function isSetupCompleted(role) {
+  try {
+    const raw = localStorage.getItem(SETUP_KEY);
+    if (raw) {
+      const completed = JSON.parse(raw);
+      return !!completed[role];
+    }
+  } catch (e) {}
+  return false;
+}
+
+function markSetupCompleted(role) {
+  try {
+    const raw = localStorage.getItem(SETUP_KEY);
+    const completed = raw ? JSON.parse(raw) : {};
+    completed[role] = true;
+    localStorage.setItem(SETUP_KEY, JSON.stringify(completed));
+  } catch (e) {}
+}
+
 // ========== 重置全部数据 ==========
 function resetAll() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(ACCOUNTS_KEY);
   localStorage.removeItem(NICKNAMES_KEY);
   localStorage.removeItem(AI_CONFIG_KEY);
+  localStorage.removeItem(SETUP_KEY);
+}
+
+// ========== 清空数据（保留账号） ==========
+function clearAllData() {
+  localStorage.removeItem(STORAGE_KEY);   // 运动记录、奖金池
+  localStorage.removeItem(ACCOUNTS_KEY);  // 热量预算、体重设置
+  localStorage.removeItem(NICKNAMES_KEY); // 昵称
+  localStorage.removeItem(AI_CONFIG_KEY); // AI 设置
+  localStorage.removeItem(SETUP_KEY);     // 引导设置标记
+  // 保留 USERS_KEY (pk_users) — 注册账号信息
 }
 
 // ========== AI识别配置 ==========
@@ -771,7 +809,7 @@ function register(husbandName, husbandPwd, wifeName, wifePwd) {
 
 function login(accountName, password) {
   const users = loadUsers();
-  if (!users) return { success: false, error: '尚未注册，请先注册夫妻账号' };
+  if (!users) return { success: false, error: '尚未注册，请先注册燃脂搭档账号' };
   const user = users[accountName];
   if (!user) return { success: false, error: '账号不存在' };
   if (user.password !== password) return { success: false, error: '密码错误' };
@@ -795,6 +833,17 @@ function changePassword(adminAccount, adminPwd, targetAccount, newPwd) {
   if (admin.password !== adminPwd) return { success: false, error: '管理员密码错误' };
   if (!users[targetAccount]) return { success: false, error: '目标账号不存在' };
   users[targetAccount].password = newPwd;
+  saveUsers(users);
+  return { success: true };
+}
+
+function selfChangePassword(account, oldPwd, newPwd) {
+  const users = loadUsers();
+  if (!users) return { success: false, error: '尚未注册' };
+  const user = users[account];
+  if (!user) return { success: false, error: '账号不存在' };
+  if (user.password !== oldPwd) return { success: false, error: '当前密码错误' };
+  user.password = newPwd;
   saveUsers(users);
   return { success: true };
 }

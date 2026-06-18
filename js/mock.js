@@ -15,7 +15,7 @@ function initMockData() {
     d.setDate(d.getDate() - i);
     const ds = dateStr(d);
 
-    // 老公数据
+    // 燃脂侠数据
     data.records[ds] = data.records[ds] || {};
     data.records[ds].husband = generateMockRecord('husband', d, i === 0);
     data.records[ds].wife = generateMockRecord('wife', d, i === 0);

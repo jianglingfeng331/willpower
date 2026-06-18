@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="该减肥le">
 <meta name="theme-color" content="#7FC3DD">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260618">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -24,22 +24,22 @@
   <div class="auth-card">
     <!-- 登录表单 -->
     <div class="auth-form" id="auth-login-form">
-      <h2 class="auth-heading">Login</h2>
+      <h2 class="auth-heading">登录</h2>
       <div class="auth-field">
-        <label class="auth-label">Account</label>
+        <label class="auth-label">账号</label>
         <input type="text" id="login-account" class="auth-input" placeholder="输入账号名" onkeydown="if(event.key==='Enter'){document.getElementById('login-password').focus()}">
       </div>
       <div class="auth-field">
-        <label class="auth-label">Password</label>
+        <label class="auth-label">密码</label>
         <input type="password" id="login-password" class="auth-input" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <button class="auth-btn" onclick="doLogin()">登录</button>
       <div class="auth-error" id="login-error"></div>
-      <div class="auth-switch">还没注册？<a onclick="showRegister()">注册夫妻账号</a></div>
+      <div class="auth-switch">还没注册？<a onclick="showRegister()">注册燃脂搭档账号</a></div>
     </div>
     <!-- 注册表单 -->
     <div class="auth-form" id="auth-register-form" style="display:none">
-      <h2 class="auth-heading">注册夫妻账号</h2>
+      <h2 class="auth-heading">注册燃脂搭档账号</h2>
       <div class="auth-field">
         <label class="auth-label">男方账号</label>
         <input type="text" id="reg-husband-name" class="auth-input" placeholder="设置男方账号名">
@@ -155,7 +155,7 @@
   <div class="header-title">该减肥le</div>
   <div class="header-account" id="header-account">
     <span class="account-badge" id="current-account-badge">
-      <svg class="ic-person-20" width="20" height="20"><use href="#ic-person"/></svg> 老公
+      <svg class="ic-person-20" width="20" height="20"><use href="#ic-person"/></svg> 燃脂侠
     </span>
   </div>
 </header>
@@ -191,9 +191,12 @@
     </div>
 
     <!-- 积分明细入口 -->
-    <div class="score-entry" onclick="openScoreDetail()">
-      <span class="score-entry-label">积分明细</span>
-      <span class="score-entry-arrow"><svg width="16" height="16"><use href="#ic-chevron-down"/></svg></span>
+    <div class="score-entry-row">
+      <div class="score-entry" onclick="openScoreDetail()">
+        <span class="score-entry-label">积分明细</span>
+        <span class="score-entry-arrow"><svg width="16" height="16"><use href="#ic-chevron-down"/></svg></span>
+      </div>
+      <span class="score-rules-link" onclick="openScoreRules()">积分规则</span>
     </div>
 
     <!-- 双方今日概览 -->
@@ -201,7 +204,7 @@
       <div class="person-card husband-card">
         <div class="card-head">
           <span class="person-icon"><svg width="24" height="24"><use href="#ic-person"/></svg></span>
-          <span class="person-name" id="person-name-h">老公</span>
+          <span class="person-name" id="person-name-h">燃脂侠</span>
         </div>
         <div class="card-stats">
           <div class="stat-item">
@@ -233,7 +236,7 @@
       <div class="person-card wife-card">
         <div class="card-head">
           <span class="person-icon"><svg width="24" height="24"><use href="#ic-person"/></svg></span>
-          <span class="person-name" id="person-name-w">老婆</span>
+          <span class="person-name" id="person-name-w">甩肉酱</span>
         </div>
         <div class="card-stats">
           <div class="stat-item">
@@ -361,7 +364,7 @@
       <div class="so-card so-card-husband">
         <div class="so-card-header">
           <span class="so-avatar"><svg width="18" height="18"><use href="#ic-person"/></svg></span>
-          <span class="so-name" id="so-h-name">老公</span>
+          <span class="so-name" id="so-h-name">燃脂侠</span>
         </div>
         <div class="so-score-row">
           <span class="so-score-val" id="so-h-score">0</span>
@@ -388,7 +391,7 @@
       <div class="so-card so-card-wife">
         <div class="so-card-header">
           <span class="so-avatar"><svg width="18" height="18"><use href="#ic-person"/></svg></span>
-          <span class="so-name" id="so-w-name">老婆</span>
+          <span class="so-name" id="so-w-name">甩肉酱</span>
         </div>
         <div class="so-score-row">
           <span class="so-score-val" id="so-w-score">0</span>
@@ -440,14 +443,32 @@
       <svg class="ic-inline" width="18" height="18"><use href="#ic-person"/></svg> 个人中心
     </div>
 
-    <div class="settings-card">
+    <div class="settings-card" id="account-settings-card">
       <div class="settings-title">账号设置</div>
-      <div class="settings-row nickname-row" onclick="openNicknameModal()">
-        <span>当前账号</span>
-        <span class="settings-val settings-val-editable" id="me-current-account">
-          <svg class="ic-inline" width="18" height="18"><use href="#ic-person"/></svg> 老公
-        </span>
+      <div class="settings-row">
+        <span>账号</span>
+        <span class="settings-val" style="color:var(--text-muted);" id="me-account-name">燃脂侠</span>
       </div>
+      <div class="settings-row">
+        <span>昵称</span>
+        <div class="settings-input-row">
+          <input type="text" id="me-nickname-input" class="settings-input" placeholder="燃脂侠" maxlength="12" style="width:120px;">
+        </div>
+      </div>
+      <div class="settings-row">
+        <span>当前密码</span>
+        <div class="settings-input-row">
+          <input type="password" id="me-old-pwd" class="settings-input" placeholder="验证身份" style="width:120px;" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="settings-row">
+        <span>新密码</span>
+        <div class="settings-input-row">
+          <input type="password" id="me-new-pwd" class="settings-input" placeholder="留空不修改" style="width:120px;" autocomplete="new-password">
+        </div>
+      </div>
+      <button class="record-btn" onclick="saveAccountSettings()" style="margin-top:12px;">保存设置</button>
+      <div class="auth-error" id="me-settings-error" style="margin-top:8px;"></div>
     </div>
 
     <div class="settings-card">
@@ -486,11 +507,11 @@
         <span class="settings-val" id="pool-period-display">-</span>
       </div>
       <div class="settings-row">
-        <span>老公投入</span>
+        <span id="pool-h-label">燃脂侠投入</span>
         <span class="settings-val" id="pool-husband">0 元</span>
       </div>
       <div class="settings-row">
-        <span>老婆投入</span>
+        <span id="pool-w-label">甩肉酱投入</span>
         <span class="settings-val" id="pool-wife">0 元</span>
       </div>
       <button class="record-btn" onclick="openPoolModal()">管理奖金池</button>
@@ -524,15 +545,15 @@
     <div class="settings-card">
       <div class="settings-title">账号安全</div>
       <div id="admin-password-section" style="display:none">
-        <div class="settings-row">
+        <div class="admin-form-row">
           <span>目标账号</span>
           <select id="admin-target-account" class="settings-select"></select>
         </div>
-        <div class="settings-row">
+        <div class="admin-form-row">
           <span>管理员密码</span>
           <input type="password" id="admin-verify-pwd" class="settings-input-wide" placeholder="输入你的管理员密码">
         </div>
-        <div class="settings-row">
+        <div class="admin-form-row">
           <span>新密码</span>
           <input type="password" id="admin-new-pwd" class="settings-input-wide" placeholder="设置新密码">
         </div>
@@ -545,6 +566,8 @@
     <div class="settings-card">
       <div class="settings-title">数据管理</div>
       <button class="record-btn danger-btn" onclick="resetAllData()"><svg class="ic-inline" width="16" height="16"><use href="#ic-trash"/></svg> 重置全部数据</button>
+      <div class="data-mgmt-divider"></div>
+      <button class="clear-data-btn" onclick="clearDataKeepAccount()">清空运动记录与设置，保留账号</button>
     </div>
   </section>
 
@@ -722,9 +745,9 @@
     <div class="modal-body">
       <div class="modal-label">对赌时段（天）</div>
       <input type="number" id="pool-days" class="settings-input" placeholder="如 7 天" inputmode="numeric" min="1" value="7" style="width:100%;box-sizing:border-box;">
-      <div class="modal-label" style="margin-top:12px;">老公投入金额（虚拟）</div>
+      <div class="modal-label" id="pool-modal-h-label" style="margin-top:12px;">燃脂侠投入金额（虚拟）</div>
       <input type="number" id="pool-husband-amount" class="settings-input" placeholder="元" inputmode="numeric" min="0" value="100" style="width:100%;box-sizing:border-box;">
-      <div class="modal-label" style="margin-top:12px;">老婆投入金额（虚拟）</div>
+      <div class="modal-label" id="pool-modal-w-label" style="margin-top:12px;">甩肉酱投入金额（虚拟）</div>
       <input type="number" id="pool-wife-amount" class="settings-input" placeholder="元" inputmode="numeric" min="0" value="100" style="width:100%;box-sizing:border-box;">
       <button class="modal-btn" onclick="startPool()">开启奖金池</button>
       <button class="modal-btn danger-btn" style="margin-top:8px;" onclick="settlePool()">结算奖金池</button>
@@ -764,10 +787,95 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<script src="js/data.js"></script>
-<script src="js/mock.js"></script>
-<script src="js/charts.js"></script>
-<script src="js/app.js"></script>
+<!-- ========== 弹窗：积分规则 ========== -->
+<div class="modal-overlay" id="modal-score-rules">
+  <div class="modal">
+    <div class="modal-header">
+      <span><svg class="ic-inline" width="20" height="20"><use href="#ic-trophy"/></svg> 积分规则</span>
+      <span class="modal-close" onclick="closeModal('modal-score-rules')"><svg width="22" height="22"><use href="#ic-close"/></svg></span>
+    </div>
+    <div class="modal-body">
+      <div class="score-rules-list">
+        <div class="score-rule-item">
+          <div class="sri-icon sri-water"><svg width="20" height="20"><use href="#ic-water"/></svg></div>
+          <div class="sri-content">
+            <div class="sri-title">饮水达标</div>
+            <div class="sri-desc">当日饮水总量 ≥ 1500ml</div>
+          </div>
+          <div class="sri-pts">+10分</div>
+        </div>
+        <div class="score-rule-item">
+          <div class="sri-icon sri-food"><svg width="20" height="20"><use href="#ic-utensils"/></svg></div>
+          <div class="sri-content">
+            <div class="sri-title">饮食记录</div>
+            <div class="sri-desc">当日记录 ≥ 2 餐</div>
+          </div>
+          <div class="sri-pts">+15分</div>
+        </div>
+        <div class="score-rule-item">
+          <div class="sri-icon sri-exercise"><svg width="20" height="20"><use href="#ic-run"/></svg></div>
+          <div class="sri-content">
+            <div class="sri-title">运动消耗</div>
+            <div class="sri-desc">当日运动消耗 ≥ 200 kcal</div>
+          </div>
+          <div class="sri-pts">+15分</div>
+        </div>
+        <div class="score-rule-item">
+          <div class="sri-icon sri-weight"><svg width="20" height="20"><use href="#ic-scale"/></svg></div>
+          <div class="sri-content">
+            <div class="sri-title">体重称重</div>
+            <div class="sri-desc">当日有体重记录</div>
+          </div>
+          <div class="sri-pts">+5分</div>
+        </div>
+        <div class="score-rule-item">
+          <div class="sri-icon sri-cal"><svg width="20" height="20"><use href="#ic-flame"/></svg></div>
+          <div class="sri-content">
+            <div class="sri-title">热量不超标</div>
+            <div class="sri-desc">净摄入 ≤ 卡路里预算</div>
+          </div>
+          <div class="sri-pts">+5分</div>
+        </div>
+      </div>
+      <div class="score-rules-footer">
+        <div class="srf-max">每日满分 <strong>50 分</strong></div>
+        <div class="srf-note">仅加分，不扣分</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 首次引导设置弹窗 ========== -->
+<div class="modal-overlay" id="modal-first-setup">
+  <div class="modal modal-setup-card">
+    <div class="setup-hero">
+      <img src="img/dog.png" alt="" class="setup-dog">
+      <h2 class="setup-heading">欢迎加入燃脂PK！</h2>
+      <p class="setup-sub">请设置你的减重目标，让我们开始吧</p>
+    </div>
+    <div class="setup-fields">
+      <div class="setup-field">
+        <label class="setup-label">初始体重 (kg)</label>
+        <input type="number" id="setup-init-weight" class="setup-input" placeholder="例如 70" step="0.1" inputmode="decimal">
+      </div>
+      <div class="setup-field">
+        <label class="setup-label">目标体重 (kg)</label>
+        <input type="number" id="setup-target-weight" class="setup-input" placeholder="例如 60" step="0.1" inputmode="decimal">
+      </div>
+      <div class="setup-field">
+        <label class="setup-label">每日热量预算 (kcal)</label>
+        <input type="number" id="setup-cal-budget" class="setup-input" placeholder="例如 1800" inputmode="numeric">
+      </div>
+    </div>
+    <button class="setup-confirm-btn" onclick="confirmFirstTimeSetup()">开始减重之旅</button>
+    <div class="setup-error" id="setup-error"></div>
+  </div>
+</div>
+
+<script src="js/data.js?v=20260618"></script>
+<script src="js/mock.js?v=20260618"></script>
+<script src="js/charts.js?v=20260618"></script>
+<script src="js/app.js?v=20260618"></script>
 </div><!-- end main-content -->
 </body>
 </html>

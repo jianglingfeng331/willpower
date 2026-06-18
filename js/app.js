@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAllCharts();
   initHASync();
   initRandomAnimal();
+  checkFirstTimeSetup();
 });
 
 // ========== 登录认证 ==========
@@ -119,9 +120,50 @@ function doLogin() {
     initHASync();
     initRandomAnimal();
     showToast('欢迎，' + getDisplayName(currentRole));
+    checkFirstTimeSetup();
   } else {
     document.getElementById('login-error').textContent = result.error;
   }
+}
+
+// ========== 首次引导设置 ==========
+function checkFirstTimeSetup() {
+  if (isSetupCompleted(currentRole)) return;
+
+  // 不预填默认值，由用户自行填写
+  const elInitW = document.getElementById('setup-init-weight');
+  const elTargetW = document.getElementById('setup-target-weight');
+  const elCalB = document.getElementById('setup-cal-budget');
+  if (elInitW) elInitW.value = '';
+  if (elTargetW) elTargetW.value = '';
+  if (elCalB) elCalB.value = '';
+  document.getElementById('setup-error').textContent = '';
+
+  openModal('modal-first-setup');
+}
+
+function confirmFirstTimeSetup() {
+  const initW = parseFloat(document.getElementById('setup-init-weight').value);
+  const targetW = parseFloat(document.getElementById('setup-target-weight').value);
+  const calB = parseInt(document.getElementById('setup-cal-budget').value);
+
+  const errEl = document.getElementById('setup-error');
+  if (!initW || initW <= 0) { errEl.textContent = '请输入有效的初始体重'; return; }
+  if (!targetW || targetW <= 0) { errEl.textContent = '请输入有效的目标体重'; return; }
+  if (!calB || calB <= 0) { errEl.textContent = '请输入有效的每日热量预算'; return; }
+  if (targetW >= initW) { errEl.textContent = '目标体重应小于初始体重'; return; }
+
+  updateAccountInfo(currentRole, {
+    initialWeight: initW,
+    targetWeight: targetW,
+    dailyCalorieBudget: calB
+  });
+
+  markSetupCompleted(currentRole);
+  closeModal('modal-first-setup');
+  updateAllUI();
+  initRandomAnimal();
+  showToast('目标已设定，开始你的减重之旅吧！');
 }
 
 function doRegister() {
@@ -229,7 +271,7 @@ function updateHomePage() {
   updateElement('person-name-h', getDisplayName('husband'));
   updateElement('person-name-w', getDisplayName('wife'));
 
-  // 更新老公卡片
+  // 更新燃脂侠卡片
   const hStats = calcTodayStats(dt, 'husband');
   updateElement('h-score', hStats.score);
   updateElement('h-cal-in', hStats.calIn);
@@ -238,7 +280,7 @@ function updateHomePage() {
   updateElement('h-cal-remain', '剩余 ' + hStats.remain + ' kcal');
   updateCalBar('h-cal-bar', hStats.netCal, hStats.budget);
 
-  // 更新老婆卡片
+  // 更新甩肉酱卡片
   const wStats = calcTodayStats(dt, 'wife');
   updateElement('w-score', wStats.score);
   updateElement('w-cal-in', wStats.calIn);
@@ -299,6 +341,11 @@ function updateCalBar(id, netCal, budget) {
   }
 }
 
+// ========== 积分规则 ==========
+function openScoreRules() {
+  openModal('modal-score-rules');
+}
+
 // ========== 积分明细 ==========
 function openScoreDetail() {
   renderScoreDetail();
@@ -343,7 +390,7 @@ function renderScoreDetail() {
       ).join('');
       return '<div class="sd-col ' + accountClass + '">' +
         '<span class="sd-col-name"><svg width="14" height="14" style="margin-right:3px"><use href="#' + (accountClass === 'sd-husband' ? 'ic-husband' : 'ic-wife') + '"/></svg>' +
-          (accountClass === 'sd-husband' ? '老公' : '老婆') + '</span>' +
+          (accountClass === 'sd-husband' ? getDisplayName('husband') : getDisplayName('wife')) + '</span>' +
         '<span class="sd-col-score' + (detail.score === 50 ? ' max' : '') + '">' + detail.score + '</span>' +
         '<div class="sd-col-tags">' + tagsHTML + '</div>' +
       '</div>';
@@ -740,7 +787,10 @@ function initHASync() {
 function initRandomAnimal() {
   const img = document.getElementById('pk-animal-img');
   if (!img) return;
-  img.src = Math.random() > 0.5 ? './img/dog.png' : './img/cat.png';
+  const animals = ['./img/dog.png', './img/cat.png'];
+  const chosen = animals[Math.floor(Math.random() * animals.length)];
+  // 加时间戳防浏览器缓存
+  img.src = chosen + '?_=' + Date.now();
 }
 
 
@@ -953,13 +1003,21 @@ function confirmSuperviseManual() {
 
 // ========== 我的页面 ==========
 function updateMePage() {
-  const account = currentUser;
+  const account = currentRole;
   const info = getAccountInfo(account);
 
-  document.getElementById('me-current-account').innerHTML = '<svg width="18" height="18" style="vertical-align:middle"><use href="#ic-person"/></svg> ' + getDisplayName(account);
-  document.getElementById('cal-budget-input').value = info.dailyCalorieBudget;
-  document.getElementById('init-weight-input').value = info.initialWeight;
-  document.getElementById('target-weight-input').value = info.targetWeight;
+  // 账号设置区域
+  document.getElementById('me-account-name').textContent = account;
+  const curNick = getNickname(currentRole) || '';
+  document.getElementById('me-nickname-input').value = curNick;
+  document.getElementById('me-nickname-input').placeholder = getDefaultAccountName(currentRole);
+  document.getElementById('me-old-pwd').value = '';
+  document.getElementById('me-new-pwd').value = '';
+  document.getElementById('me-settings-error').textContent = '';
+
+  document.getElementById('cal-budget-input').value = (info && info.dailyCalorieBudget) || 2000;
+  document.getElementById('init-weight-input').value = (info && info.initialWeight) || 70;
+  document.getElementById('target-weight-input').value = (info && info.targetWeight) || 60;
 
   // 管理员可见改密区
   const adminSection = document.getElementById('admin-password-section');
@@ -987,6 +1045,8 @@ function updateMePage() {
   document.getElementById('ai-model').value = aiConfig.model || '';
 
   // 奖金池信息
+  updateElement('pool-h-label', getDisplayName('husband') + '投入');
+  updateElement('pool-w-label', getDisplayName('wife') + '投入');
   const pool = getPool();
   if (pool) {
     updateElement('pool-status', pool.status === 'active' ? '进行中' : '已结算');
@@ -1003,21 +1063,21 @@ function updateMePage() {
 
 function saveCalorieBudget() {
   const val = parseInt(document.getElementById('cal-budget-input').value) || 2000;
-  updateAccountInfo(currentUser, { dailyCalorieBudget: val });
+  updateAccountInfo(currentRole, { dailyCalorieBudget: val });
   showToast('卡路里预算已更新：' + val + ' kcal');
   updateAllUI();
 }
 
 function saveInitWeight() {
   const val = parseFloat(document.getElementById('init-weight-input').value) || 70;
-  updateAccountInfo(currentUser, { initialWeight: val });
+  updateAccountInfo(currentRole, { initialWeight: val });
   showToast('初始体重已更新：' + val + ' kg');
   updateAllUI();
 }
 
 function saveTargetWeight() {
   const val = parseFloat(document.getElementById('target-weight-input').value) || 60;
-  updateAccountInfo(currentUser, { targetWeight: val });
+  updateAccountInfo(currentRole, { targetWeight: val });
   showToast('目标体重已更新：' + val + ' kg');
   updateAllUI();
 }
@@ -1111,23 +1171,21 @@ function restoreAIDefaults() {
 
 // ========== 昵称编辑 ==========
 function openNicknameModal() {
-  const account = currentUser;
-  const currentName = getDisplayName(account);
+  const currentName = getDisplayName(currentRole);
   document.getElementById('nickname-account-label').textContent = currentName;
-  document.getElementById('nickname-input').value = getNickname(account) || '';
+  document.getElementById('nickname-input').value = getNickname(currentRole) || '';
   openModal('modal-nickname');
 }
 
 function saveNickname() {
-  const account = currentUser;
   const val = document.getElementById('nickname-input').value.trim();
-  const oldName = getDisplayName(account);
-  setNickname(account, val);
-  const newName = getDisplayName(account);
+  const oldName = getDisplayName(currentRole);
+  setNickname(currentRole, val);
+  const newName = getDisplayName(currentRole);
   closeModal('modal-nickname');
   if (newName !== oldName) {
     showToast('昵称已更新：' + newName);
-  } else if (!val && !getNickname(account)) {
+  } else if (!val && !getNickname(currentRole)) {
     showToast('已恢复默认名称：' + newName);
   }
   updateAllUI();
@@ -1137,8 +1195,61 @@ function closeNicknameModal() {
   closeModal('modal-nickname');
 }
 
+// ========== 账号设置保存（"我的"页面） ==========
+function saveAccountSettings() {
+  const account = currentUser;
+  const errEl = document.getElementById('me-settings-error');
+  errEl.textContent = '';
+
+  const nickname = document.getElementById('me-nickname-input').value.trim();
+  const oldPwd = document.getElementById('me-old-pwd').value;
+  const newPwd = document.getElementById('me-new-pwd').value;
+
+  let changes = [];
+
+  // 修改昵称（以角色为 key 存储，与全局 getDisplayName 保持一致）
+  const oldName = getDisplayName(currentRole);
+  setNickname(currentRole, nickname);
+  const newName = getDisplayName(currentRole);
+  if (newName !== oldName) {
+    changes.push('昵称：' + newName);
+  }
+
+  // 修改密码
+  if (newPwd) {
+    if (!oldPwd) {
+      errEl.textContent = '修改密码需要输入当前密码';
+      return;
+    }
+    const result = selfChangePassword(account, oldPwd, newPwd);
+    if (!result.success) {
+      errEl.textContent = result.error;
+      return;
+    }
+    changes.push('密码已修改');
+  } else if (oldPwd && !newPwd) {
+    errEl.textContent = '请输入新密码';
+    return;
+  }
+
+  // 清理密码字段
+  document.getElementById('me-old-pwd').value = '';
+  document.getElementById('me-new-pwd').value = '';
+
+  if (changes.length > 0) {
+    showToast(changes.join('；'));
+  } else {
+    showToast('无变更');
+  }
+
+  updateAllUI();
+}
+
 // ========== 奖金池 ==========
 function openPoolModal() {
+  // 更新弹窗标签为当前昵称
+  updateElement('pool-modal-h-label', getDisplayName('husband') + '投入金额（虚拟）');
+  updateElement('pool-modal-w-label', getDisplayName('wife') + '投入金额（虚拟）');
   const pool = getPool();
   if (pool) {
     document.getElementById('pool-days').value = 7;
@@ -1223,24 +1334,32 @@ function resetAllData() {
   }
 }
 
+function clearDataKeepAccount() {
+  if (!confirm('确定要清空运动记录与设置数据吗？\n\n将清除：运动记录、积分、热量/体重设置、昵称、AI配置\n将保留：已注册的账号密码\n\n此操作不可恢复！')) return;
+  clearAllData();
+  location.reload();
+}
+
 // ========== 弹窗操作 ==========
 let _bodyScrollY = 0;
 
 function openModal(id) {
   _bodyScrollY = window.scrollY;
-  document.body.style.overflow = 'hidden';
   document.body.style.position = 'fixed';
   document.body.style.top = `-${_bodyScrollY}px`;
-  document.body.style.width = '100%';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.overflow = 'hidden';
   document.getElementById(id).classList.add('show');
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
-  document.body.style.overflow = '';
   document.body.style.position = '';
   document.body.style.top = '';
-  document.body.style.width = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
   window.scrollTo(0, _bodyScrollY);
 }
 
