@@ -166,7 +166,7 @@ function confirmFirstTimeSetup() {
   showToast('目标已设定，开始你的减重之旅吧！');
 }
 
-function doRegister() {
+async function doRegister() {
   const hName = document.getElementById('reg-husband-name').value.trim();
   const hPwd = document.getElementById('reg-husband-pwd').value.trim();
   const wName = document.getElementById('reg-wife-name').value.trim();
@@ -179,8 +179,9 @@ function doRegister() {
     document.getElementById('reg-error').textContent = '双方账号名不能相同';
     return;
   }
-  if (!register(hName, hPwd, wName, wPwd)) {
-    document.getElementById('reg-error').textContent = '已注册过，请直接登录';
+  const result = await register(hName, hPwd, wName, wPwd);
+  if (!result.success) {
+    document.getElementById('reg-error').textContent = result.error || '注册失败';
     return;
   }
   showToast('注册成功，请登录');

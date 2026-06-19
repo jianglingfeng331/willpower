@@ -9,6 +9,70 @@ const SETUP_KEY = 'diet_pk_setup_completed';
 // 跨设备同步：指向工作区 output/diet-pk/pk-sync.json
 const SYNC_DATA_FILE = './pk-sync.json';
 
+// ========== API 层（后端 server.js 端口 3001）==========
+const API_BASE = '';
+let _apiOnline = null; // null=未检测, true/false
+
+async function apiGet(path) {
+  try {
+    const resp = await fetch(API_BASE + path, { cache: 'no-cache' });
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (_e) { return null; }
+}
+
+async function apiPost(path, body) {
+  try {
+    const resp = await fetch(API_BASE + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (_e) { return null; }
+}
+
+async function checkApiOnline() {
+  if (_apiOnline !== null) return _apiOnline;
+  const r = await apiGet('/api/health');
+  _apiOnline = !!(r && r.status === 'ok');
+  console.log('[API] 服务器状态:', _apiOnline ? '在线' : '离线，降级到本地存储');
+  return _apiOnline;
+}
+
+// 将 pk_users 推送到后端
+async function pushUsersToServer(users) {
+  if (!(await checkApiOnline())) return;
+  await apiPost('/api/sync', { pk_users: users });
+}
+
+// 将完整数据推送到后端
+async function pushDataToServer() {
+  if (!(await checkApiOnline())) return;
+  const data = loadData();
+  const accounts = loadAccounts();
+  const users = loadUsers();
+  await apiPost('/api/sync', {
+    pk_users: users,
+    accounts: accounts,
+    records: data.records || {}
+  });
+}
+
+// 从后端拉取数据合并到本地
+async function pullDataFromServer() {
+  if (!(await checkApiOnline())) return null;
+  return await apiGet('/api/sync');
+}
+
+// 防抖自动同步（延迟 3 秒，汇聚连续写入）
+let _syncTimer = null;
+function autoSyncToServer() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => pushDataToServer(), 3000);
+}
+
 // 预设食物卡路里映射表
 const FOOD_CAL_MAP = {
   rice: { name: '米饭', cal: 200, unit: '碗' },
@@ -78,6 +142,7 @@ function loadData() {
 
 function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  autoSyncToServer();
 }
 
 function loadAccounts() {
@@ -694,14 +759,58 @@ function mergeSyncData(localData, syncData) {
   return merged;
 }
 
-// 页面初始化时尝试合并共享数据，写入 localStorage
+// 页面初始化：优先从 API 拉取数据，不可用时降级到 pk-sync.json
 async function initData() {
   const localData = loadData();
+
+  // 1. 尝试从后端拉取
+  const serverData = await pullDataFromServer();
+  if (serverData) {
+    // 合并 records
+    const merged = mergeSyncData(localData, serverData.records ? { records: serverData.records, accounts: serverData.accounts } : null);
+    saveData(merged);
+    // 合并 pk_users
+    if (serverData.pk_users && typeof serverData.pk_users === 'object') {
+      const existingUsers = loadUsers();
+      if (!existingUsers) {
+        saveUsers(serverData.pk_users);
+        console.log('[API] 已从服务器加载账号数据，共', Object.keys(serverData.pk_users).length, '个账号');
+      } else {
+        let changed = false;
+        for (const [name, info] of Object.entries(serverData.pk_users)) {
+          if (!existingUsers[name]) { existingUsers[name] = info; changed = true; }
+        }
+        if (changed) saveUsers(existingUsers);
+      }
+    }
+    // 合并 accounts
+    if (serverData.accounts) {
+      const acc = loadAccounts();
+      saveAccounts({ ...acc, ...serverData.accounts });
+    }
+    console.log('[API] 服务器数据合并完成');
+    return merged;
+  }
+
+  // 2. API 不可用，降级到 pk-sync.json
   const syncData = await loadSyncData();
   if (syncData) {
     const merged = mergeSyncData(localData, syncData);
     saveData(merged);
     console.log('[同步] 已合并共享数据到本地存储');
+    if (syncData._users) {
+      const existingUsers = loadUsers();
+      if (!existingUsers) {
+        saveUsers(syncData._users);
+        console.log('[同步] 已合并账号数据（_users），共', Object.keys(syncData._users).length, '个账号');
+      } else {
+        let changed = false;
+        for (const [name, info] of Object.entries(syncData._users)) {
+          if (!existingUsers[name]) { existingUsers[name] = info; changed = true; }
+        }
+        if (changed) saveUsers(existingUsers);
+      }
+    }
     return merged;
   }
   return localData;
@@ -710,7 +819,9 @@ async function initData() {
 // 导出当前 localStorage 数据为 JSON 文件下载（「导出到云端」按钮）
 function exportSyncData() {
   const data = loadData();
-  if (!data || Object.keys(data.records).length === 0) {
+  const hasRecords = data.records && Object.keys(data.records).length > 0;
+  const hasUsers = data._users && Object.keys(data._users).length > 0;
+  if (!hasRecords && !hasUsers) {
     alert('暂无数据可导出');
     return;
   }
@@ -790,21 +901,37 @@ function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-function register(husbandName, husbandPwd, wifeName, wifePwd) {
-  if (loadUsers()) return false;
+async function register(husbandName, husbandPwd, wifeName, wifePwd) {
+  // 1. 检查本地是否已注册
+  if (loadUsers()) return { success: false, error: '本地已有注册数据' };
+
+  // 2. 检查服务器是否已有账号（防止重复注册）
+  const serverData = await pullDataFromServer();
+  if (serverData && serverData.pk_users && Object.keys(serverData.pk_users).length > 0) {
+    return { success: false, error: '服务器已有账号，请直接登录' };
+  }
+
   const hName = husbandName.trim();
   const wName = wifeName.trim();
-  if (!hName || !wName || hName === wName) return false;
+  if (!hName || !wName || hName === wName) {
+    return { success: false, error: '双方账号名不能为空或相同' };
+  }
   const users = {};
   users[hName] = { password: husbandPwd, isAdmin: true, role: 'husband', displayName: hName };
   users[wName] = { password: wifePwd, isAdmin: false, role: 'wife', displayName: wName };
   saveUsers(users);
+
   // 同步更新 loadAccounts 中的显示名
   const accounts = loadAccounts();
   accounts.husband.name = hName;
   accounts.wife.name = wName;
   saveAccounts(accounts);
-  return true;
+
+  // 推送账号到服务器 + 写入本地同步数据
+  syncUsersToData(users);
+  await pushUsersToServer(users);
+  console.log('[注册] 账号已同步到服务器');
+  return { success: true };
 }
 
 function login(accountName, password) {
@@ -834,6 +961,7 @@ function changePassword(adminAccount, adminPwd, targetAccount, newPwd) {
   if (!users[targetAccount]) return { success: false, error: '目标账号不存在' };
   users[targetAccount].password = newPwd;
   saveUsers(users);
+  syncUsersToData(users);
   return { success: true };
 }
 
@@ -845,7 +973,17 @@ function selfChangePassword(account, oldPwd, newPwd) {
   if (user.password !== oldPwd) return { success: false, error: '当前密码错误' };
   user.password = newPwd;
   saveUsers(users);
+  syncUsersToData(users);
   return { success: true };
+}
+
+// 将 pk_users 数据同步到 diet_pk_data._users + 推送到服务器
+function syncUsersToData(users) {
+  const data = loadData();
+  data._users = users;
+  saveData(data);
+  // 异步推送到服务器（不阻塞 UI）
+  pushUsersToServer(users);
 }
 
 function logout() {
