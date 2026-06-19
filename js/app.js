@@ -137,6 +137,14 @@ function doLogin() {
 function checkFirstTimeSetup() {
   if (isSetupCompleted(currentRole)) return;
 
+  // 兜底检查：SETUP_KEY 可能因存储清理等原因丢失，
+  // 但账户设置数据（体重/热量预算）仍然存在 → 自动补标记，跳过弹窗
+  const info = getAccountInfo(currentRole);
+  if (info && info.initialWeight > 0 && info.targetWeight > 0 && info.dailyCalorieBudget > 0) {
+    markSetupCompleted(currentRole);
+    return;
+  }
+
   // 不预填默认值，由用户自行填写
   const elInitW = document.getElementById('setup-init-weight');
   const elTargetW = document.getElementById('setup-target-weight');
