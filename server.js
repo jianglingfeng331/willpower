@@ -14,6 +14,8 @@ const DATA_FILE = path.join(__dirname, 'data', 'users.json');
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+// 直接提供静态文件，不需要 Nginx
+app.use(express.static(__dirname));
 
 // ========== 工具函数 ==========
 
