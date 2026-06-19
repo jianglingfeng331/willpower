@@ -56,7 +56,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ========== 登录认证 ==========
 function checkAuth() {
-  const user = getCurrentUser();
+  let user = getCurrentUser();
+  // 自动登录：sessionStorage 无登录态但 localStorage 有
+  if (!user) {
+    const result = autoLogin();
+    if (result && result.success) {
+      user = getCurrentUser();
+    }
+  }
   if (user) {
     currentUser = user.account;
     currentRole = user.role;

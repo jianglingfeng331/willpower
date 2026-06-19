@@ -511,6 +511,13 @@ function setNickname(account, nickname) {
     delete nicknames[account];
   }
   saveNicknames(nicknames);
+  // 同步到 accounts + 服务器，保证对方设备可见
+  const accounts = loadAccounts();
+  if (accounts[account]) {
+    accounts[account].name = trimmed || getDefaultAccountName(account);
+    saveAccounts(accounts);
+    autoSyncToServer();
+  }
 }
 
 // 获取显示名称（优先用昵称，没有则用默认名）
@@ -942,7 +949,32 @@ function login(accountName, password) {
   if (user.password !== password) return { success: false, error: '密码错误' };
   sessionStorage.setItem('pk_logged_in', accountName);
   sessionStorage.setItem('pk_logged_role', user.role);
+  saveLoginState(accountName, user.role, user.isAdmin);
   return { success: true, isAdmin: user.isAdmin, role: user.role, displayName: user.displayName };
+}
+
+function saveLoginState(accountName, role, isAdmin) {
+  localStorage.setItem('pk_saved_user', JSON.stringify({ accountName, role, isAdmin }));
+}
+
+function getSavedAccount() {
+  try {
+    const raw = localStorage.getItem('pk_saved_user');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function autoLogin() {
+  const saved = getSavedAccount();
+  if (!saved) return false;
+  const users = loadUsers();
+  if (!users || !users[saved.accountName]) return false;
+  sessionStorage.setItem('pk_logged_in', saved.accountName);
+  sessionStorage.setItem('pk_logged_role', saved.role);
+  return { success: true, isAdmin: saved.isAdmin, role: saved.role, displayName: users[saved.accountName].displayName };
 }
 
 function getCurrentUser() {
@@ -989,4 +1021,5 @@ function syncUsersToData(users) {
 function logout() {
   sessionStorage.removeItem('pk_logged_in');
   sessionStorage.removeItem('pk_logged_role');
+  localStorage.removeItem('pk_saved_user');
 }
