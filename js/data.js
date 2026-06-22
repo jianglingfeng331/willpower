@@ -727,13 +727,23 @@ function saveAIConfig(config) {
   localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(config));
 }
 
-// ========== AI识别调用 ==========
+// ========== AI识别调用（带重试与节流） ==========
+let _lastAICallTime = 0;
+const AI_MIN_INTERVAL = 1500; // 最小间隔1.5秒
+
 async function analyzeFoodImage(base64Image) {
   const config = loadAIConfig();
   if (!config.apiKey) {
     const result = simulateFoodRecognition();
     result.error = '未配置API Key，使用离线识别';
     return result;
+  }
+
+  // 客户端节流：确保两次请求间隔至少1.5秒
+  const now = Date.now();
+  const gap = now - _lastAICallTime;
+  if (gap < AI_MIN_INTERVAL) {
+    await new Promise(r => setTimeout(r, AI_MIN_INTERVAL - gap));
   }
 
   const prompt = '请识别这张图片中的食物，以JSON格式返回：{"foods":[{"name":"食物名称","calories":热量估算值(kcal),"confidence":置信度0-1}]}，只返回JSON不要其他内容';
@@ -753,55 +763,74 @@ async function analyzeFoodImage(base64Image) {
     temperature: 0.1
   };
 
-  try {
-    const res = await fetch(config.apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + config.apiKey
-      },
-      body: JSON.stringify(body)
-    });
+  const maxRetries = 3;
 
-    if (!res.ok) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    _lastAICallTime = Date.now();
+    try {
+      const res = await fetch(config.apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + config.apiKey
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!content) {
+          const result = simulateFoodRecognition();
+          result.error = 'AI未返回有效内容，已回退离线识别';
+          return result;
+        }
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          const result = simulateFoodRecognition();
+          result.error = 'AI返回格式异常，已回退离线识别';
+          return result;
+        }
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.foods && Array.isArray(parsed.foods) && parsed.foods.length > 0) {
+          return { foods: parsed.foods, source: 'ai' };
+        }
+        const result = simulateFoodRecognition();
+        result.error = 'AI未识别到食物，已回退离线识别';
+        return result;
+      }
+
+      // 429 指数退避重试
+      if (res.status === 429 && attempt < maxRetries) {
+        const delay = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
+        console.warn('AI API 429, retrying in ' + (delay / 1000) + 's (attempt ' + (attempt + 1) + '/' + maxRetries + ')');
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+
+      // 401/404 等不可重试错误
       const errMsg = res.status === 401 ? 'API Key无效(401)'
         : res.status === 404 ? 'API地址错误(404)'
-        : res.status === 429 ? '请求频率超限(429)'
+        : res.status === 429 ? '请求频率超限(429)，重试' + maxRetries + '次后仍失败'
         : 'API错误(' + res.status + ')';
       console.warn('AI API error:', res.status, errMsg);
       const result = simulateFoodRecognition();
       result.error = errMsg + '，已回退离线识别';
       return result;
-    }
 
-    const data = await res.json();
-    const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-    if (!content) {
+    } catch (e) {
+      // 网络错误重试
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt + 1) * 1000;
+        console.warn('AI API network error, retrying in ' + (delay / 1000) + 's');
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      console.warn('AI API call failed:', e);
       const result = simulateFoodRecognition();
-      result.error = 'AI未返回有效内容，已回退离线识别';
+      result.error = '网络请求失败（重试' + maxRetries + '次），已回退离线识别';
       return result;
     }
-
-    // Try to extract JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      const result = simulateFoodRecognition();
-      result.error = 'AI返回格式异常，已回退离线识别';
-      return result;
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    if (parsed.foods && Array.isArray(parsed.foods) && parsed.foods.length > 0) {
-      return { foods: parsed.foods, source: 'ai' };
-    }
-    const result = simulateFoodRecognition();
-    result.error = 'AI未识别到食物，已回退离线识别';
-    return result;
-  } catch (e) {
-    console.warn('AI API call failed:', e);
-    const result = simulateFoodRecognition();
-    result.error = '网络请求失败，已回退离线识别';
-    return result;
   }
 }
 
