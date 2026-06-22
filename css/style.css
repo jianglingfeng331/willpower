@@ -1274,3 +1274,228 @@ body {
   color: var(--text-lighter);
   font-size: 14px;
 }
+
+/* ========== 监督登记概览 ========== */
+.supervise-overview {
+  margin: 0 6px 0;
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 14px 16px 10px;
+  border: 1px solid var(--border-light);
+}
+.supervise-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.supervise-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sv-card {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sv-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sv-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}
+.sv-all-ok {
+  font-size: 12px;
+  color: #22c55e;
+  font-weight: 700;
+  background: rgba(34,197,94,0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.sv-not-all {
+  font-size: 12px;
+  color: #f59e0b;
+  font-weight: 700;
+}
+.sv-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.sv-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+.sv-tag-ok {
+  background: rgba(34,197,94,0.12);
+  color: #22c55e;
+}
+.sv-tag-miss {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+.sv-badge {
+  display: inline-block;
+  font-size: 10px;
+  background: var(--btn-primary);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.supervise-check-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.supervise-check-row input {
+  margin-right: 6px;
+}
+
+.supervise-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ========== 运动自定义管理弹窗 ========== */
+.manual-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.manual-input-group .settings-input-wide {
+  flex: 1 1 100px;
+}
+.exercise-grid-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+.food-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--btn-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.food-action-btn:hover {
+  background: rgba(99,102,241,0.08);
+}
+
+.quick-btn-accent {
+  background: var(--btn-primary);
+  color: #fff;
+}
+.quick-btn-accent:hover {
+  background: var(--btn-primary-hover);
+}
+
+/* ========== AI拍照识别 (监督) ========== */
+.ai-capture-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--btn-primary);
+  border-radius: 12px;
+  background: rgba(99,102,241,0.06);
+  color: var(--btn-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ai-preview { 
+  margin-top: 12px; 
+}
+.ai-preview canvas { 
+  max-width: 100%; 
+  border-radius: 12px; 
+}
+.ai-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.ai-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--btn-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.ai-results {
+  margin-top: 12px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 12px;
+}
+.ai-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ai-source-badge {
+  font-size: 11px;
+  color: #fff;
+  background: var(--btn-primary);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.ai-close-preview {
+  cursor: pointer;
+  color: var(--text-lighter);
+}
+.ai-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+.ai-result-item:last-child { border-bottom: none; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

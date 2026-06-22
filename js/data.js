@@ -6,6 +6,7 @@ const NICKNAMES_KEY = 'diet_pk_nicknames';
 const AI_CONFIG_KEY = 'diet_pk_ai_config';
 const SETUP_KEY = 'diet_pk_setup_completed';
 const CUSTOM_FOODS_KEY = 'diet_pk_custom_foods';
+const CUSTOM_EXERCISES_KEY = 'diet_pk_custom_exercises';
 
 // 跨设备同步：指向工作区 output/diet-pk/pk-sync.json
 const SYNC_DATA_FILE = './pk-sync.json';
@@ -173,6 +174,48 @@ function getAllFoods() {
   return { ...preset, ...custom };
 }
 
+// ========== 自定义运动库 ==========
+function getCustomExercises() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_EXERCISES_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {};
+}
+
+function saveCustomExercises(exercises) {
+  localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(exercises));
+}
+
+function addCustomExercise(name, calPerHour) {
+  const exercises = getCustomExercises();
+  const key = 'custom_ex_' + Date.now();
+  exercises[key] = { name, calPerHour: parseInt(calPerHour) || 0 };
+  saveCustomExercises(exercises);
+  return key;
+}
+
+function removeCustomExercise(key) {
+  const exercises = getCustomExercises();
+  if (!exercises[key]) return false;
+  delete exercises[key];
+  saveCustomExercises(exercises);
+  return true;
+}
+
+// 合并预设 + 自定义运动，返回统一运动列表
+function getAllExercises() {
+  const preset = {};
+  for (const [key, val] of Object.entries(EXERCISE_CAL_MAP)) {
+    preset[key] = { ...val, source: 'preset' };
+  }
+  const custom = getCustomExercises();
+  for (const [key, val] of Object.entries(custom)) {
+    custom[key] = { ...val, source: 'custom' };
+  }
+  return { ...preset, ...custom };
+}
+
 // 运动卡路里消耗参考 (kcal/小时)
 const EXERCISE_CAL_MAP = {
   run: { name: '跑步', calPerHour: 500 },
@@ -285,7 +328,7 @@ function getDayRecord(date, account) {
 }
 
 // ========== 添加饮食 ==========
-function addMeal(date, account, foodKey, manualName, manualCal, quantity) {
+function addMeal(date, account, foodKey, manualName, manualCal, quantity, supervised) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
@@ -304,7 +347,8 @@ function addMeal(date, account, foodKey, manualName, manualCal, quantity) {
       unit: f.unit,
       quantity: qty,
       totalCalories: f.cal * qty,
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
+      supervised: !!supervised
     };
   } else if (manualName && manualCal) {
     meal = {
@@ -314,7 +358,8 @@ function addMeal(date, account, foodKey, manualName, manualCal, quantity) {
       unit: '',
       quantity: qty,
       totalCalories: (parseInt(manualCal) || 0) * qty,
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
+      supervised: !!supervised
     };
   } else return null;
 
@@ -344,7 +389,8 @@ function addExercise(date, account, exKey, durationMin) {
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
 
-  const exInfo = EXERCISE_CAL_MAP[exKey];
+  const allExercises = getAllExercises();
+  const exInfo = allExercises[exKey];
   if (!exInfo) return null;
 
   const hours = durationMin / 60;

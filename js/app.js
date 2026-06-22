@@ -8,6 +8,8 @@ let selectedExercise = null;
 let aiRecognitionResults = [];
 let recordDate = today();
 let mealTab = 'common';    // 'common' | 'camera' | 'manual'
+let svAiResults = [];       // 监督登记 - AI识别结果
+let superviseTarget = null; // 监督登记 - 选中的食物
 
 // ========== 日期导航辅助函数 ==========
 function getRecordDate() { return recordDate; }
@@ -317,6 +319,9 @@ function updateHomePage() {
   updateElement('w-water', wStats.waterTotal);
   updateElement('w-cal-remain', '剩余 ' + wStats.remain + ' kcal');
   updateCalBar('w-cal-bar', wStats.netCal, wStats.budget);
+
+  // 更新监督登记概览
+  renderSuperviseOverview(dt);
 }
 
 function updatePKBar() {
@@ -383,6 +388,45 @@ function openScoreDetail() {
 
 function closeScoreDetail() {
   document.getElementById('score-panel').classList.remove('show');
+}
+
+// ========== 监督登记概览 ==========
+function renderSuperviseOverview(dt) {
+  const el = document.getElementById('supervise-cards');
+  if (!el) return;
+  const hDetail = getScoreDetail(dt, 'husband');
+  const wDetail = getScoreDetail(dt, 'wife');
+
+  function renderPerson(account, detail, roleLabel) {
+    const name = getDisplayName(account);
+    const tags = [
+      { label: '饮食', ok: detail.mealOk, icon: 'ic-utensils' },
+      { label: '运动', ok: detail.exerciseOk, icon: 'ic-run' },
+      { label: '饮水', ok: detail.waterOk, icon: 'ic-water' },
+      { label: '称重', ok: detail.weightOk, icon: 'ic-weight' },
+      { label: '预算', ok: detail.calOk, icon: 'ic-flame' }
+    ];
+    const allOk = tags.every(t => t.ok);
+    const tagsHTML = tags.map(t =>
+      '<div class="sv-tag ' + (t.ok ? 'sv-tag-ok' : 'sv-tag-miss') + '">' +
+        '<svg width="12" height="12"><use href="#' + t.icon + '"/></svg>' +
+        t.label +
+        (t.ok ? '<svg width="10" height="10" style="margin-left:2px"><use href="#ic-check"/></svg>' :
+               '<svg width="10" height="10" style="margin-left:2px"><use href="#ic-close"/></svg>') +
+      '</div>'
+    ).join('');
+
+    return '<div class="sv-card">' +
+      '<div class="sv-card-top">' +
+        '<span class="sv-card-name"><svg width="16" height="16" style="margin-right:4px"><use href="#ic-person"/></svg>' + name + '</span>' +
+        (allOk ? '<span class="sv-all-ok">全部完成</span>' :
+         '<span class="sv-not-all">' + tags.filter(t => t.ok).length + '/' + tags.length + '</span>') +
+      '</div>' +
+      '<div class="sv-card-tags">' + tagsHTML + '</div>' +
+    '</div>';
+  }
+
+  el.innerHTML = renderPerson('husband', hDetail) + renderPerson('wife', wDetail);
 }
 
 function renderScoreDetail() {
@@ -486,6 +530,7 @@ function updateRecordPage() {
       <div class="record-item">
         <div class="record-item-left">
           ${m.name} ${m.quantity && m.quantity > 1 ? '×' + m.quantity : ''}
+          ${m.supervised ? '<span class="sv-badge">监督</span>' : ''}
         </div>
         <div class="record-item-right">${m.totalCalories || m.calories} kcal${delMeal(i)}
         </div>
@@ -588,6 +633,9 @@ function openMealModal() {
   updateSelectedList();
   // 重置确认按钮
   document.getElementById('meal-confirm-btn').textContent = '请添加食物';
+  // 重置监督checkbox
+  const svCheckbox = document.getElementById('meal-supervised');
+  if (svCheckbox) svCheckbox.checked = false;
 
   openModal('modal-meal');
 }
@@ -747,14 +795,263 @@ function confirmMeal() {
     return;
   }
 
+  const supervised = document.getElementById('meal-supervised')?.checked || false;
+  const targetRole = supervised ? (currentRole === 'husband' ? 'wife' : 'husband') : currentRole;
+
   selectedFoods.forEach(item => {
-    addMeal(getRecordDate(), currentRole, item.key || null, item.key ? null : item.name, item.key ? null : item.calories, item.quantity);
+    addMeal(getRecordDate(), targetRole, item.key || null, item.key ? null : item.name, item.key ? null : item.calories, item.quantity, supervised);
   });
 
   const totalCal = selectedFoods.reduce((s, f) => s + f.calories * f.quantity, 0);
   closeModal('modal-meal');
-  showToast('已记录 ' + selectedFoods.length + ' 种食物，共 ' + totalCal + ' kcal');
+  showToast('已记录 ' + selectedFoods.length + ' 种食物，共 ' + totalCal + ' kcal' + (supervised ? '（监督登记）' : ''));
   updateAllUI();
+}
+
+// ========== 监督 checkbox ==========
+function onMealSupervisedChange() {
+  const checked = document.getElementById('meal-supervised')?.checked;
+  const target = checked ? (currentRole === 'husband' ? 'wife' : 'husband') : null;
+  if (checked) {
+    showToast('已开启监督登记，记录将保存到对方账上');
+  }
+}
+
+// ========== 监督登记弹窗 ==========
+function openSuperviseModal() {
+  svAiResults = [];
+  superviseTarget = null;
+  clearSvAIPreview();
+  document.getElementById('sv-manual-food-name').value = '';
+  document.getElementById('sv-manual-food-cal').value = '';
+  document.getElementById('supervise-confirm-btn').style.display = 'none';
+  openModal('modal-supervise');
+  renderSuperviseFoodGrid();
+}
+
+function renderSuperviseFoodGrid() {
+  const grid = document.getElementById('supervise-food-grid');
+  if (!grid) return;
+  const allFoods = getAllFoods();
+  const entries = Object.entries(allFoods);
+  grid.innerHTML = entries.map(([key, f]) => `
+    <div class="food-item" data-key="${key}" onclick="superviseFood('${key}')">
+      <svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> ${f.name}<br><small>~${f.cal}kcal/${f.unit}</small>
+      ${f.source === 'custom' ? '<div class="food-item-tag">自定义</div>' : ''}
+    </div>
+  `).join('');
+}
+
+function superviseFood(foodKey) {
+  superviseTarget = foodKey;
+  document.getElementById('supervise-confirm-btn').style.display = 'block';
+  const allFoods = getAllFoods();
+  const f = allFoods[foodKey];
+  if (f) {
+    showToast('已选择：' + f.name);
+  }
+}
+
+function confirmSupervise() {
+  if (!superviseTarget) {
+    showToast('请先选择一种食物');
+    return;
+  }
+  const targetRole = currentRole === 'husband' ? 'wife' : 'husband';
+  const result = addMeal(getRecordDate(), targetRole, superviseTarget, null, null, 1, true);
+  closeModal('modal-supervise');
+  if (result !== null) {
+    const allFoods = getAllFoods();
+    const f = allFoods[superviseTarget];
+    showToast('已监督登记给' + getDisplayName(targetRole) + '：' + (f ? f.name : superviseTarget));
+  } else {
+    showToast('监督登记失败');
+  }
+  updateAllUI();
+  superviseTarget = null;
+}
+
+// ========== 监督登记 - 手动输入 ==========
+function confirmSuperviseManual() {
+  const name = document.getElementById('sv-manual-food-name').value.trim();
+  const calStr = document.getElementById('sv-manual-food-cal').value.trim();
+  if (!name || !calStr) {
+    showToast('请填写食物名称和卡路里');
+    return;
+  }
+  const cal = parseInt(calStr);
+  if (isNaN(cal) || cal <= 0) {
+    showToast('请输入有效的卡路里值');
+    return;
+  }
+  const targetRole = currentRole === 'husband' ? 'wife' : 'husband';
+  addMeal(getRecordDate(), targetRole, null, name, calStr, 1, true);
+  closeModal('modal-supervise');
+  showToast('已监督登记给' + getDisplayName(targetRole) + '：' + name + ' ' + cal + ' kcal');
+  updateAllUI();
+}
+
+// ========== 监督登记 - AI拍照识别 ==========
+function openSuperviseCamera() {
+  const input = document.getElementById('sv-camera-input');
+  if (!input) return;
+  input.click();
+}
+
+function handleSuperviseImageCapture(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.getElementById('sv-ai-preview-canvas');
+      const maxW = 512;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      showSvAIPreview();
+      startSvAIRecognition(img);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function showSvAIPreview() {
+  document.getElementById('sv-ai-preview').classList.remove('hidden');
+  document.getElementById('sv-ai-loading').classList.remove('hidden');
+  document.getElementById('sv-ai-results-inline').classList.add('hidden');
+}
+
+function clearSvAIPreview() {
+  svAiResults = [];
+  document.getElementById('sv-ai-preview').classList.add('hidden');
+  document.getElementById('sv-ai-loading').classList.add('hidden');
+  document.getElementById('sv-ai-results-inline').classList.add('hidden');
+  document.getElementById('sv-ai-results-list').innerHTML = '';
+}
+
+async function startSvAIRecognition(img) {
+  const canvas = document.getElementById('sv-ai-preview-canvas');
+  const base64 = canvas.toDataURL('image/jpeg', 0.7);
+  try {
+    const result = await analyzeFoodImage(base64);
+    if (result.error) {
+      showToast(result.error);
+      clearSvAIPreview();
+      return;
+    }
+    document.getElementById('sv-ai-loading').classList.add('hidden');
+    svAiResults = result.foods.map(f => ({ name: f.name, calories: f.calories }));
+    if (svAiResults.length === 0) {
+      showToast('未识别到食物');
+      clearSvAIPreview();
+      return;
+    }
+    renderSvAIResults();
+    document.getElementById('sv-ai-results-inline').classList.remove('hidden');
+    // Source badge
+    const badge = document.getElementById('sv-ai-source-badge');
+    if (badge) {
+      if (result.source === 'simulated') {
+        badge.textContent = '离线识别（未配置AI）';
+      } else {
+        badge.textContent = 'AI识别';
+      }
+    }
+  } catch (e) {
+    document.getElementById('sv-ai-loading').classList.add('hidden');
+    showToast('识别失败，请重试');
+  }
+}
+
+function renderSvAIResults() {
+  const listEl = document.getElementById('sv-ai-results-list');
+  const totalCal = svAiResults.reduce((s, r) => s + r.calories, 0);
+  document.getElementById('sv-ai-total-cal').textContent = totalCal;
+  listEl.innerHTML = svAiResults.map((r, i) => `
+    <div class="ai-result-item">
+      <span>${r.name}</span>
+      <span style="color:var(--text-secondary);font-size:13px;">${r.calories} kcal</span>
+    </div>
+  `).join('');
+}
+
+function confirmSuperviseAI() {
+  if (svAiResults.length === 0) return;
+  const targetRole = currentRole === 'husband' ? 'wife' : 'husband';
+  svAiResults.forEach(r => {
+    addMeal(getRecordDate(), targetRole, null, r.name, String(r.calories), 1, true);
+  });
+  const totalCal = svAiResults.reduce((s, r) => s + r.calories, 0);
+  closeModal('modal-supervise');
+  showToast('已监督登记给' + getDisplayName(targetRole) + '：' + svAiResults.length + '项，共 ' + totalCal + ' kcal');
+  updateAllUI();
+  svAiResults = [];
+}
+
+// ========== 自定义运动管理 ==========
+function openCustomExerciseModal() {
+  renderCustomExerciseList();
+  // 清空输入
+  document.getElementById('custom-exercise-name').value = '';
+  document.getElementById('custom-exercise-cal').value = '';
+  openModal('modal-custom-exercise');
+}
+
+function addCustomExerciseItem() {
+  const name = document.getElementById('custom-exercise-name').value.trim();
+  const calStr = document.getElementById('custom-exercise-cal').value.trim();
+  if (!name) { showToast('请输入运动名称'); return; }
+  const cal = parseInt(calStr);
+  if (isNaN(cal) || cal <= 0) { showToast('请输入有效的每小时消耗(kcal)'); return; }
+  addCustomExercise(name, cal);
+  renderCustomExerciseList();
+  renderCustomExerciseGrid();
+  document.getElementById('custom-exercise-name').value = '';
+  document.getElementById('custom-exercise-cal').value = '';
+  showToast('已添加自定义运动：' + name);
+}
+
+function removeCustomExerciseItem(key) {
+  removeCustomExercise(key);
+  renderCustomExerciseList();
+  renderCustomExerciseGrid();
+}
+
+function renderCustomExerciseList() {
+  const el = document.getElementById('custom-exercise-list');
+  if (!el) return;
+  const list = getCustomExercises();
+  if (list.length === 0) {
+    el.innerHTML = '<div style="color:#999;font-size:13px;padding:8px 0;">暂无自定义运动</div>';
+    return;
+  }
+  el.innerHTML = list.map(e => `
+    <div class="sf-item">
+      <div class="sf-item-info">
+        <span class="sf-item-name">${e.name}</span>
+        <span class="sf-item-cal">${e.calPerHour} kcal/h</span>
+      </div>
+      <button class="sf-item-del" onclick="removeCustomExerciseItem('${e.key}')"><svg width="16" height="16"><use href="#ic-close"/></svg></button>
+    </div>
+  `).join('');
+}
+
+function renderCustomExerciseGrid() {
+  const container = document.getElementById('custom-exercise-items');
+  if (!container) return;
+  const exercises = getCustomExercises();
+  container.innerHTML = exercises.map(e => `
+    <div class="exercise-item" onclick="selectExercise('${e.key}')" data-ex="${e.key}">
+      <svg class="ic-inline" width="16" height="16"><use href="#ic-exercise"/></svg> ${e.name}<br><small>~${e.calPerHour}kcal/h</small>
+    </div>
+  `).join('');
 }
 
 // ========== AI拍照识别 ==========
@@ -976,6 +1273,7 @@ function openExerciseModal() {
   selectedExercise = null;
   document.getElementById('exercise-duration').value = '30';
   document.querySelectorAll('#exercise-grid .exercise-item').forEach(el => el.classList.remove('selected'));
+  renderCustomExerciseGrid();
   openModal('modal-exercise');
 }
 
