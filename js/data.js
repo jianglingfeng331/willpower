@@ -907,11 +907,9 @@ function mergeSyncData(localData, syncData) {
           merged.records[date][account] = JSON.parse(JSON.stringify(accountData));
         } else {
           for (const [key, val] of Object.entries(accountData)) {
-            if (Array.isArray(val) && val.length > 0) {
-              // 数组字段（meals/exercises/water）：追加并去重（按 time 字段）
-              const existingTimes = new Set((merged.records[date][account][key] || []).map(item => item.time));
-              const newItems = val.filter(item => !existingTimes.has(item.time));
-              merged.records[date][account][key] = (merged.records[date][account][key] || []).concat(newItems);
+            if (Array.isArray(val)) {
+              // 数组字段以服务器数据为权威来源，直接替换以支持删除操作
+              merged.records[date][account][key] = val;
             } else if (val !== null && val !== undefined) {
               merged.records[date][account][key] = val;
             }
