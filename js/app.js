@@ -1714,10 +1714,11 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
     // Layer 6：中心百分比文字
     // ═══════════════════════════════════════
     const pct = Math.round(ratio * 100);
+    const isOverWater = ratio > 0.45;
     ctx.shadowColor = 'rgba(0,0,0,0.18)';
     ctx.shadowBlur = 3;
-    ctx.fillStyle = ratio > 0.45 ? '#FFFFFF' : '#2C3E50';
-    ctx.font = 'bold 22px system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif';
+    ctx.fillStyle = isOverWater ? '#FFFFFF' : '#2C5F7C';
+    ctx.font = '300 22px "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Helvetica Neue Light", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(pct + '%', cx, cy);
@@ -1727,7 +1728,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
     // 100% 达标 ✓
     if (ratio >= 1) {
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '600 13px system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif';
+      ctx.font = '300 13px "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Helvetica Neue Light", sans-serif';
       ctx.fillText('✓', cx, cy + 23);
     }
   }
