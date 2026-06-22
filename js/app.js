@@ -1497,8 +1497,8 @@ function renderWaterStats() {
 }
 
 function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
-  const SIZE = 170;
-  const PADDING = 10;
+  const SIZE = 130;
+  const PADDING = 8;
   const r = SIZE / 2 - PADDING;
   const cx = SIZE / 2, cy = SIZE / 2;
   let phase = 0;
@@ -1510,7 +1510,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
       arr.push({
         angle: Math.random() * Math.PI * 2,
         dist: 0.15 + Math.random() * 0.73,
-        radius: 1.2 + Math.random() * 2.2,
+        radius: 1.0 + Math.random() * 1.6,
         speed: 0.25 + Math.random() * 0.55,
         baseProgress: Math.random(),
         opacity: 0.12 + Math.random() * 0.28
@@ -1553,7 +1553,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
 
     if (ratio > 0) {
       // 波浪幅度：达标时更大
-      const amp = ratio >= 1 ? 5.5 : (ratio > 0.7 ? 4.5 : (ratio > 0.3 ? 4 : 3.5));
+      const amp = ratio >= 1 ? 4.2 : (ratio > 0.7 ? 3.4 : (ratio > 0.3 ? 3.0 : 2.7));
 
       // 三正弦叠加波浪路径
       ctx.beginPath();
@@ -1571,7 +1571,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
       ctx.closePath();
 
       // 水体渐变：浅蓝 → 中蓝 → 深蓝
-      const waterGrad = ctx.createLinearGradient(0, waterTop - 25, 0, cy + r);
+      const waterGrad = ctx.createLinearGradient(0, waterTop - 19, 0, cy + r);
       waterGrad.addColorStop(0, '#B3E5FC');
       waterGrad.addColorStop(0.12, '#81D4FA');
       waterGrad.addColorStop(0.45, '#29B6F6');
@@ -1591,7 +1591,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
         ctx.lineTo(x, y);
       }
       ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 1.8;
       ctx.stroke();
 
       // 次反光线（稍低）
@@ -1610,7 +1610,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
 
       // 水面下方水平反光带（模拟水内散射）
       if (ratio > 0.2) {
-        const reflY = waterTop + 12;
+        const reflY = waterTop + 9;
         ctx.beginPath();
         ctx.moveTo(cx - r, reflY);
         for (let x = cx - r; x <= cx + r; x += step) {
@@ -1700,7 +1700,7 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(160,190,210,0.35)';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     // 外圈微光
@@ -1715,9 +1715,9 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
     // ═══════════════════════════════════════
     const pct = Math.round(ratio * 100);
     ctx.shadowColor = 'rgba(0,0,0,0.18)';
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 3;
     ctx.fillStyle = ratio > 0.45 ? '#FFFFFF' : '#2C3E50';
-    ctx.font = 'bold 28px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.font = 'bold 22px system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(pct + '%', cx, cy);
@@ -1727,8 +1727,8 @@ function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
     // 100% 达标 ✓
     if (ratio >= 1) {
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 16px "PingFang SC","Microsoft YaHei",sans-serif';
-      ctx.fillText('✓', cx, cy + 30);
+      ctx.font = '600 13px system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif';
+      ctx.fillText('✓', cx, cy + 23);
     }
   }
 
