@@ -1,1 +1,63 @@
-{}
+{
+  "pk_users": {
+    "燃脂侠": {
+      "password": "",
+      "isAdmin": true,
+      "role": "husband",
+      "displayName": "燃脂侠"
+    },
+    "甩肉酱": {
+      "password": "",
+      "isAdmin": false,
+      "role": "wife",
+      "displayName": "甩肉酱"
+    }
+  },
+  "accounts": {
+    "husband": {
+      "name": "燃脂侠",
+      "icon": "",
+      "dailyCalorieBudget": 2000,
+      "initialWeight": 80,
+      "targetWeight": 72
+    },
+    "wife": {
+      "name": "甩肉酱",
+      "icon": "",
+      "dailyCalorieBudget": 1500,
+      "initialWeight": 60,
+      "targetWeight": 52
+    }
+  },
+  "records": {
+    "2026-06-22": {
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "custom",
+            "name": "13213",
+            "calories": 150,
+            "unit": "个",
+            "quantity": 2,
+            "totalCalories": 300,
+            "time": "2026-06-22T06:33:50.400Z"
+          }
+        ],
+        "water": [
+          {
+            "amount": 500,
+            "time": "2026-06-22T06:18:07.040Z"
+          }
+        ],
+        "exercises": [],
+        "weight": null
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ const ACCOUNTS_KEY = 'diet_pk_accounts';
 const NICKNAMES_KEY = 'diet_pk_nicknames';
 const AI_CONFIG_KEY = 'diet_pk_ai_config';
 const SETUP_KEY = 'diet_pk_setup_completed';
+const CUSTOM_FOODS_KEY = 'diet_pk_custom_foods';
 
 // 跨设备同步：指向工作区 output/diet-pk/pk-sync.json
 const SYNC_DATA_FILE = './pk-sync.json';
@@ -75,22 +76,102 @@ function autoSyncToServer() {
 
 // 预设食物卡路里映射表
 const FOOD_CAL_MAP = {
-  rice: { name: '米饭', cal: 200, unit: '碗' },
-  noodles: { name: '面条', cal: 300, unit: '碗' },
-  burger: { name: '汉堡', cal: 550, unit: '个' },
-  salad: { name: '沙拉', cal: 150, unit: '份' },
-  chicken: { name: '鸡胸肉', cal: 200, unit: '份(100g)' },
-  fruit: { name: '水果', cal: 80, unit: '份' },
-  fish: { name: '鱼肉', cal: 150, unit: '份' },
-  egg: { name: '鸡蛋', cal: 70, unit: '个' },
-  bread: { name: '面包', cal: 250, unit: '片' },
-  cake: { name: '蛋糕', cal: 350, unit: '块' },
-  'milk-tea': { name: '奶茶', cal: 400, unit: '杯' },
-  'ice-cream': { name: '冰淇淋', cal: 250, unit: '份' },
-  'fried-chicken': { name: '炸鸡', cal: 600, unit: '份' },
-  pizza: { name: '披萨', cal: 500, unit: '块' },
-  chips: { name: '薯条', cal: 350, unit: '份' }
+  rice: { name: '米饭', cal: 200, unit: '碗', source: 'preset' },
+  noodles: { name: '面条', cal: 300, unit: '碗', source: 'preset' },
+  burger: { name: '汉堡', cal: 550, unit: '个', source: 'preset' },
+  salad: { name: '沙拉', cal: 150, unit: '份', source: 'preset' },
+  chicken: { name: '鸡胸肉', cal: 200, unit: '份(100g)', source: 'preset' },
+  fruit: { name: '水果', cal: 80, unit: '份', source: 'preset' },
+  fish: { name: '鱼肉', cal: 150, unit: '份', source: 'preset' },
+  egg: { name: '鸡蛋', cal: 70, unit: '个', source: 'preset' },
+  bread: { name: '面包', cal: 250, unit: '片', source: 'preset' },
+  cake: { name: '蛋糕', cal: 350, unit: '块', source: 'preset' },
+  'milk-tea': { name: '奶茶', cal: 400, unit: '杯', source: 'preset' },
+  'ice-cream': { name: '冰淇淋', cal: 250, unit: '份', source: 'preset' },
+  'fried-chicken': { name: '炸鸡', cal: 600, unit: '份', source: 'preset' },
+  pizza: { name: '披萨', cal: 500, unit: '块', source: 'preset' },
+  chips: { name: '薯条', cal: 350, unit: '份', source: 'preset' }
 };
+
+
+function getCustomFoods() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_FOODS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {};
+}
+
+function saveCustomFoods(foods) {
+  localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods));
+}
+
+function getAllFoods() {
+  const preset = Object.fromEntries(
+    Object.entries(FOOD_CAL_MAP).map(([k, v]) => [k, { ...v }])
+  );
+  const custom = getCustomFoods();
+  for (const [k, v] of Object.entries(custom)) {
+    preset[k] = { ...v, source: 'custom' };
+  }
+  return preset;
+}
+
+function addCustomFood(name, cal, unit) {
+  const foods = getCustomFoods();
+  const key = 'custom_' + Date.now();
+  foods[key] = { name, cal: parseInt(cal) || 0, unit: unit || '份', source: 'custom' };
+  saveCustomFoods(foods);
+  return key;
+}
+
+function removeCustomFood(key) {
+  const foods = getCustomFoods();
+  delete foods[key];
+  saveCustomFoods(foods);
+}
+
+// ========== 自定义食物库 ==========
+function getCustomFoods() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_FOODS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {};
+}
+
+function saveCustomFoods(foods) {
+  localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods));
+}
+
+function addCustomFood(name, cal, unit) {
+  const foods = getCustomFoods();
+  const key = 'custom_' + Date.now();
+  foods[key] = { name, cal: parseInt(cal) || 0, unit: unit || '份' };
+  saveCustomFoods(foods);
+  return key;
+}
+
+function removeCustomFood(key) {
+  const foods = getCustomFoods();
+  if (!foods[key]) return false;
+  delete foods[key];
+  saveCustomFoods(foods);
+  return true;
+}
+
+// 合并预设 + 自定义，返回统一食物列表
+function getAllFoods() {
+  const preset = {};
+  for (const [key, val] of Object.entries(FOOD_CAL_MAP)) {
+    preset[key] = { ...val, source: 'preset' };
+  }
+  const custom = getCustomFoods();
+  for (const [key, val] of Object.entries(custom)) {
+    custom[key] = { ...val, source: 'custom' };
+  }
+  return { ...preset, ...custom };
+}
 
 // 运动卡路里消耗参考 (kcal/小时)
 const EXERCISE_CAL_MAP = {
@@ -204,30 +285,36 @@ function getDayRecord(date, account) {
 }
 
 // ========== 添加饮食 ==========
-function addMeal(date, account, foodKey, customName, customCal, supervised) {
+function addMeal(date, account, foodKey, manualName, manualCal, quantity) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
 
+  const qty = parseInt(quantity) || 1;
+
   let meal;
-  if (foodKey && FOOD_CAL_MAP[foodKey]) {
-    const f = FOOD_CAL_MAP[foodKey];
+  if (foodKey) {
+    const allFoods = getAllFoods();
+    const f = allFoods[foodKey];
+    if (!f) return null;
     meal = {
-      type: 'ai',
+      type: f.source === 'custom' ? 'custom' : 'preset',
       name: f.name,
       calories: f.cal,
       unit: f.unit,
-      time: new Date().toISOString(),
-      supervised: !!supervised
+      quantity: qty,
+      totalCalories: f.cal * qty,
+      time: new Date().toISOString()
     };
-  } else if (customName && customCal) {
+  } else if (manualName && manualCal) {
     meal = {
       type: 'manual',
-      name: customName,
-      calories: parseInt(customCal) || 0,
+      name: manualName,
+      calories: parseInt(manualCal) || 0,
       unit: '',
-      time: new Date().toISOString(),
-      supervised: !!supervised
+      quantity: qty,
+      totalCalories: (parseInt(manualCal) || 0) * qty,
+      time: new Date().toISOString()
     };
   } else return null;
 
@@ -324,7 +411,7 @@ function calcTodayStats(date, account) {
   const data = loadData();
   const rec = (data.records[date] && data.records[date][account]) || { meals: [], water: [], exercises: [], weight: null };
 
-  const calIn = rec.meals.reduce((s, m) => s + m.calories, 0);
+  const calIn = rec.meals.reduce((s, m) => s + (m.totalCalories || m.calories), 0);
   const calOut = rec.exercises.reduce((s, e) => s + e.calories, 0);
   const waterTotal = rec.water.reduce((s, w) => s + w.amount, 0);
 
@@ -358,7 +445,7 @@ function getScoreDetail(date, account) {
 
   const waterTotal = rec.water.reduce((s, w) => s + w.amount, 0);
   const calOut = rec.exercises.reduce((s, e) => s + e.calories, 0);
-  const calIn = rec.meals.reduce((s, m) => s + m.calories, 0);
+  const calIn = rec.meals.reduce((s, m) => s + (m.totalCalories || m.calories), 0);
   const netCal = calIn - calOut;
   const accounts = loadAccounts();
   const budget = accounts[account] ? accounts[account].dailyCalorieBudget : 2000;
@@ -768,10 +855,12 @@ function mergeSyncData(localData, syncData) {
 
 // 页面初始化：优先从 API 拉取数据，不可用时降级到 pk-sync.json
 async function initData() {
+  console.log('[initData] 开始初始化...');
   const localData = loadData();
 
   // 1. 尝试从后端拉取
   const serverData = await pullDataFromServer();
+  console.log('[initData] 服务器数据:', serverData ? 'QWK: ' + JSON.stringify(serverData).slice(0, 120) : 'null（离线）');
   if (serverData) {
     // 合并 records
     const merged = mergeSyncData(localData, serverData.records ? { records: serverData.records, accounts: serverData.accounts } : null);
@@ -795,7 +884,15 @@ async function initData() {
       const acc = loadAccounts();
       saveAccounts({ ...acc, ...serverData.accounts });
     }
-    console.log('[API] 服务器数据合并完成');
+    // 如果服务器未提供 pk_users，降级到 pk-sync.json 的 _users
+    if (!loadUsers()) {
+      const syncData = await loadSyncData();
+      if (syncData && syncData._users) {
+        saveUsers(syncData._users);
+        console.log('[同步] 服务器无账号数据，已从 pk-sync.json 加载');
+      }
+    }
+    console.log('[initData] API 服务器数据合并完成，最终 loadUsers():', JSON.stringify(loadUsers()));
     return merged;
   }
 
