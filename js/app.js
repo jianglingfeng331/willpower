@@ -268,7 +268,7 @@ function switchTab(tab) {
 
   if (tab === 'home') updateHomePage();
   if (tab === 'record') updateRecordPage();
-  if (tab === 'stats') { destroyCharts(); renderAllCharts(); }
+  if (tab === 'stats') { destroyCharts(); renderAllCharts(); renderWaterStats(); }
   if (tab === 'me') updateMePage();
 }
 
@@ -1454,3 +1454,161 @@ document.addEventListener('touchmove', function(e) {
     e.stopPropagation();
   }
 }, { passive: true });
+
+// ========== 饮水统计渲染 ==========
+const WATER_TARGET = 1500; // ml
+let waterBallAnimFrame = null;
+
+function renderWaterStats() {
+  const card = document.getElementById('water-stats-card');
+  if (!card) return;
+
+  // 更新名称
+  document.getElementById('water-ball-name-h').textContent = getDisplayName('husband');
+  document.getElementById('water-ball-name-w').textContent = getDisplayName('wife');
+  document.getElementById('wh-th-h').textContent = getDisplayName('husband');
+  document.getElementById('wh-th-w').textContent = getDisplayName('wife');
+
+  // 今日饮水数据
+  const today = new Date().toISOString().slice(0, 10);
+  const hStats = calcTodayStats(today, 'husband');
+  const wStats = calcTodayStats(today, 'wife');
+  const hWater = hStats.waterTotal || 0;
+  const wWater = wStats.waterTotal || 0;
+
+  // 水球渲染
+  if (waterBallAnimFrame) cancelAnimationFrame(waterBallAnimFrame);
+  const cH = document.getElementById('water-ball-h');
+  const cW = document.getElementById('water-ball-w');
+  if (cH && cW) {
+    const ctxH = cH.getContext('2d');
+    const ctxW = cW.getContext('2d');
+    drawWaterBalls(ctxH, hWater, ctxW, wWater);
+  }
+
+  // 文字标注
+  document.getElementById('water-ball-text-h').textContent =
+    hWater + '/' + WATER_TARGET + ' ml (' + Math.round(hWater / WATER_TARGET * 100) + '%)';
+  document.getElementById('water-ball-text-w').textContent =
+    wWater + '/' + WATER_TARGET + ' ml (' + Math.round(wWater / WATER_TARGET * 100) + '%)';
+
+  // 历史记录
+  renderWaterHistory();
+}
+
+function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
+  const size = 150;
+  const r = size / 2 - 8;
+  const cx = size / 2, cy = size / 2;
+  let phase = 0;
+
+  function drawOne(ctx, waterMl) {
+    const ratio = Math.min(1, waterMl / WATER_TARGET);
+    ctx.clearRect(0, 0, size, size);
+
+    // 背景圆
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#EFEDEA';
+    ctx.fill();
+
+    // 水位裁剪
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+
+    // 水面 Y 坐标：从底部向上填
+    const waterTop = cy + r - ratio * r * 2;
+
+    // 波浪路径
+    const amp = ratio > 0 ? 3.5 : 0;
+    ctx.beginPath();
+    ctx.moveTo(cx - r, waterTop);
+    const step = 3;
+    for (let x = cx - r; x <= cx + r; x += step) {
+      const y = waterTop + Math.sin((x + phase) * 0.06) * amp +
+                Math.sin((x + phase * 0.7) * 0.04) * amp * 0.5;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(cx + r, cy + r);
+    ctx.lineTo(cx - r, cy + r);
+    ctx.closePath();
+
+    // 渐变填充
+    const grad = ctx.createLinearGradient(0, waterTop - 30, 0, cy + r);
+    grad.addColorStop(0, '#81D4FA');
+    grad.addColorStop(0.4, '#4FC3F7');
+    grad.addColorStop(1, '#0288D1');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+
+    // 边框
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#D5D1CC';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 百分比文字
+    const pct = Math.round(ratio * 100);
+    ctx.fillStyle = ratio > 0.5 ? '#FFFFFF' : '#3A3A3A';
+    ctx.font = 'bold 26px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(pct + '%', cx, cy);
+
+    // 达标标记
+    if (ratio >= 1) {
+      ctx.fillStyle = '#43A047';
+      ctx.font = '18px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillText('✓', cx, cy + 30);
+    }
+  }
+
+  function frame() {
+    drawOne(ctxH, hWater);
+    drawOne(ctxW, wWater);
+    phase += 0.6;
+    waterBallAnimFrame = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function renderWaterHistory() {
+  const tbody = document.getElementById('water-history-body');
+  if (!tbody) return;
+  const hData = getRecentDaysData('husband', 7);
+  const wData = getRecentDaysData('wife', 7);
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const ds = d.toISOString().slice(0, 10);
+    const dow = weekDays[d.getDay()];
+
+    const hDay = hData.find(r => r.date === ds);
+    const wDay = wData.find(r => r.date === ds);
+    const hOk = hDay && hDay.waterTotal >= WATER_TARGET;
+    const wOk = wDay && wDay.waterTotal >= WATER_TARGET;
+
+    html += '<tr>';
+    html += '<td class="wh-date">' + (d.getMonth() + 1) + '/' + d.getDate() + ' 周' + dow + '</td>';
+    html += '<td class="wh-mark">' + renderWaterMark(hDay, hOk) + '</td>';
+    html += '<td class="wh-mark">' + renderWaterMark(wDay, wOk) + '</td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function renderWaterMark(dayData, isOk) {
+  if (!dayData) return '<span class="wh-na">—</span>';
+  const ml = dayData.waterTotal || 0;
+  const pct = Math.round(ml / WATER_TARGET * 100);
+  const cls = isOk ? 'wh-check' : 'wh-cross';
+  const icon = isOk ? '✓' : '✗';
+  return '<span class="' + cls + '">' + icon + '</span> <span class="wh-ml">' + ml + 'ml (' + pct + '%)</span>';
+}

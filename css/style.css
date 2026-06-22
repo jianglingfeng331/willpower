@@ -1158,3 +1158,118 @@ body {
   background: rgba(229,57,53,0.18);
   transform: scale(0.93);
 }
+
+/* ========== 饮水统计 ========== */
+#water-stats-card {
+  margin-top: 0;
+}
+
+.water-balls-row {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  padding: 16px 0 24px;
+}
+
+.water-ball-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.water-ball-canvas {
+  border-radius: 50%;
+  display: block;
+}
+
+.water-ball-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.water-ball-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* 历史记录 */
+.water-history-wrap {
+  border-top: 1px solid var(--border-light);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.water-history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
+.water-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.water-history-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.water-history-table th:first-child {
+  text-align: left;
+}
+
+.water-history-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-lighter);
+  text-align: center;
+}
+
+.water-history-table td:first-child {
+  text-align: left;
+}
+
+.wh-date {
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.wh-mark {
+  font-weight: 600;
+}
+
+.wh-check {
+  color: #43A047;
+  font-size: 16px;
+}
+
+.wh-cross {
+  color: #E53935;
+  font-size: 16px;
+}
+
+.wh-ml {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.wh-na {
+  color: var(--text-lighter);
+  font-size: 14px;
+}

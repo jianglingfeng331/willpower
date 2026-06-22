@@ -435,6 +435,34 @@
       <div class="chart-title"><svg class="ic-inline" width="16" height="16"><use href="#ic-run"/></svg> 运动消耗对比</div>
       <div class="chart-wrap"><canvas id="chart-exercise"></canvas></div>
     </div>
+
+    <!-- 饮水统计 -->
+    <div class="chart-card" id="water-stats-card">
+      <div class="chart-title"><svg class="ic-inline" width="16" height="16"><use href="#ic-water"/></svg> 饮水达标</div>
+      <!-- 今日水球 -->
+      <div class="water-balls-row">
+        <div class="water-ball-col">
+          <canvas class="water-ball-canvas" id="water-ball-h" width="150" height="150"></canvas>
+          <div class="water-ball-name" id="water-ball-name-h">燃脂侠</div>
+          <div class="water-ball-text" id="water-ball-text-h">0/1500 ml (0%)</div>
+        </div>
+        <div class="water-ball-col">
+          <canvas class="water-ball-canvas" id="water-ball-w" width="150" height="150"></canvas>
+          <div class="water-ball-name" id="water-ball-name-w">甩肉酱</div>
+          <div class="water-ball-text" id="water-ball-text-w">0/1500 ml (0%)</div>
+        </div>
+      </div>
+      <!-- 历史记录 -->
+      <div class="water-history-wrap">
+        <div class="water-history-title">最近7天饮水记录</div>
+        <table class="water-history-table">
+          <thead>
+            <tr><th>日期</th><th id="wh-th-h">燃脂侠</th><th id="wh-th-w">甩肉酱</th></tr>
+          </thead>
+          <tbody id="water-history-body"></tbody>
+        </table>
+      </div>
+    </div>
   </section>
 
   <!-- ===== 我的 Tab ===== -->
