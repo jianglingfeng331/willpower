@@ -267,19 +267,12 @@
       </div>
     </div>
 
-    <!-- 监督登记概览 -->
-    <div class="supervise-overview" id="supervise-overview">
-      <div class="supervise-header">
-        <svg class="ic-inline" width="18" height="18"><use href="#ic-eye"/></svg> 监督登记
-      </div>
-      <div class="supervise-cards" id="supervise-cards"></div>
-    </div>
 
     <!-- 快捷操作 -->
     <div class="quick-actions">
       <button class="quick-btn" onclick="switchTab('record')"><svg class="ic-btn" width="18" height="18"><use href="#ic-utensils"/></svg> 记录饮食</button>
       <button class="quick-btn" onclick="switchTab('record')"><svg class="ic-btn" width="18" height="18"><use href="#ic-run"/></svg> 运动打卡</button>
-      <button class="quick-btn quick-btn-accent" onclick="openSuperviseModal()"><svg class="ic-btn" width="18" height="18"><use href="#ic-eye"/></svg> 监督登记</button>
+
     </div>
   </section>
 
@@ -695,9 +688,6 @@
         <div class="food-total-bar">
           <span>合计 <strong id="meal-total-cal">0</strong> kcal</span>
         </div>
-        <div class="supervise-check-row">
-          <label><input type="checkbox" id="meal-supervised" onchange="onMealSupervisedChange()"> 监督登记（为对方记录）</label>
-        </div>
         <button class="modal-btn" id="meal-confirm-btn" onclick="confirmMeal()" disabled>确认记录</button>
       </div>
 
@@ -775,67 +765,6 @@
       <div class="sf-header" style="margin-bottom:8px;">已有自定义运动</div>
       <div id="custom-exercise-list"></div>
       <button class="modal-btn" onclick="closeModal('modal-custom-exercise')" style="margin-top:12px;background:var(--bg-secondary);color:var(--text-primary);">完成</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========== 弹窗：监督登记 ========== -->
-<div class="modal-overlay" id="modal-supervise">
-  <div class="modal">
-    <div class="modal-header">
-      <span><svg class="ic-inline" width="20" height="20"><use href="#ic-eye"/></svg> 监督登记</span>
-      <span class="modal-close" onclick="closeModal('modal-supervise')"><svg width="22" height="22"><use href="#ic-close"/></svg></span>
-    </div>
-    <div class="modal-body">
-      <div class="modal-label">为对方记录饮食（标记为监督）</div>
-      <div class="food-grid" id="supervise-food-grid">
-        <div class="food-item" onclick="superviseFood('rice')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 米饭<br><small>~200kcal/碗</small></div>
-        <div class="food-item" onclick="superviseFood('noodles')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 面条<br><small>~300kcal/碗</small></div>
-        <div class="food-item" onclick="superviseFood('burger')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 汉堡<br><small>~550kcal</small></div>
-        <div class="food-item" onclick="superviseFood('cake')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 蛋糕<br><small>~350kcal</small></div>
-        <div class="food-item" onclick="superviseFood('milk-tea')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 奶茶<br><small>~400kcal</small></div>
-        <div class="food-item" onclick="superviseFood('ice-cream')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 冰淇淋<br><small>~250kcal</small></div>
-        <div class="food-item" onclick="superviseFood('fried-chicken')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 炸鸡<br><small>~600kcal</small></div>
-        <div class="food-item" onclick="superviseFood('pizza')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 披萨<br><small>~500kcal</small></div>
-        <div class="food-item" onclick="superviseFood('chips')"><svg class="ic-inline" width="16" height="16"><use href="#ic-food"/></svg> 薯条<br><small>~350kcal</small></div>
-      </div>
-
-      <!-- AI拍照识别区域 -->
-      <div class="divider-line" style="margin:16px 0;"></div>
-      <div class="modal-label">AI拍照识别</div>
-      <input type="file" id="sv-camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleSuperviseImageCapture(event)">
-      <button class="ai-capture-btn" onclick="openSuperviseCamera()">
-        <svg class="ic-inline" width="20" height="20"><use href="#ic-camera"/></svg> 拍照识别食物
-      </button>
-      <div class="ai-preview hidden" id="sv-ai-preview">
-        <canvas id="sv-ai-preview-canvas"></canvas>
-        <div class="ai-loading hidden" id="sv-ai-loading">
-          <div class="ai-spinner"></div>
-          <span>识别中...</span>
-        </div>
-        <div class="ai-results hidden" id="sv-ai-results-inline">
-          <div class="ai-results-header">
-            <span class="ai-source-badge" id="sv-ai-source-badge"></span>
-            <span class="ai-close-preview" onclick="clearSvAIPreview()"><svg width="16" height="16"><use href="#ic-close"/></svg></span>
-          </div>
-          <div id="sv-ai-results-list"></div>
-          <button class="modal-btn" id="sv-ai-confirm-all-btn" onclick="confirmSuperviseAI()">全部确认添加 (<span id="sv-ai-total-cal">0</span> kcal)</button>
-        </div>
-      </div>
-
-      <!-- 手动输入区域 -->
-      <div class="divider-line" style="margin:16px 0;"></div>
-      <div class="modal-label">或手动输入</div>
-      <div class="manual-input-row">
-        <input type="text" id="sv-manual-food-name" class="settings-input" placeholder="食物名称" style="flex:1;">
-        <input type="number" id="sv-manual-food-cal" class="settings-input" placeholder="卡路里" inputmode="numeric" style="flex:1;">
-      </div>
-      <button class="modal-btn" onclick="confirmSuperviseManual()">确认手动输入</button>
-
-      <div class="supervise-note" style="color:var(--btn-primary);font-size:13px;margin-top:12px;text-align:center;font-weight:600;">
-        <svg class="ic-inline" width="15" height="15"><use href="#ic-warning"/></svg> 监督登记将直接记录到对方账上，并带「监督」标识
-      </div>
-      <button class="modal-btn danger-btn" id="supervise-confirm-btn" onclick="confirmSupervise()" style="display:none;">确认监督登记</button>
     </div>
   </div>
 </div>

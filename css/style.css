@@ -266,7 +266,6 @@ body {
 /* ========== Record List ========== */
 .record-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .record-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-main); border-radius: var(--radius-sm); font-size: 15px; transition: transform 0.2s; color: var(--text-primary); }
-.record-item.supervised { background: var(--orange-light-bg); border-left: 3px solid var(--accent-card); }
 .record-item-left { display: flex; align-items: center; gap: 8px; }
 .record-item-right { font-weight: 700; color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; }
 .record-item-delete {
@@ -276,7 +275,6 @@ body {
   display: flex; align-items: center; justify-content: center;
 }
 .record-item-delete:active { color: #E53935; }
-.supervised-tag { background: var(--accent-card); color: #FFFFFF; font-size: 11px; padding: 3px 8px; border-radius: var(--radius-xs); margin-left: 6px; font-weight: 600; }
 
 /* ========== Water Buttons ========== */
 .water-buttons { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 10px; }
@@ -1273,114 +1271,6 @@ body {
 .wh-na {
   color: var(--text-lighter);
   font-size: 14px;
-}
-
-/* ========== 监督登记概览 ========== */
-.supervise-overview {
-  margin: 0 6px 0;
-  background: var(--bg-card);
-  border-radius: 14px;
-  padding: 14px 16px 10px;
-  border: 1px solid var(--border-light);
-}
-.supervise-header {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.supervise-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.sv-card {
-  background: var(--bg-secondary);
-  border-radius: 10px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.sv-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.sv-card-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-}
-.sv-all-ok {
-  font-size: 12px;
-  color: #22c55e;
-  font-weight: 700;
-  background: rgba(34,197,94,0.1);
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-.sv-not-all {
-  font-size: 12px;
-  color: #f59e0b;
-  font-weight: 700;
-}
-.sv-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.sv-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 11px;
-  padding: 3px 7px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-.sv-tag-ok {
-  background: rgba(34,197,94,0.12);
-  color: #22c55e;
-}
-.sv-tag-miss {
-  background: rgba(239,68,68,0.1);
-  color: #ef4444;
-}
-
-.sv-badge {
-  display: inline-block;
-  font-size: 10px;
-  background: var(--btn-primary);
-  color: #fff;
-  padding: 1px 5px;
-  border-radius: 4px;
-  margin-left: 4px;
-  font-weight: 600;
-  vertical-align: middle;
-}
-
-.supervise-check-row {
-  display: flex;
-  align-items: center;
-  padding: 8px 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-.supervise-check-row input {
-  margin-right: 6px;
-}
-
-.supervise-note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
 }
 
 /* ========== 运动自定义管理弹窗 ========== */
