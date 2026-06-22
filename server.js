@@ -50,10 +50,9 @@ function mergeRecords(existing, incoming) {
         continue;
       }
       for (const [key, val] of Object.entries(accountData)) {
-        if (Array.isArray(val) && val.length > 0) {
-          const existingTimes = new Set((merged[date][account][key] || []).map(item => item.time));
-          const newItems = val.filter(item => !existingTimes.has(item.time));
-          merged[date][account][key] = (merged[date][account][key] || []).concat(newItems);
+        if (Array.isArray(val)) {
+          // meals/water/exercises 数组以客户端为权威来源，直接替换以支持删除操作
+          merged[date][account][key] = val;
         } else if (val !== null && val !== undefined) {
           merged[date][account][key] = val;
         }

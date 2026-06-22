@@ -1283,6 +1283,9 @@ body {
 .manual-input-group .settings-input-wide {
   flex: 1 1 100px;
 }
+#custom-exercise-items {
+  display: contents;
+}
 .exercise-grid-actions {
   margin-top: 10px;
   display: flex;
