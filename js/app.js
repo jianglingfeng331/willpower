@@ -1027,18 +1027,18 @@ function removeCustomExerciseItem(key) {
 function renderCustomExerciseList() {
   const el = document.getElementById('custom-exercise-list');
   if (!el) return;
-  const list = getCustomExercises();
+  const list = Object.entries(getCustomExercises());
   if (list.length === 0) {
     el.innerHTML = '<div style="color:#999;font-size:13px;padding:8px 0;">暂无自定义运动</div>';
     return;
   }
-  el.innerHTML = list.map(e => `
+  el.innerHTML = list.map(([key, e]) => `
     <div class="sf-item">
       <div class="sf-item-info">
         <span class="sf-item-name">${e.name}</span>
         <span class="sf-item-cal">${e.calPerHour} kcal/h</span>
       </div>
-      <button class="sf-item-del" onclick="removeCustomExerciseItem('${e.key}')"><svg width="16" height="16"><use href="#ic-close"/></svg></button>
+      <button class="sf-item-del" onclick="removeCustomExerciseItem('${key}')"><svg width="16" height="16"><use href="#ic-close"/></svg></button>
     </div>
   `).join('');
 }
@@ -1047,8 +1047,9 @@ function renderCustomExerciseGrid() {
   const container = document.getElementById('custom-exercise-items');
   if (!container) return;
   const exercises = getCustomExercises();
-  container.innerHTML = exercises.map(e => `
-    <div class="exercise-item" onclick="selectExercise('${e.key}')" data-ex="${e.key}">
+  const list = Object.entries(exercises);
+  container.innerHTML = list.map(([key, e]) => `
+    <div class="exercise-item" onclick="selectExercise('${key}')" data-ex="${key}">
       <svg class="ic-inline" width="16" height="16"><use href="#ic-exercise"/></svg> ${e.name}<br><small>~${e.calPerHour}kcal/h</small>
     </div>
   `).join('');
