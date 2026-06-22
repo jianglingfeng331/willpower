@@ -1181,6 +1181,7 @@ body {
 .water-ball-canvas {
   border-radius: 50%;
   display: block;
+  box-shadow: 0 4px 18px rgba(0,40,80,0.10), 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .water-ball-name {

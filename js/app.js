@@ -1497,80 +1497,245 @@ function renderWaterStats() {
 }
 
 function drawWaterBalls(ctxH, hWater, ctxW, wWater) {
-  const size = 150;
-  const r = size / 2 - 8;
-  const cx = size / 2, cy = size / 2;
+  const SIZE = 170;
+  const PADDING = 10;
+  const r = SIZE / 2 - PADDING;
+  const cx = SIZE / 2, cy = SIZE / 2;
   let phase = 0;
 
-  function drawOne(ctx, waterMl) {
-    const ratio = Math.min(1, waterMl / WATER_TARGET);
-    ctx.clearRect(0, 0, size, size);
+  // 预生成气泡池（每个水球独立一份）
+  function makeBubbles() {
+    const arr = [];
+    for (let i = 0; i < 14; i++) {
+      arr.push({
+        angle: Math.random() * Math.PI * 2,
+        dist: 0.15 + Math.random() * 0.73,
+        radius: 1.2 + Math.random() * 2.2,
+        speed: 0.25 + Math.random() * 0.55,
+        baseProgress: Math.random(),
+        opacity: 0.12 + Math.random() * 0.28
+      });
+    }
+    return arr;
+  }
+  const bubblesH = makeBubbles();
+  const bubblesW = makeBubbles();
 
-    // 背景圆
+  function drawOne(ctx, waterMl, bubbles) {
+    const ratio = Math.min(1, waterMl / WATER_TARGET);
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    // ═══════════════════════════════════════
+    // Layer 1：玻璃球体背景（径向渐变）
+    // ═══════════════════════════════════════
+    const bgGrad = ctx.createRadialGradient(
+      cx - r * 0.25, cy - r * 0.35, r * 0.05,
+      cx, cy, r
+    );
+    bgGrad.addColorStop(0, '#F8FCFF');
+    bgGrad.addColorStop(0.35, '#ECF5FC');
+    bgGrad.addColorStop(0.7, '#D6EAF8');
+    bgGrad.addColorStop(1, '#BDD8EB');
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = '#EFEDEA';
+    ctx.fillStyle = bgGrad;
     ctx.fill();
 
-    // 水位裁剪
+    // ═══════════════════════════════════════
+    // Layer 2：水体（clip 区域内）
+    // ═══════════════════════════════════════
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.clip();
 
-    // 水面 Y 坐标：从底部向上填
     const waterTop = cy + r - ratio * r * 2;
 
-    // 波浪路径
-    const amp = ratio > 0 ? 3.5 : 0;
-    ctx.beginPath();
-    ctx.moveTo(cx - r, waterTop);
-    const step = 3;
-    for (let x = cx - r; x <= cx + r; x += step) {
-      const y = waterTop + Math.sin((x + phase) * 0.06) * amp +
-                Math.sin((x + phase * 0.7) * 0.04) * amp * 0.5;
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(cx + r, cy + r);
-    ctx.lineTo(cx - r, cy + r);
-    ctx.closePath();
+    if (ratio > 0) {
+      // 波浪幅度：达标时更大
+      const amp = ratio >= 1 ? 5.5 : (ratio > 0.7 ? 4.5 : (ratio > 0.3 ? 4 : 3.5));
 
-    // 渐变填充
-    const grad = ctx.createLinearGradient(0, waterTop - 30, 0, cy + r);
-    grad.addColorStop(0, '#81D4FA');
-    grad.addColorStop(0.4, '#4FC3F7');
-    grad.addColorStop(1, '#0288D1');
-    ctx.fillStyle = grad;
-    ctx.fill();
+      // 三正弦叠加波浪路径
+      ctx.beginPath();
+      ctx.moveTo(cx - r, waterTop);
+      const step = 2;
+      for (let x = cx - r; x <= cx + r; x += step) {
+        const y = waterTop
+          + Math.sin((x + phase) * 0.05) * amp
+          + Math.sin((x + phase * 0.7) * 0.08) * amp * 0.6
+          + Math.sin((x - phase * 0.4) * 0.12) * amp * 0.3;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(cx + r, cy + r);
+      ctx.lineTo(cx - r, cy + r);
+      ctx.closePath();
+
+      // 水体渐变：浅蓝 → 中蓝 → 深蓝
+      const waterGrad = ctx.createLinearGradient(0, waterTop - 25, 0, cy + r);
+      waterGrad.addColorStop(0, '#B3E5FC');
+      waterGrad.addColorStop(0.12, '#81D4FA');
+      waterGrad.addColorStop(0.45, '#29B6F6');
+      waterGrad.addColorStop(0.75, '#0288D1');
+      waterGrad.addColorStop(1, '#01579B');
+      ctx.fillStyle = waterGrad;
+      ctx.fill();
+
+      // 水面反光——白色泡沫边
+      ctx.beginPath();
+      ctx.moveTo(cx - r, waterTop - 1);
+      for (let x = cx - r; x <= cx + r; x += step) {
+        const y = waterTop - 1
+          + Math.sin((x + phase) * 0.05) * amp
+          + Math.sin((x + phase * 0.7) * 0.08) * amp * 0.6
+          + Math.sin((x - phase * 0.4) * 0.12) * amp * 0.3;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // 次反光线（稍低）
+      ctx.beginPath();
+      ctx.moveTo(cx - r, waterTop + 4);
+      for (let x = cx - r; x <= cx + r; x += step) {
+        const y = waterTop + 4
+          + Math.sin((x + phase) * 0.05) * amp * 0.75
+          + Math.sin((x + phase * 0.7) * 0.08) * amp * 0.45
+          + Math.sin((x - phase * 0.4) * 0.12) * amp * 0.2;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 水面下方水平反光带（模拟水内散射）
+      if (ratio > 0.2) {
+        const reflY = waterTop + 12;
+        ctx.beginPath();
+        ctx.moveTo(cx - r, reflY);
+        for (let x = cx - r; x <= cx + r; x += step) {
+          const y = reflY
+            + Math.sin((x + phase) * 0.05) * amp * 0.5
+            + Math.sin((x + phase * 0.7) * 0.08) * amp * 0.3;
+          ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // 气泡粒子
+      for (const b of bubbles) {
+        const progress = ((phase * b.speed * 0.003 + b.baseProgress) % 1 + 1) % 1;
+        const bubbleY = cy + r - 2 - progress * (cy + r - waterTop + 4);
+        const bx = cx + Math.cos(b.angle) * b.dist * r;
+        if (bubbleY > waterTop + b.radius && bubbleY < cy + r - b.radius) {
+          // 气泡主体
+          ctx.beginPath();
+          ctx.arc(bx, bubbleY, b.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${b.opacity})`;
+          ctx.fill();
+          // 气泡高光
+          ctx.beginPath();
+          ctx.arc(bx - b.radius * 0.3, bubbleY - b.radius * 0.35, b.radius * 0.35, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.fill();
+        }
+      }
+    }
+
     ctx.restore();
 
-    // 边框
+    // ═══════════════════════════════════════
+    // Layer 3：底部暗面 / 内阴影
+    // ═══════════════════════════════════════
+    ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = '#D5D1CC';
-    ctx.lineWidth = 3;
+    ctx.clip();
+    const isGrad = ctx.createRadialGradient(
+      cx, cy + r * 0.65, r * 0.25,
+      cx, cy + r * 0.55, r * 1.05
+    );
+    isGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    isGrad.addColorStop(0.6, 'rgba(0,20,40,0.04)');
+    isGrad.addColorStop(1, 'rgba(0,20,40,0.12)');
+    ctx.fillStyle = isGrad;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
+
+    // ═══════════════════════════════════════
+    // Layer 4：高光反射（左上角）
+    // ═══════════════════════════════════════
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+
+    // 主高光椭圆
+    ctx.beginPath();
+    ctx.ellipse(cx - r * 0.33, cy - r * 0.38, r * 0.38, r * 0.16, -Math.PI / 7, 0, Math.PI * 2);
+    const hlGrad = ctx.createRadialGradient(
+      cx - r * 0.33, cy - r * 0.38, r * 0.02,
+      cx - r * 0.3, cy - r * 0.3, r * 0.4
+    );
+    hlGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    hlGrad.addColorStop(0.35, 'rgba(255,255,255,0.55)');
+    hlGrad.addColorStop(0.7, 'rgba(255,255,255,0.15)');
+    hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hlGrad;
+    ctx.fill();
+
+    // 副高光小点
+    ctx.beginPath();
+    ctx.ellipse(cx - r * 0.48, cy - r * 0.52, r * 0.1, r * 0.05, -Math.PI / 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fill();
+
+    ctx.restore();
+
+    // ═══════════════════════════════════════
+    // Layer 5：球体边缘描边
+    // ═══════════════════════════════════════
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(160,190,210,0.35)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // 百分比文字
+    // 外圈微光
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 1, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(190,210,230,0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // ═══════════════════════════════════════
+    // Layer 6：中心百分比文字
+    // ═══════════════════════════════════════
     const pct = Math.round(ratio * 100);
-    ctx.fillStyle = ratio > 0.5 ? '#FFFFFF' : '#3A3A3A';
-    ctx.font = 'bold 26px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.18)';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = ratio > 0.45 ? '#FFFFFF' : '#2C3E50';
+    ctx.font = 'bold 28px "PingFang SC","Microsoft YaHei",sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(pct + '%', cx, cy);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
 
-    // 达标标记
+    // 100% 达标 ✓
     if (ratio >= 1) {
-      ctx.fillStyle = '#43A047';
-      ctx.font = '18px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 16px "PingFang SC","Microsoft YaHei",sans-serif';
       ctx.fillText('✓', cx, cy + 30);
     }
   }
 
   function frame() {
-    drawOne(ctxH, hWater);
-    drawOne(ctxW, wWater);
-    phase += 0.6;
+    drawOne(ctxH, hWater, bubblesH);
+    drawOne(ctxW, wWater, bubblesW);
+    phase += 0.7;
     waterBallAnimFrame = requestAnimationFrame(frame);
   }
   frame();
