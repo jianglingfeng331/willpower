@@ -452,6 +452,44 @@ function setWeight(date, account, weight) {
   saveData(data);
 }
 
+// ========== 杀局弹窗：获取体重变化 ==========
+const KILL_DUEL_KEY = 'diet_pk_kill_duel_';
+
+function getWeightChange(account) {
+  const data = loadData();
+  const dt = today();
+  const todayWeight = data.records[dt] && data.records[dt][account] ? data.records[dt][account].weight : null;
+  if (todayWeight === null || todayWeight === undefined) return null;
+
+  // 收集所有有体重记录的日期，取今日之前最近的那次
+  const dates = [];
+  for (const d in data.records) {
+    if (d >= dt) continue;
+    const rec = data.records[d][account];
+    if (rec && rec.weight !== null && rec.weight !== undefined) {
+      dates.push({ date: d, weight: rec.weight });
+    }
+  }
+  if (dates.length === 0) return null;
+  dates.sort((a, b) => b.date.localeCompare(a.date)); // 降序，取最近
+  return todayWeight - dates[0].weight;
+}
+
+function hasWeightRecordToday(account) {
+  const data = loadData();
+  const dt = today();
+  const rec = data.records[dt] && data.records[dt][account];
+  return !!(rec && rec.weight !== null && rec.weight !== undefined);
+}
+
+function getKillDuelShown(account) {
+  return localStorage.getItem(KILL_DUEL_KEY + today() + '_' + account) === '1';
+}
+
+function markKillDuelShown(account) {
+  localStorage.setItem(KILL_DUEL_KEY + today() + '_' + account, '1');
+}
+
 // ========== 计算今日统计数据 ==========
 function calcTodayStats(date, account) {
   const data = loadData();

@@ -277,6 +277,7 @@ function updateAllUI() {
   updateHomePage();
   updateRecordPage();
   updateMePage();
+  checkKillDuelPopup();
 }
 
 function updateHeader() {
@@ -1125,6 +1126,141 @@ function recordWeight() {
   input.value = '';
   showToast(getDisplayName(currentRole) + ' 体重 ' + val + 'kg 已记录');
   updateAllUI();
+}
+
+// ========== 杀局弹窗：夫妻减肥PK ==========
+// 体重变化分级判定
+function getWeightCategory(diff) {
+  if (diff === null || diff === undefined) return null;
+  if (diff >= 1.0) return 'bigUp';
+  if (diff > 0.3) return 'smallUp';
+  if (diff >= -0.3) return 'flat';
+  if (diff >= -1.0) return 'smallDown';
+  return 'bigDown';
+}
+
+// 胜负判定：赢=1, 输=-1, 平=0
+function duelResult(myDiff, partnerDiff) {
+  if (myDiff === null || partnerDiff === null) return 0;
+  if (myDiff < partnerDiff) return 1;
+  if (myDiff > partnerDiff) return -1;
+  return 0;
+}
+
+// 时段判定
+function getTimePeriod() {
+  const h = new Date().getHours();
+  if (h >= 6 && h < 12) return 'morning';
+  if (h >= 12 && h < 18) return 'afternoon';
+  return 'evening';
+}
+
+// 21种组合模板表
+// 格式: {myCat}_{partnerCat}_{result} → [morning, afternoon, evening] 或字符串
+const KILL_DUEL_TEXTS = {
+  'bigDown_bigDown_win': { morning: '减脂卷王就是你，稳住节奏别被反超！', afternoon: '保持自律，继续拉开和伴侣的差距！', evening: '减重碾压队友，再接再厉守住第一名！' },
+  'bigDown_bigDown_lose': { morning: '被伴侣卷赢了，今天多运动追进度！', afternoon: '戒掉奶茶零食，抓紧缩小差距！', evening: '今日落败，明天严格控饮食争取翻盘！' },
+  'bigDown_bigDown_draw': '双人同步猛掉秤，一起坚持自律！',
+
+  'bigDown_smallDown_win': { morning: '减脂完胜伴侣，千万别偷懒松懈！', afternoon: '坚持低卡饮食，继续扩大领先优势！', evening: '减重优势拉满，继续保持优秀状态！' },
+  'bigDown_flat_win': { morning: '你断层式掉秤，伴侣原地踏步，守住自律！', afternoon: '拒绝加餐，维持你的领先地位！', evening: '你的减脂效果拉满，继续坚持别松懈！' },
+  'bigDown_smallUp_win': { morning: '今日减脂冠军就是你，稳住别反弹！', afternoon: '清淡饮食，牢牢守住领先优势！', evening: '你顺利掉秤对方涨重，再接再厉！' },
+  'bigDown_bigUp_win': { morning: '自律封神完胜对方，千万不能松懈！', afternoon: '坚持运动饮食管控，继续拉开差距！', evening: '遥遥领先队友，保持自律稳住第一！' },
+
+  'smallDown_bigDown_lose': { morning: '被伴侣狠狠内卷，抓紧运动追赶进度！', afternoon: '戒掉零食，努力缩小减重差距！', evening: '今日进度落后，明天一定要反超！' },
+  'smallDown_smallDown_win': { morning: '细微优势在手，管住嘴拉大差距！', afternoon: '细微优势在手，管住嘴拉大差距！', evening: '细微优势在手，管住嘴拉大差距！' },
+  'smallDown_smallDown_lose': { morning: '小幅落败，加大运动量下周翻盘！', afternoon: '小幅落败，加大运动量下周翻盘！', evening: '小幅落败，加大运动量下周翻盘！' },
+  'smallDown_smallDown_draw': '两人稳步变瘦，互相监督共同进步！',
+  'smallDown_flat_win': { morning: '稳步掉秤小赢一局，继续保持！', afternoon: '拒绝高热量零食，别丢掉领先优势！', evening: '小有减重优势，坚持下去效果会更好！' },
+  'smallDown_smallUp_win': { morning: '顺利拿下今日减脂对局，稳住节奏！', afternoon: '饭后散步，持续维持减重优势！', evening: '今日成功胜出，继续坚持自律习惯！' },
+  'smallDown_bigUp_win': { morning: '减脂完胜对方，杜绝夜宵重油食物！', afternoon: '守住减重成果，别让优势消失！', evening: '顺利拿下今日对局，再接再厉！' },
+
+  'flat_bigDown_lose': { morning: '伴侣狂掉秤你停滞，抓紧运动追赶！', afternoon: '少吃加餐，尽快缩小巨大差距！', evening: '彻底落后队友，明日全力发力反超！' },
+  'flat_smallDown_lose': { morning: '别人都在瘦就你停滞，赶紧动起来！', afternoon: '选择低卡饮食，努力跟上队友节奏！', evening: '今日落败，双人互相监督争取翻盘！' },
+  'flat_flat_draw': '双人进入平台期，一起加练打破体重瓶颈！',
+  'flat_smallUp_win': { morning: '守住体重没上涨，清淡饮食稳住优势！', afternoon: '小幅领先，拒绝一切额外加餐！', evening: '体重平稳取胜，继续保持健康饮食习惯！' },
+  'flat_bigUp_win': { morning: '稳稳守住体重优势，别乱吃导致反弹！', afternoon: '对方热量严重超标，你继续保持自律！', evening: '今日减脂成功胜出，再接再厉！' },
+
+  'smallUp_bigDown_lose': { morning: '队友疯狂掉秤你长胖，严格控卡追赶！', afternoon: '戒掉所有零食奶茶，拼命缩小差距！', evening: '差距悬殊，明天一定要全力翻盘！' },
+  'smallUp_smallDown_lose': { morning: '伴侣变瘦你长胖，今天多运动消耗热量！', afternoon: '拒绝加餐，努力内卷追上队友进度！', evening: '今日遗憾落败，清淡饮食准备翻盘！' },
+  'smallUp_flat_lose': { morning: '伴侣稳住体重你长胖，一定要管住嘴！', afternoon: '饭后出门散步，避免热量持续堆积！', evening: '今日落于下风，争取明天把涨的体重减回去！' },
+  'smallUp_smallUp_win': { morning: '小幅取胜，今天少吃碳水夜宵！', afternoon: '小幅取胜，今天少吃碳水夜宵！', evening: '小幅取胜，今天少吃碳水夜宵！' },
+  'smallUp_smallUp_lose': { morning: '今日落败，必须比伴侣更自律！', afternoon: '今日落败，必须比伴侣更自律！', evening: '今日落败，必须比伴侣更自律！' },
+  'smallUp_smallUp_draw': '两人都要管控饮食，一起控制体重！',
+  'smallUp_bigUp_win': { morning: '涨幅远低于伴侣，管住嘴守住小优势！', afternoon: '远离高热量食物，避免体重继续上涨！', evening: '小幅取胜，双人一起开启减脂计划！' },
+
+  'bigUp_bigDown_lose': { morning: '复刻伴侣的减脂食谱，抓紧追赶进度！', afternoon: '停掉所有零食奶茶，加大每日运动量！', evening: '大幅落后队友，靠自律实现逆风翻盘！' },
+  'bigUp_smallDown_lose': { morning: '复刻伴侣的减脂食谱，抓紧追赶进度！', afternoon: '停掉所有零食奶茶，加大每日运动量！', evening: '大幅落后队友，靠自律实现逆风翻盘！' },
+  'bigUp_flat_lose': { morning: '复刻伴侣的减脂食谱，抓紧追赶进度！', afternoon: '停掉所有零食奶茶，加大每日运动量！', evening: '大幅落后队友，靠自律实现逆风翻盘！' },
+  'bigUp_smallUp_lose': { morning: '复刻伴侣的减脂食谱，抓紧追赶进度！', afternoon: '停掉所有零食奶茶，加大每日运动量！', evening: '大幅落后队友，靠自律实现逆风翻盘！' },
+  'bigUp_bigUp_draw': '两人都要管控饮食，一起控制体重！',
+  'bigUp_bigUp_lose': { morning: '今日落败，必须比伴侣更自律！', afternoon: '今日落败，必须比伴侣更自律！', evening: '今日落败，必须比伴侣更自律！' },
+  'bigUp_bigUp_win': { morning: '涨幅远低于伴侣，管住嘴守住小优势！', afternoon: '远离高热量食物，避免体重继续上涨！', evening: '小幅取胜，双人一起开启减脂计划！' },
+
+  // 补充对称情况——大幅上涨对大幅下降（输方文案已在上面）
+  'bigDown_bigDown_all': '双人同步猛掉秤，一起坚持自律！',
+};
+
+function getKillDuelText(myDiff, partnerDiff) {
+  const myCat = getWeightCategory(myDiff);
+  const partnerCat = getWeightCategory(partnerDiff);
+  if (!myCat || !partnerCat) return null;
+
+  const result = duelResult(myDiff, partnerDiff);
+  const resultKey = result === 1 ? 'win' : result === -1 ? 'lose' : 'draw';
+  const period = getTimePeriod();
+  const key = `${myCat}_${partnerCat}_${resultKey}`;
+
+  let template = KILL_DUEL_TEXTS[key];
+  if (!template) return null;
+
+  if (typeof template === 'object' && !Array.isArray(template)) {
+    return template[period] || template['morning'];
+  }
+  return template;
+}
+
+function showKillDuelPopup() {
+  const myDiff = getWeightChange(currentRole);
+  const partnerRole = currentRole === 'husband' ? 'wife' : 'husband';
+  const partnerDiff = getWeightChange(partnerRole);
+  if (myDiff === null || partnerDiff === null) return;
+
+  // 从今日记录中读取当前体重
+  const data = loadData();
+  const dt = today();
+  const todayWeight = (data.records[dt] && data.records[dt][currentRole]) ? data.records[dt][currentRole].weight : null;
+  const currentWeight = todayWeight !== null && todayWeight !== undefined ? todayWeight.toFixed(1) : '--';
+  const diffSign = myDiff > 0 ? '+' : '';
+  const diffText = diffSign + myDiff.toFixed(1);
+  const bodyText = getKillDuelText(myDiff, partnerDiff);
+  if (!bodyText) return;
+
+  document.getElementById('kill-duel-header-weight').textContent = currentWeight + ' kg';
+  document.getElementById('kill-duel-header-diff').textContent = diffText + ' kg';
+  document.getElementById('kill-duel-body').textContent = bodyText;
+
+  // 胜负视觉
+  const result = duelResult(myDiff, partnerDiff);
+  const card = document.getElementById('modal-kill-duel');
+  const rankEl = document.getElementById('kill-duel-rank');
+  card.classList.remove('duel-win', 'duel-lose', 'duel-draw');
+  rankEl.textContent = '';
+  if (result === 1) { card.classList.add('duel-win'); rankEl.textContent = '🏆 恭喜你赢了！'; }
+  else if (result === -1) { card.classList.add('duel-lose'); rankEl.textContent = '💪 今日惜败，明天再战！'; }
+  else { card.classList.add('duel-draw'); rankEl.textContent = '🤝 难分伯仲，继续加油！'; }
+
+  openModal('modal-kill-duel');
+  markKillDuelShown(currentRole);
+}
+
+function checkKillDuelPopup() {
+  if (!currentRole) return;
+  if (getKillDuelShown(currentRole)) return;
+  if (!hasWeightRecordToday(currentRole)) return;
+  const partnerRole = currentRole === 'husband' ? 'wife' : 'husband';
+  if (!hasWeightRecordToday(partnerRole)) return;
+  showKillDuelPopup();
 }
 
 // ========== 我的页面 ==========

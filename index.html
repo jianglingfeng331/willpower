@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="该减肥le">
 <meta name="theme-color" content="#7FC3DD">
-<link rel="stylesheet" href="css/style.css?v=20260622d">
+<link rel="stylesheet" href="css/style.css?v=20260624a">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -906,10 +906,32 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260622b"></script>
+<!-- 杀局弹窗 -->
+<div class="modal-overlay" id="modal-kill-duel">
+  <div class="modal kill-duel-card">
+    <div class="kill-duel-hero">
+      <div class="kill-duel-vs">
+        <span class="kill-duel-icon-h">🔥</span>
+        <span class="kill-duel-vs-text">VS</span>
+        <span class="kill-duel-icon-w">💧</span>
+      </div>
+      <div class="kill-duel-title">燃脂杀局 · 每日PK</div>
+      <div class="kill-duel-stats">
+        <div class="kill-duel-stat-item">你的当前体重：<strong id="kill-duel-header-weight">-- kg</strong></div>
+        <div class="kill-duel-stat-item">今日体重对比上次变化：<strong id="kill-duel-header-diff">-- kg</strong></div>
+      </div>
+      <div class="kill-duel-rank" id="kill-duel-rank"></div>
+    </div>
+    <div class="kill-duel-divider"></div>
+    <div class="kill-duel-body" id="kill-duel-body"></div>
+    <button class="kill-duel-btn" onclick="closeModal('modal-kill-duel')">知道了，继续加油！</button>
+  </div>
+</div>
+
+<script src="js/data.js?v=20260624a"></script>
 <script src="js/mock.js?v=20260622a"></script>
 <script src="js/charts.js?v=20260622a"></script>
-<script src="js/app.js?v=20260622c"></script>
+<script src="js/app.js?v=20260624a"></script>
 </div><!-- end main-content -->
 </body>
 </html>

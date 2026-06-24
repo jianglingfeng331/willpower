@@ -1392,3 +1392,95 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ========== 杀局弹窗 ========== */
+.kill-duel-card {
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  color: #e0e0e0;
+  border-radius: 20px;
+  overflow: hidden;
+  max-width: 380px;
+}
+.kill-duel-hero {
+  padding: 24px 20px 16px;
+  text-align: center;
+}
+.kill-duel-vs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.kill-duel-icon-h, .kill-duel-icon-w {
+  font-size: 28px;
+}
+.kill-duel-vs-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f0a500;
+  letter-spacing: 2px;
+}
+.kill-duel-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+}
+.kill-duel-stats {
+  text-align: left;
+  background: rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.kill-duel-stat-item {
+  font-size: 13px;
+  color: #aab;
+  line-height: 1.8;
+}
+.kill-duel-stat-item strong {
+  color: #fff;
+  font-weight: 600;
+}
+.kill-duel-rank {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  min-height: 24px;
+}
+.kill-duel-win .kill-duel-rank { color: #4caf50; }
+.kill-duel-lose .kill-duel-rank { color: #ff9800; }
+.kill-duel-draw .kill-duel-rank { color: #2196f3; }
+.kill-duel-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f0a500, transparent);
+  margin: 0 20px;
+}
+.kill-duel-body {
+  padding: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.8;
+  text-align: center;
+  color: #e8e8e8;
+}
+.kill-duel-btn {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 8px 20px 24px;
+  padding: 14px;
+  background: linear-gradient(135deg, #f0a500, #e67e00);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+.kill-duel-btn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
