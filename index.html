@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="该减肥le">
 <meta name="theme-color" content="#7FC3DD">
-<link rel="stylesheet" href="css/style.css?v=20260624a">
+<link rel="stylesheet" href="css/style.css?v=20260624b">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -361,27 +361,28 @@
       </div>
     </div>
 
-    <!-- 双人积分总览卡片 -->
+    <!-- 双人体重对比卡片 -->
     <div class="stats-overview" id="stats-overview">
       <div class="so-card so-card-husband">
         <div class="so-card-header">
           <span class="so-avatar"><svg width="18" height="18"><use href="#ic-person"/></svg></span>
           <span class="so-name" id="so-h-name">燃脂侠</span>
         </div>
-        <div class="so-score-row">
-          <span class="so-score-val" id="so-h-score">0</span>
-          <span class="so-score-unit">分</span>
+        <div class="so-weight-row">
+          <span class="so-weight-val" id="so-h-weight">--</span>
+          <span class="so-weight-unit">kg</span>
         </div>
+        <div class="so-wt-change" id="so-h-wtchange">--</div>
         <div class="so-meta">
+          <div class="so-meta-item">
+            <span class="so-meta-label">积分</span>
+            <span class="so-meta-val" id="so-h-score">0</span>
+            <span class="so-meta-unit">分</span>
+          </div>
           <div class="so-meta-item">
             <span class="so-meta-label">净摄入</span>
             <span class="so-meta-val" id="so-h-netcal">0</span>
             <span class="so-meta-unit">kcal</span>
-          </div>
-          <div class="so-meta-item">
-            <span class="so-meta-label">日均</span>
-            <span class="so-meta-val" id="so-h-avg">0</span>
-            <span class="so-meta-unit">分</span>
           </div>
         </div>
       </div>
@@ -395,20 +396,21 @@
           <span class="so-avatar"><svg width="18" height="18"><use href="#ic-person"/></svg></span>
           <span class="so-name" id="so-w-name">甩肉酱</span>
         </div>
-        <div class="so-score-row">
-          <span class="so-score-val" id="so-w-score">0</span>
-          <span class="so-score-unit">分</span>
+        <div class="so-weight-row">
+          <span class="so-weight-val" id="so-w-weight">--</span>
+          <span class="so-weight-unit">kg</span>
         </div>
+        <div class="so-wt-change" id="so-w-wtchange">--</div>
         <div class="so-meta">
+          <div class="so-meta-item">
+            <span class="so-meta-label">积分</span>
+            <span class="so-meta-val" id="so-w-score">0</span>
+            <span class="so-meta-unit">分</span>
+          </div>
           <div class="so-meta-item">
             <span class="so-meta-label">净摄入</span>
             <span class="so-meta-val" id="so-w-netcal">0</span>
             <span class="so-meta-unit">kcal</span>
-          </div>
-          <div class="so-meta-item">
-            <span class="so-meta-label">日均</span>
-            <span class="so-meta-val" id="so-w-avg">0</span>
-            <span class="so-meta-unit">分</span>
           </div>
         </div>
       </div>
@@ -911,9 +913,9 @@
   <div class="modal kill-duel-card">
     <div class="kill-duel-hero">
       <div class="kill-duel-vs">
-        <span class="kill-duel-icon-h">🔥</span>
+        <span class="kill-duel-nick kill-duel-nick-left" id="kill-duel-nick-left">燃脂侠</span>
         <span class="kill-duel-vs-text">VS</span>
-        <span class="kill-duel-icon-w">💧</span>
+        <span class="kill-duel-nick kill-duel-nick-right" id="kill-duel-nick-right">甩肉酱</span>
       </div>
       <div class="kill-duel-title">燃脂杀局 · 每日PK</div>
       <div class="kill-duel-stats">
@@ -931,7 +933,7 @@
 <script src="js/data.js?v=20260624a"></script>
 <script src="js/mock.js?v=20260622a"></script>
 <script src="js/charts.js?v=20260622a"></script>
-<script src="js/app.js?v=20260624a"></script>
+<script src="js/app.js?v=20260624b"></script>
 </div><!-- end main-content -->
 </body>
 </html>

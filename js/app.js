@@ -7,6 +7,7 @@ let selectedFoods = [];     // [{key, name, calories, quantity, unit}]
 let selectedExercise = null;
 let aiRecognitionResults = [];
 let recordDate = today();
+let recordViewRole = null; // 记录页当前查看的角色，切换后可查看对方历史记录
 let mealTab = 'common';    // 'common' | 'camera' | 'manual'
 // ========== 日期导航辅助函数 ==========
 function getRecordDate() { return recordDate; }
@@ -266,7 +267,7 @@ function switchTab(tab) {
   if (tabBtn) tabBtn.classList.add('active');
 
   if (tab === 'home') updateHomePage();
-  if (tab === 'record') updateRecordPage();
+  if (tab === 'record') { recordViewRole = currentRole; updateRecordPage(); }
   if (tab === 'stats') { destroyCharts(); renderAllCharts(); renderWaterStats(); }
   if (tab === 'me') updateMePage();
 }
@@ -444,12 +445,21 @@ function renderScoreDetail() {
   listEl.innerHTML = items.length > 0 ? items.join('') : '<div class="sd-empty">暂无记录</div>';
 }
 
+// ========== 记录页角色切换 ==========
+function toggleRecordViewRole() {
+  const partnerRole = currentRole === 'husband' ? 'wife' : 'husband';
+  recordViewRole = recordViewRole === currentRole ? partnerRole : currentRole;
+  updateRecordPage();
+}
+
 // ========== 记录页更新 ==========
 function updateRecordPage() {
   const dt = getRecordDate();
   const isToday = dt === today();
-  const rec = getDayRecord(dt, currentRole);
-  const stats = calcTodayStats(dt, currentRole);
+  const viewRole = recordViewRole || currentRole; // 兜底
+  const isViewingPartner = viewRole !== currentRole;
+  const rec = getDayRecord(dt, viewRole);
+  const stats = calcTodayStats(dt, viewRole);
 
   // 更新日期导航栏
   const navDisplay = document.getElementById('date-nav-display');
@@ -457,13 +467,23 @@ function updateRecordPage() {
     navDisplay.textContent = isToday ? '今日记录' : formatDateDisplay(dt);
   }
 
-  // 回到今天按钮
+  // 角色切换按钮 + 回到今天按钮
   const navExtra = document.getElementById('date-nav-extra');
   if (navExtra) {
-    navExtra.innerHTML = isToday ? '' : '<span class="date-nav-today" onclick="goToToday()">回到今天</span>';
+    const selfName = getDisplayName(currentRole);
+    const partnerRole = currentRole === 'husband' ? 'wife' : 'husband';
+    const partnerName = getDisplayName(partnerRole);
+    const selfActive = !isViewingPartner ? ' active' : '';
+    const partnerActive = isViewingPartner ? ' active' : '';
+    const todayBtn = isToday ? '' : '<span class="date-nav-today" style="margin-right:8px;" onclick="goToToday()">回到今天</span>';
+    navExtra.innerHTML = todayBtn +
+      '<div class="record-account-switch">' +
+        '<button class="ras-btn' + selfActive + '" onclick="toggleRecordViewRole()">' + selfName + '</button>' +
+        '<button class="ras-btn' + partnerActive + '" onclick="toggleRecordViewRole()">' + partnerName + '</button>' +
+      '</div>';
   }
 
-  // 今日日期汇总
+  // 日期汇总
   const summaryEl = document.getElementById('date-summary');
   if (summaryEl) {
     summaryEl.innerHTML = '<span>摄入 ' + stats.calIn + ' kcal</span>' +
@@ -472,16 +492,19 @@ function updateRecordPage() {
       '<span>得分 ' + stats.score + '</span>';
   }
 
-  // 历史记录隐藏录入按钮和输入区域
+  // 查看对方数据时隐藏录入按钮；历史日期也隐藏
   const recordSection = document.getElementById('tab-record');
   if (recordSection) {
     const btns = recordSection.querySelectorAll('.record-btn, .sync-btn, .water-btn, .weight-input-row');
-    btns.forEach(b => { b.style.display = isToday ? '' : 'none'; });
+    btns.forEach(b => { b.style.display = (isToday && !isViewingPartner) ? '' : 'none'; });
   }
+
+  // 可删除条件：今日 + 查看的是自己
+  const canDelete = isToday && !isViewingPartner;
 
   // 饮食列表
   const mealList = document.getElementById('meal-list');
-  const delMeal = (i) => isToday ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteMeal(${i})"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
+  const delMeal = (i) => canDelete ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteMeal(${i})"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
   mealList.innerHTML = rec.meals.length === 0
     ? '<div style="color:#999;font-size:13px;padding:8px 0;">暂无记录</div>'
     : rec.meals.map((m, i) => `
@@ -496,7 +519,7 @@ function updateRecordPage() {
 
   // 运动列表
   const exList = document.getElementById('exercise-list');
-  const delEx = (i) => isToday ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteExercise(${i})"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
+  const delEx = (i) => canDelete ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteExercise(${i})"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
   exList.innerHTML = rec.exercises.length === 0
     ? '<div style="color:#999;font-size:13px;padding:8px 0;">暂无记录</div>'
     : rec.exercises.map((e, i) => `
@@ -512,7 +535,7 @@ function updateRecordPage() {
   const waterTotal = rec.water.reduce((s, w) => s + w.amount, 0);
   const waterLen = rec.water.length;
   const waterDayLabel = isToday ? '今日' : '当日';
-  const delWater = (ri) => isToday ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteWater(${waterLen - 1 - ri})"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
+  const delWater = (ri) => canDelete ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteWater(${waterLen - 1 - ri})"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
   waterList.innerHTML = rec.water.length === 0
     ? '<div style="color:#999;font-size:13px;padding:8px 0;">暂无记录</div>'
     : `<div style="font-weight:600;color:var(--blue-deep);margin-bottom:4px;">${waterDayLabel}已饮 ${waterTotal}ml ${waterTotal >= 1500 ? '达标' : '(目标1500ml)'}</div>` +
@@ -526,10 +549,10 @@ function updateRecordPage() {
 
   // 体重列表
   const weightList = document.getElementById('weight-list');
-  const info = getAccountInfo(currentRole);
+  const info = getAccountInfo(viewRole);
   const targetWeight = info ? info.targetWeight : '-';
   const weightDayLabel = isToday ? '今日' : '当日';
-  const delWeight = isToday ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteWeight()"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
+  const delWeight = canDelete ? `<span class="record-item-delete" onclick="event.stopPropagation();confirmDeleteWeight()"><svg width="18" height="18"><use href="#ic-close"/></svg></span>` : '';
   weightList.innerHTML = rec.weight !== null
     ? `<div class="record-item"><div class="record-item-left">体重</div><div class="record-item-right">${rec.weight} kg (目标: ${targetWeight}kg)${delWeight}</div></div>`
     : `<div style="color:#999;font-size:13px;padding:8px 0;">${weightDayLabel}未记录</div>`;
@@ -1239,6 +1262,8 @@ function showKillDuelPopup() {
   document.getElementById('kill-duel-header-weight').textContent = currentWeight + ' kg';
   document.getElementById('kill-duel-header-diff').textContent = diffText + ' kg';
   document.getElementById('kill-duel-body').textContent = bodyText;
+  document.getElementById('kill-duel-nick-left').textContent = getDisplayName('husband');
+  document.getElementById('kill-duel-nick-right').textContent = getDisplayName('wife');
 
   // 胜负视觉
   const result = duelResult(myDiff, partnerDiff);

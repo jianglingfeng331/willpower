@@ -914,6 +914,15 @@ function getStatsSummary(account, days) {
   return { totalScore, totalCalIn, totalCalOut, totalNetCal, avgScore, winDays, daysWithWeight, latestWeight, daysData };
 }
 
+// 计算周期内体重变化：取最早一次有体重记录的日期与最后一次的差值
+function computeWeightChange(daysData) {
+  const withWeight = daysData.filter(d => d.hasWeight && d.weight !== null);
+  if (withWeight.length < 2) return null;
+  const first = withWeight[0];
+  const last = withWeight[withWeight.length - 1];
+  return parseFloat((last.weight - first.weight).toFixed(1));
+}
+
 // ========== 跨设备 JSON 文件同步 ==========
 
 // 从 pk-sync.json 加载共享数据（桌面端启动时调用）

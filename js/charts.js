@@ -170,16 +170,27 @@ function renderAllCharts() {
   renderExerciseChart(data);
 }
 
-// ─── 顶部总览卡片 ───
+// ─── 顶部总览卡片（体重优先）───
 function renderOverviewCards(days) {
   const h = getStatsSummary('husband', days);
   const w = getStatsSummary('wife', days);
+  const periodLabel = days <= 7 ? '本周' : '本月';
 
   // 名称
   document.getElementById('so-h-name').textContent = getDisplayName('husband');
   document.getElementById('so-w-name').textContent = getDisplayName('wife');
 
-  // 分数
+  // 体重（主指标）
+  document.getElementById('so-h-weight').textContent = h.latestWeight !== null ? h.latestWeight : '--';
+  document.getElementById('so-w-weight').textContent = w.latestWeight !== null ? w.latestWeight : '--';
+
+  // 体重变化
+  const hWtChg = computeWeightChange(h.daysData);
+  const wWtChg = computeWeightChange(w.daysData);
+  document.getElementById('so-h-wtchange').innerHTML = formatWtChange(hWtChg, periodLabel);
+  document.getElementById('so-w-wtchange').innerHTML = formatWtChange(wWtChg, periodLabel);
+
+  // 积分（次要）
   document.getElementById('so-h-score').textContent = h.totalScore;
   document.getElementById('so-w-score').textContent = w.totalScore;
 
@@ -187,30 +198,57 @@ function renderOverviewCards(days) {
   document.getElementById('so-h-netcal').textContent = h.totalNetCal;
   document.getElementById('so-w-netcal').textContent = w.totalNetCal;
 
-  // 日均
-  document.getElementById('so-h-avg').textContent = h.avgScore;
-  document.getElementById('so-w-avg').textContent = w.avgScore;
-
-  // VS 胜负
-  const diff = h.totalScore - w.totalScore;
+  // VS 胜负（基于体重变化，降得多的领先）
   const vsLeadEl = document.getElementById('so-vs-lead');
   const vsGapEl = document.getElementById('so-vs-gap');
-  if (diff > 0) {
-    vsLeadEl.textContent = getDisplayName('husband');
-    vsGapEl.textContent = '+' + diff + ' 分';
-  } else if (diff < 0) {
-    vsLeadEl.textContent = getDisplayName('wife');
-    vsGapEl.textContent = '+' + Math.abs(diff) + ' 分';
-  } else {
+  const hHas = hWtChg !== null;
+  const wHas = wWtChg !== null;
+
+  if (!hHas && !wHas) {
     vsLeadEl.textContent = '—';
     vsGapEl.textContent = '—';
+  } else if (!hHas) {
+    vsLeadEl.textContent = getDisplayName('wife');
+    vsGapEl.innerHTML = formatWtChangeSmall(wWtChg);
+  } else if (!wHas) {
+    vsLeadEl.textContent = getDisplayName('husband');
+    vsGapEl.innerHTML = formatWtChangeSmall(hWtChg);
+  } else if (hWtChg < wWtChg) {
+    vsLeadEl.textContent = getDisplayName('husband');
+    vsGapEl.textContent = '多减 ' + (wWtChg - hWtChg).toFixed(1) + ' kg';
+  } else if (wWtChg < hWtChg) {
+    vsLeadEl.textContent = getDisplayName('wife');
+    vsGapEl.textContent = '多减 ' + (hWtChg - wWtChg).toFixed(1) + ' kg';
+  } else {
+    vsLeadEl.textContent = '—';
+    vsGapEl.textContent = '持平';
   }
 
-  // 高亮领先方卡片
+  // 高亮领先方卡片（体重减更多的亮）
   const cardH = document.querySelector('.so-card-husband');
   const cardW = document.querySelector('.so-card-wife');
-  cardH.style.boxShadow = diff > 0 ? '0 0 0 2px rgba(212,165,116,0.4), 0 4px 16px rgba(0,0,0,0.06)' : 'none';
-  cardW.style.boxShadow = diff < 0 ? '0 0 0 2px rgba(139,94,60,0.35), 0 4px 16px rgba(0,0,0,0.06)' : 'none';
+  const hLeads = hHas && wHas && hWtChg < wWtChg;
+  const wLeads = hHas && wHas && wWtChg < hWtChg;
+  cardH.style.boxShadow = hLeads ? '0 0 0 2px rgba(212,165,116,0.4), 0 4px 16px rgba(0,0,0,0.06)' : 'none';
+  cardW.style.boxShadow = wLeads ? '0 0 0 2px rgba(139,94,60,0.35), 0 4px 16px rgba(0,0,0,0.06)' : 'none';
+}
+
+// 格式化体重变化（卡片内显示）
+function formatWtChange(change, period) {
+  if (change === null) return '<span class="so-wt-flat">' + period + ' 无记录</span>';
+  const abs = Math.abs(change).toFixed(1);
+  if (change < -0.05) return '<span class="so-wt-down">' + period + ' ↓' + abs + 'kg</span>';
+  if (change > 0.05) return '<span class="so-wt-up">' + period + ' ↑' + abs + 'kg</span>';
+  return '<span class="so-wt-flat">' + period + ' 持平</span>';
+}
+
+// 格式化体重变化（VS 区小字显示）
+function formatWtChangeSmall(change) {
+  if (change === null) return '—';
+  const abs = Math.abs(change).toFixed(1);
+  if (change < -0.05) return '↓' + abs + 'kg';
+  if (change > 0.05) return '↑' + abs + 'kg';
+  return '持平';
 }
 
 // ─── 图表1：积分趋势 (line + 渐变面积) ───
