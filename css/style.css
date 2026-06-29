@@ -585,12 +585,17 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   .auth-overlay { padding: 16px; }
   .auth-logo { width: 120px; height: 120px; margin-bottom: 16px; }
   .auth-card { width: 90vw; max-width: none; padding: 24px 16px; }
+  .tab-bar { gap: 8px; padding: 8px 12px; }
+  .tab-item { padding: 6px 10px; }
 }
 
 @media (max-width:360px) {
   .card-stats { grid-template-columns:repeat(2,1fr); }
   .water-buttons { grid-template-columns:repeat(2,1fr); }
   .food-grid, .exercise-grid { grid-template-columns:repeat(3,1fr); }
+  .tab-bar { gap: 4px; padding: 8px 6px; }
+  .tab-item { padding: 6px 6px; }
+  .tab-item .tab-label { font-size: 9px; }
 }
 
 /* ========== Utilities ========== */
