@@ -250,7 +250,7 @@ function getDefaultAccounts() {
 function getDefaultData() {
   return {
     records: {},          // { "YYYY-MM-DD": { husband: {...}, wife: {...} } }
-    pool: null,           // { startDate, endDate, husbandAmount, wifeAmount, status }
+    pkRounds: [],         // PK回合数组
     currentAccount: 'husband'
   };
 }
@@ -259,7 +259,41 @@ function getDefaultData() {
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const data = JSON.parse(raw);
+      // 迁移旧 pool 字段为 pkRounds
+      if (data.pool) {
+        const oldPool = data.pool;
+        const oldStart = new Date(oldPool.startDate);
+        const oldEnd = new Date(oldPool.endDate);
+        const oldDays = Math.round((oldEnd - oldStart) / 86400000) + 1;
+        const round = {
+          id: 'pk_migrated_' + oldPool.startDate,
+          initiator: 'husband',
+          startDate: oldPool.startDate,
+          endDate: oldPool.endDate,
+          durationDays: oldDays,
+          items: ['score'],
+          status: oldPool.status === 'completed' ? 'completed' : 'active',
+          startWeight: { husband: null, wife: null },
+          endWeight: { husband: null, wife: null },
+          result: {
+            score: {
+              winner: oldPool.winner || null,
+              hTotal: oldPool.finalHScore || 0,
+              wTotal: oldPool.finalWScore || 0
+            },
+            weight: { winner: null, hPct: 0, wPct: 0, hKg: 0, wKg: 0 },
+            overall: oldPool.winner || null
+          },
+          settlementViewed: oldPool.status === 'completed'
+        };
+        data.pkRounds = [round];
+        delete data.pool;
+        saveData(data);
+      }
+      return data;
+    }
   } catch (e) {}
   return getDefaultData();
 }
@@ -495,9 +529,13 @@ function calcTodayStats(date, account) {
   const data = loadData();
   const rec = (data.records[date] && data.records[date][account]) || { meals: [], water: [], exercises: [], weight: null };
 
-  const calIn = rec.meals.reduce((s, m) => s + (m.totalCalories || m.calories), 0);
-  const calOut = rec.exercises.reduce((s, e) => s + e.calories, 0);
-  const waterTotal = rec.water.reduce((s, w) => s + w.amount, 0);
+  const meals = rec.meals || [];
+  const exercises = rec.exercises || [];
+  const water = rec.water || [];
+
+  const calIn = meals.reduce((s, m) => s + (m.totalCalories || m.calories), 0);
+  const calOut = exercises.reduce((s, e) => s + e.calories, 0);
+  const waterTotal = water.reduce((s, w) => s + w.amount, 0);
 
   const accounts = loadAccounts();
   const budget = accounts[account] ? accounts[account].dailyCalorieBudget : 2000;
@@ -507,7 +545,7 @@ function calcTodayStats(date, account) {
   // 计算积分
   let score = 0;
   if (waterTotal >= 1500) score += 10;
-  if (rec.meals.length >= 2) score += 15;
+  if (meals.length >= 2) score += 15;
   if (calOut >= 200) score += 15;
   if (rec.weight !== null) score += 5;
   if (netCal <= budget) score += 5;
@@ -515,8 +553,8 @@ function calcTodayStats(date, account) {
   return {
     calIn, calOut, waterTotal, netCal, remain, budget,
     score,
-    mealCount: rec.meals.length,
-    exerciseCount: rec.exercises.length,
+    mealCount: meals.length,
+    exerciseCount: exercises.length,
     hasWeight: rec.weight !== null,
     weight: rec.weight
   };
@@ -527,9 +565,13 @@ function getScoreDetail(date, account) {
   const data = loadData();
   const rec = (data.records[date] && data.records[date][account]) || { meals: [], water: [], exercises: [], weight: null };
 
-  const waterTotal = rec.water.reduce((s, w) => s + w.amount, 0);
-  const calOut = rec.exercises.reduce((s, e) => s + e.calories, 0);
-  const calIn = rec.meals.reduce((s, m) => s + (m.totalCalories || m.calories), 0);
+  const meals = rec.meals || [];
+  const exercises = rec.exercises || [];
+  const water = rec.water || [];
+
+  const waterTotal = water.reduce((s, w) => s + w.amount, 0);
+  const calOut = exercises.reduce((s, e) => s + e.calories, 0);
+  const calIn = meals.reduce((s, m) => s + (m.totalCalories || m.calories), 0);
   const netCal = calIn - calOut;
   const accounts = loadAccounts();
   const budget = accounts[account] ? accounts[account].dailyCalorieBudget : 2000;
@@ -601,18 +643,140 @@ function getRecentDaysData(account, days) {
   return result;
 }
 
-// ========== 奖金池操作 ==========
-function getPool() {
-  const data = loadData();
-  return data.pool;
+// ========== PK回合操作 ==========
+function getPkRounds() {
+  return loadData().pkRounds || [];
 }
 
-function setPool(pool) {
+function savePkRound(round) {
   const data = loadData();
-  data.pool = pool;
+  if (!data.pkRounds) data.pkRounds = [];
+  data.pkRounds.push(round);
   saveData(data);
 }
 
+function updatePkRound(roundId, updates) {
+  const data = loadData();
+  if (!data.pkRounds) return;
+  const idx = data.pkRounds.findIndex(r => r.id === roundId);
+  if (idx === -1) return;
+  data.pkRounds[idx] = { ...data.pkRounds[idx], ...updates };
+  saveData(data);
+}
+
+function getActivePkRound() {
+  const rounds = getPkRounds();
+  return rounds.find(r => r.status === 'active') || null;
+}
+
+function calcWeightPct(startWeight, endWeight) {
+  if (!startWeight || !endWeight || startWeight === 0) return 0;
+  return ((startWeight - endWeight) / startWeight) * 100;
+}
+
+function formatWeightPct(pct) {
+  return (pct >= 0 ? '↓' : '↑') + Math.abs(pct).toFixed(1) + '%';
+}
+
+function getWeightForDate(date, account) {
+  const data = loadData();
+  const rec = data.records[date] && data.records[date][account];
+  return (rec && rec.weight !== null && rec.weight !== undefined) ? rec.weight : null;
+}
+
+function checkAutoSettle() {
+  const rounds = getPkRounds();
+  const todayDate = today();
+  const unsettled = [];
+  rounds.forEach(r => {
+    if (r.status === 'active' && r.endDate < todayDate) {
+      settlePkRound(r);
+      const updated = getPkRounds().find(x => x.id === r.id);
+      if (updated && updated.status === 'completed' && !updated.settlementViewed) {
+        unsettled.push(updated);
+      }
+    }
+  });
+  return unsettled;
+}
+
+function settlePkRound(round) {
+  const data = loadData();
+  const endDate = round.endDate;
+
+  // 积分PK
+  if (round.items.includes('score')) {
+    const { hTotal, wTotal } = getPoolScores(round.startDate, endDate);
+    round.result.score = {
+      winner: hTotal > wTotal ? 'husband' : (wTotal > hTotal ? 'wife' : null),
+      hTotal, wTotal
+    };
+  }
+
+  // 体重PK
+  if (round.items.includes('weight')) {
+    // 取期末体重：最后一天有记录的值，无则倒序找最近一次
+    function findEndWeight(account) {
+      let wt = getWeightForDate(endDate, account);
+      if (wt !== null) return wt;
+      // 倒序往前找
+      const allDates = Object.keys(data.records).sort((a, b) => b.localeCompare(a));
+      for (const d of allDates) {
+        if (d > endDate) continue;
+        if (d < round.startDate) break;
+        wt = getWeightForDate(d, account);
+        if (wt !== null) return wt;
+      }
+      return null;
+    }
+
+    const hEndWt = findEndWeight('husband');
+    const wEndWt = findEndWeight('wife');
+    round.endWeight = { husband: hEndWt, wife: wEndWt };
+
+    const hPct = round.startWeight.husband && hEndWt ? calcWeightPct(round.startWeight.husband, hEndWt) : 0;
+    const wPct = round.startWeight.wife && wEndWt ? calcWeightPct(round.startWeight.wife, wEndWt) : 0;
+    const hKg = round.startWeight.husband && hEndWt ? round.startWeight.husband - hEndWt : 0;
+    const wKg = round.startWeight.wife && wEndWt ? round.startWeight.wife - wEndWt : 0;
+
+    // 使用 ±0.05 阈值判定
+    const hGreater = hPct > wPct + 0.05;
+    const wGreater = wPct > hPct + 0.05;
+
+    round.result.weight = {
+      winner: hGreater ? 'husband' : (wGreater ? 'wife' : null),
+      hPct, wPct, hKg, wKg
+    };
+  }
+
+  // 综合判定
+  const hasScore = round.items.includes('score');
+  const hasWeight = round.items.includes('weight');
+  if (hasScore && hasWeight) {
+    const sWin = round.result.score.winner;
+    const wWin = round.result.weight.winner;
+    // 9种情况判定
+    if (sWin === wWin) {
+      round.result.overall = sWin || 'tie'; // 两胜同方 或 两平
+    } else if (sWin && !wWin) {
+      round.result.overall = sWin; // 一胜一平
+    } else if (!sWin && wWin) {
+      round.result.overall = wWin; // 一平一胜
+    } else {
+      round.result.overall = 'tie'; // 各胜一项
+    }
+  } else if (hasScore) {
+    round.result.overall = round.result.score.winner || 'tie';
+  } else {
+    round.result.overall = round.result.weight.winner || 'tie';
+  }
+
+  round.status = 'completed';
+  round.settlementViewed = false;
+  updatePkRound(round.id, round);
+}
+
+// 获取时间段内累计积分
 function getPoolScores(startDate, endDate) {
   const data = loadData();
   const hScores = [];

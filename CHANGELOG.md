@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 4699a67f42add1cd3343bb390e6f0373_d61b32146f7411f195af5254002afed2
+    ReservedCode1: 8+wlMwNr7S/ZbdZVnxEZ9Jt5itWcZFGi5umdJoS6qwZ0Zp6qBuwqPFT/LLzBcUfSf+s7VERw3voDd6il4ELPPIu11P3xqUELL4EiUD81zcfSqoovYR3tmE2fmGOckv5olyHQoxY8Dy8yhVEVfmWyD5kMT3MaqFegNS/ZnAfepF+oPaCxcpBDlM6Sm98=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 4699a67f42add1cd3343bb390e6f0373_d61b32146f7411f195af5254002afed2
+    ReservedCode2: 8+wlMwNr7S/ZbdZVnxEZ9Jt5itWcZFGi5umdJoS6qwZ0Zp6qBuwqPFT/LLzBcUfSf+s7VERw3voDd6il4ELPPIu11P3xqUELL4EiUD81zcfSqoovYR3tmE2fmGOckv5olyHQoxY8Dy8yhVEVfmWyD5kMT3MaqFegNS/ZnAfepF+oPaCxcpBDlM6Sm98=
+---
+
 # 该减肥le 更新日志
 
 ## 2026-06-24
@@ -29,3 +40,4 @@
 - `data.js`：新增 `computeWeightChange()` 函数，基于周期内首末次体重记录计算变化
 - `charts.js`：新增 `formatWtChange()` / `formatWtChangeSmall()`，重写 `renderOverviewCards()`
 - `app.js`：新增 `recordViewRole` 变量和 `toggleRecordViewRole()` 函数
+*（内容由AI生成，仅供参考）*

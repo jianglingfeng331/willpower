@@ -525,7 +525,7 @@ body {
 /* ========== 弹窗通用 ========== */
 .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.40); z-index:200; display:none; justify-content:center; align-items:center; backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); touch-action:none; }
 .modal-overlay.show { display:flex; }
-.modal { width:100%; max-width:430px; max-height:80vh; background:var(--card-bg); border-radius:var(--radius-lg); overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; box-shadow:var(--shadow-modal); animation:modalIn 0.3s var(--ease); }
+.modal, .modal-content { width:100%; max-width:430px; max-height:80vh; background:var(--card-bg); border-radius:var(--radius-lg); overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; box-shadow:var(--shadow-modal); animation:modalIn 0.3s var(--ease); }
 @keyframes modalIn { from{transform:scale(0.92);opacity:0;} to{transform:scale(1);opacity:1;} }
 .modal-header { display:flex; justify-content:space-between; align-items:center; padding:20px; font-weight:700; font-size:18px; color:var(--text-primary); border-bottom:1px solid var(--divider); position:sticky; top:0; background:var(--card-bg); z-index:1; }
 .modal-header span { display:flex; align-items:center; gap:8px; }
@@ -1510,3 +1510,47 @@ body {
   transform: scale(0.97);
   opacity: 0.9;
 }
+
+/* ========== PK发起弹窗 ========== */
+.pk-items-check { display: flex; gap: 16px; }
+.pk-check-item { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; color: var(--text-primary); }
+.pk-check-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--btn-primary); }
+.pk-duration-pills { display: flex; gap: 8px; margin-top: 8px; }
+.pk-dur-btn { flex: 1; padding: 10px; border: 2px solid var(--border-soft); border-radius: var(--radius-sm); background: var(--card-bg); font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+.pk-dur-btn.active { background: var(--btn-primary); color: #fff; border-color: var(--btn-primary); }
+.pk-formula-note { margin-top: 16px; padding: 12px; background: #FFF9F0; border: 1px solid rgba(212,165,116,0.2); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+.pk-formula-title { font-weight: 600; color: var(--btn-primary); margin-bottom: 4px; }
+.pk-formula { font-family: monospace; font-weight: 600; color: var(--text-primary); margin: 4px 0; }
+
+/* ========== PK进行中卡片 ========== */
+.pk-active-card { background: linear-gradient(135deg, #FDF6EE, #F5EDE3); border: 1px solid rgba(212,165,116,0.25); border-radius: var(--radius-lg); padding: 14px; }
+.pk-active-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.pk-active-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #4CAF50; color: #fff; }
+.pk-active-items { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.pk-active-remain { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--btn-primary); }
+.pk-active-period { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+.pk-progress { height: 6px; background: rgba(139,94,60,0.1); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
+.pk-progress-fill { height: 100%; background: linear-gradient(90deg, #D4A574, #8B5E3C); border-radius: 3px; transition: width 0.5s; }
+.pk-lead-row { font-size: 13px; color: var(--text-primary); margin-bottom: 2px; }
+.pk-lead-label { color: var(--text-muted); }
+
+/* ========== PK结算弹窗 ========== */
+.pk-settle-modal { max-width: 360px; }
+.pk-settle-period { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 12px; }
+.pk-settle-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+.pk-settle-title.win { color: #4CAF50; }
+.pk-settle-title.tie { color: var(--text-primary); }
+.pk-settle-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+.pk-settle-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.pk-settle-val { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.pk-settle-note { margin-top: 10px; padding: 10px; background: #FFF9F0; border-radius: var(--radius-sm); font-size: 11px; color: var(--text-muted); line-height: 1.8; }
+.pk-settle-overall { text-align: center; font-size: 16px; font-weight: 700; color: var(--btn-primary); margin-top: 12px; }
+
+/* ========== PK历史 ========== */
+.pk-history-item { padding: 14px; border-bottom: 1px solid var(--border-soft); }
+.pk-history-item:last-child { border-bottom: none; }
+.pk-history-top { display: flex; align-items: center; gap: 8px; }
+.pk-history-period { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.pk-history-items { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: rgba(139,94,60,0.1); color: var(--btn-primary); }
+.pk-history-winner { margin-left: auto; font-size: 13px; font-weight: 600; }
+.pk-history-detail { margin-top: 6px; font-size: 12px; color: var(--text-muted); line-height: 1.6; }

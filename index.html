@@ -528,25 +528,21 @@
       </div>
     </div>
 
-    <div class="settings-card">
-      <div class="settings-title"><svg class="ic-inline" width="18" height="18"><use href="#ic-pool"/></svg> 虚拟奖金池</div>
-      <div class="settings-row">
-        <span>状态</span>
-        <span class="settings-val" id="pool-status">未开启</span>
+    <div class="settings-card" id="pk-card">
+      <div class="settings-title">
+        <svg class="ic-inline" width="18" height="18"><use href="#ic-pool"/></svg> 自律大PK
       </div>
-      <div class="settings-row">
-        <span>时段</span>
-        <span class="settings-val" id="pool-period-display">-</span>
+      <div id="pk-status-area">
+        <!-- JS动态渲染 -->
       </div>
-      <div class="settings-row">
-        <span id="pool-h-label">燃脂侠投入</span>
-        <span class="settings-val" id="pool-husband">0 元</span>
+    </div>
+
+    <div class="settings-card" id="pk-history-card">
+      <div class="settings-title" style="cursor:pointer;" onclick="showPkHistory()">
+        <svg class="ic-inline" width="18" height="18"><use href="#ic-list"/></svg> PK历史
+        <span style="margin-left:auto;color:var(--text-muted);">查看全部 →</span>
       </div>
-      <div class="settings-row">
-        <span id="pool-w-label">甩肉酱投入</span>
-        <span class="settings-val" id="pool-wife">0 元</span>
-      </div>
-      <button class="record-btn" onclick="openPoolModal()">管理奖金池</button>
+      <div id="pk-history-inline"></div>
     </div>
 
     <div class="settings-card">
@@ -771,22 +767,60 @@
   </div>
 </div>
 
-<!-- ========== 弹窗：奖金池管理 ========== -->
-<div class="modal-overlay" id="modal-pool">
-  <div class="modal">
+<!-- ========== 弹窗：PK发起 ========== -->
+<div class="modal-overlay" id="modal-pk-start">
+  <div class="modal-content">
     <div class="modal-header">
-      <span><svg class="ic-inline" width="20" height="20"><use href="#ic-pool"/></svg> 奖金池管理</span>
-      <span class="modal-close" onclick="closeModal('modal-pool')"><svg width="22" height="22"><use href="#ic-close"/></svg></span>
+      <span><svg class="ic-inline" width="20" height="20"><use href="#ic-pool"/></svg> 发起自律大PK</span>
+      <span class="modal-close" onclick="closeModal('modal-pk-start')"><svg width="22" height="22"><use href="#ic-close"/></svg></span>
     </div>
     <div class="modal-body">
-      <div class="modal-label">对赌时段（天）</div>
-      <input type="number" id="pool-days" class="settings-input" placeholder="如 7 天" inputmode="numeric" min="1" value="7" style="width:100%;box-sizing:border-box;">
-      <div class="modal-label" id="pool-modal-h-label" style="margin-top:12px;">燃脂侠投入金额（虚拟）</div>
-      <input type="number" id="pool-husband-amount" class="settings-input" placeholder="元" inputmode="numeric" min="0" value="100" style="width:100%;box-sizing:border-box;">
-      <div class="modal-label" id="pool-modal-w-label" style="margin-top:12px;">甩肉酱投入金额（虚拟）</div>
-      <input type="number" id="pool-wife-amount" class="settings-input" placeholder="元" inputmode="numeric" min="0" value="100" style="width:100%;box-sizing:border-box;">
-      <button class="modal-btn" onclick="startPool()">开启奖金池</button>
-      <button class="modal-btn danger-btn" style="margin-top:8px;" onclick="settlePool()">结算奖金池</button>
+      <div class="modal-label">PK项目（至少选一项）</div>
+      <div class="pk-items-check">
+        <label class="pk-check-item"><input type="checkbox" id="pk-item-score" checked onchange="updatePkStartBtn()"> 积分PK</label>
+        <label class="pk-check-item"><input type="checkbox" id="pk-item-weight" onchange="updatePkStartBtn()"> 体重PK</label>
+      </div>
+      <div class="modal-label" style="margin-top:16px;">PK时长</div>
+      <div class="pk-duration-pills">
+        <button class="pk-dur-btn active" data-days="7" onclick="selectPkDuration(7, this)">7天</button>
+        <button class="pk-dur-btn" data-days="14" onclick="selectPkDuration(14, this)">14天</button>
+        <button class="pk-dur-btn" data-days="30" onclick="selectPkDuration(30, this)">30天</button>
+      </div>
+      <div class="modal-label" style="margin-top:16px;">起始日期</div>
+      <input type="date" id="pk-start-date" class="settings-input" style="width:100%;box-sizing:border-box;">
+      <div class="pk-formula-note">
+        <div class="pk-formula-title">体重PK换算说明</div>
+        <div>由于双方体重基数不同，不直接比较下降公斤数，而是比较「体重下降百分比」。</div>
+        <div class="pk-formula">公式：(期初体重 − 期末体重) ÷ 期初体重 × 100%</div>
+        <div>示例：男方 80→78kg = 下降 2.5%，女方 55→53.5kg = 下降 2.7%，女方胜。</div>
+      </div>
+      <button class="modal-btn" id="pk-start-btn" onclick="startPkRound()">发起挑战</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 弹窗：PK结算 ========== -->
+<div class="modal-overlay" id="modal-pk-settle">
+  <div class="modal-content pk-settle-modal">
+    <div class="modal-header">
+      <span><svg class="ic-inline" width="20" height="20"><use href="#ic-trophy"/></svg> PK结算</span>
+      <span class="modal-close" onclick="closePkSettle()"><svg width="22" height="22"><use href="#ic-close"/></svg></span>
+    </div>
+    <div class="modal-body" id="pk-settle-body">
+      <!-- JS动态渲染 -->
+    </div>
+  </div>
+</div>
+
+<!-- ========== 弹窗：PK历史 ========== -->
+<div class="modal-overlay" id="modal-pk-history">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span><svg class="ic-inline" width="20" height="20"><use href="#ic-list"/></svg> PK历史</span>
+      <span class="modal-close" onclick="closeModal('modal-pk-history')"><svg width="22" height="22"><use href="#ic-close"/></svg></span>
+    </div>
+    <div class="modal-body" id="pk-history-list">
+      <!-- JS动态渲染 -->
     </div>
   </div>
 </div>

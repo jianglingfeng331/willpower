@@ -123,6 +123,7 @@ function doLogin() {
     initRandomAnimal();
     showToast('欢迎，' + getDisplayName(currentRole));
     checkFirstTimeSetup();
+    checkPkAutoSettle();
   } else {
     // 调试：输出详细诊断信息
     const users = loadUsers();
@@ -279,6 +280,7 @@ function updateAllUI() {
   updateRecordPage();
   updateMePage();
   checkKillDuelPopup();
+  checkPkAutoSettle();
 }
 
 function updateHeader() {
@@ -322,32 +324,35 @@ function updateHomePage() {
 }
 
 function updatePKBar() {
-  const pool = getPool();
   const pkBar = document.getElementById('pk-bar');
   const pkPeriod = document.getElementById('pk-period');
   const pkFillH = document.getElementById('pk-fill-husband');
   const pkHScore = document.getElementById('pk-h-score');
   const pkWScore = document.getElementById('pk-w-score');
 
-  if (!pool || pool.status !== 'active') {
-    pkFillH.style.width = '50%';
-    pkHScore.textContent = '-';
-    pkWScore.textContent = '-';
-    pkPeriod.textContent = '未开启奖金池';
+  const active = getActivePkRound();
+
+  if (!active || !active.items.includes('score')) {
+    // 无进行中PK或PK不含积分 → 显示默认条
+    if (pkFillH) pkFillH.style.width = '50%';
+    if (pkHScore) pkHScore.textContent = '-';
+    if (pkWScore) pkWScore.textContent = '-';
+    if (pkPeriod) pkPeriod.textContent = '未开启PK';
     return;
   }
 
-  const { hTotal, wTotal } = getPoolScores(pool.startDate, pool.endDate);
+  const todayDate = today();
+  const { hTotal, wTotal } = getPoolScores(active.startDate, todayDate);
   const total = hTotal + wTotal || 1;
   const hPct = Math.round((hTotal / total) * 100);
 
-  pkFillH.style.width = hPct + '%';
-  pkHScore.textContent = hTotal;
-  pkWScore.textContent = wTotal;
+  if (pkFillH) pkFillH.style.width = hPct + '%';
+  if (pkHScore) pkHScore.textContent = hTotal;
+  if (pkWScore) pkWScore.textContent = wTotal;
 
-  const start = new Date(pool.startDate);
-  const end = new Date(pool.endDate);
-  pkPeriod.textContent = formatDateShort(start) + ' - ' + formatDateShort(end);
+  const start = new Date(active.startDate);
+  const end = new Date(active.endDate);
+  if (pkPeriod) pkPeriod.textContent = formatDateShort(start) + ' - ' + formatDateShort(end);
 }
 
 function formatDateShort(d) {
@@ -1331,21 +1336,9 @@ function updateMePage() {
   document.getElementById('ai-api-key').value = aiConfig.apiKey || '';
   document.getElementById('ai-model').value = aiConfig.model || '';
 
-  // 奖金池信息
-  updateElement('pool-h-label', getDisplayName('husband') + '投入');
-  updateElement('pool-w-label', getDisplayName('wife') + '投入');
-  const pool = getPool();
-  if (pool) {
-    updateElement('pool-status', pool.status === 'active' ? '进行中' : '已结算');
-    updateElement('pool-period-display', pool.startDate + ' ~ ' + pool.endDate);
-    updateElement('pool-husband', pool.husbandAmount + ' 元');
-    updateElement('pool-wife', pool.wifeAmount + ' 元');
-  } else {
-    updateElement('pool-status', '未开启');
-    updateElement('pool-period-display', '-');
-    updateElement('pool-husband', '0 元');
-    updateElement('pool-wife', '0 元');
-  }
+  // 自律大PK卡片
+  renderPkCard();
+  renderPkHistoryInline();
 }
 
 function saveCalorieBudget() {
@@ -1532,81 +1525,291 @@ function saveAccountSettings() {
   updateAllUI();
 }
 
-// ========== 奖金池 ==========
-function openPoolModal() {
-  // 更新弹窗标签为当前昵称
-  updateElement('pool-modal-h-label', getDisplayName('husband') + '投入金额（虚拟）');
-  updateElement('pool-modal-w-label', getDisplayName('wife') + '投入金额（虚拟）');
-  const pool = getPool();
-  if (pool) {
-    document.getElementById('pool-days').value = 7;
-    document.getElementById('pool-husband-amount').value = pool.husbandAmount || 100;
-    document.getElementById('pool-wife-amount').value = pool.wifeAmount || 100;
-  }
-  openModal('modal-pool');
+// ========== PK模块 ==========
+
+let pkDuration = 7;
+let pkItems = ["score"];
+
+function selectPkDuration(days, btn) {
+  pkDuration = days;
+  document.querySelectorAll('.pk-dur-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
-function startPool() {
-  const days = parseInt(document.getElementById('pool-days').value) || 7;
-  const husbandAmount = parseInt(document.getElementById('pool-husband-amount').value) || 0;
-  const wifeAmount = parseInt(document.getElementById('pool-wife-amount').value) || 0;
+function updatePkStartBtn() {
+  const scoreChecked = document.getElementById('pk-item-score').checked;
+  const weightChecked = document.getElementById('pk-item-weight').checked;
+  const btn = document.getElementById('pk-start-btn');
+  btn.disabled = !scoreChecked && !weightChecked;
+}
 
-  if (husbandAmount <= 0 || wifeAmount <= 0) {
-    showToast('请输入有效的投入金额');
-    return;
-  }
+function openPkStartModal() {
+  const active = getActivePkRound();
+  if (active) { showToast('已有进行中的PK，请等待结束后再发起'); return; }
+  document.getElementById('pk-start-date').value = today();
+  document.getElementById('pk-item-score').checked = true;
+  document.getElementById('pk-item-weight').checked = false;
+  document.querySelectorAll('.pk-dur-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.pk-dur-btn[data-days="7"]').classList.add('active');
+  pkDuration = 7;
+  updatePkStartBtn();
+  openModal('modal-pk-start');
+}
 
-  const startDate = today();
-  const end = new Date();
-  end.setDate(end.getDate() + days - 1);
+function startPkRound() {
+  const scoreChecked = document.getElementById('pk-item-score').checked;
+  const weightChecked = document.getElementById('pk-item-weight').checked;
+  if (!scoreChecked && !weightChecked) { showToast('请至少选择一项PK'); return; }
+
+  const items = [];
+  if (scoreChecked) items.push('score');
+  if (weightChecked) items.push('weight');
+
+  const startDate = document.getElementById('pk-start-date').value || today();
+  const end = new Date(startDate);
+  end.setDate(end.getDate() + pkDuration - 1);
   const endDate = dateStr(end);
 
-  setPool({
-    startDate,
-    endDate,
-    husbandAmount,
-    wifeAmount,
-    status: 'active'
-  });
-
-  closeModal('modal-pool');
-  showToast('奖金池已开启！总奖池 ' + (husbandAmount + wifeAmount) + ' 元');
-  updateAllUI();
-}
-
-function settlePool() {
-  const pool = getPool();
-  if (!pool || pool.status !== 'active') {
-    showToast('没有进行中的奖金池');
+  const hStartWt = getWeightForDate(startDate, 'husband');
+  const wStartWt = getWeightForDate(startDate, 'wife');
+  if (weightChecked && (hStartWt === null || wStartWt === null)) {
+    showToast('体重PK需要双方当天都已录入体重');
     return;
   }
 
-  const { hTotal, wTotal } = getPoolScores(pool.startDate, pool.endDate);
-  let winner;
-  if (hTotal > wTotal) winner = 'husband';
-  else if (wTotal > hTotal) winner = 'wife';
-  else winner = 'tie';
+  const round = {
+    id: 'pk_' + today() + '_' + (getPkRounds().length + 1),
+    initiator: currentRole,
+    startDate, endDate,
+    durationDays: pkDuration,
+    items,
+    status: 'active',
+    startWeight: { husband: hStartWt, wife: wStartWt },
+    endWeight: { husband: null, wife: null },
+    result: { score: { winner: null, hTotal: 0, wTotal: 0 }, weight: { winner: null, hPct: 0, wPct: 0, hKg: 0, wKg: 0 }, overall: null },
+    settlementViewed: false
+  };
 
-  const totalPool = pool.husbandAmount + pool.wifeAmount;
-
-  pool.status = 'completed';
-  pool.winner = winner;
-  pool.finalHScore = hTotal;
-  pool.finalWScore = wTotal;
-  setPool(pool);
-
-  closeModal('modal-pool');
-
-  let msg = '奖金池结算！';
-  if (winner === 'tie') {
-    msg += ' 平局！' + totalPool + ' 元退还';
-  } else {
-    const name = getDisplayName(winner);
-    msg += ' ' + name + ' 赢得 ' + totalPool + ' 元！';
-  }
-  msg += ' (' + getDisplayName('husband') + hTotal + '分 vs ' + getDisplayName('wife') + wTotal + '分)';
-  showToast(msg);
+  savePkRound(round);
+  closeModal('modal-pk-start');
+  showToast('自律大PK已开启！' + startDate + ' ~ ' + endDate);
   updateAllUI();
+}
+
+// 渲染PK卡片（我的页面）
+function renderPkCard() {
+  const area = document.getElementById('pk-status-area');
+  if (!area) return;
+  const active = getActivePkRound();
+  if (!active) {
+    area.innerHTML = '<button class="record-btn" onclick="openPkStartModal()">发起PK</button>';
+    return;
+  }
+
+  const todayDate = today();
+  const start = new Date(active.startDate);
+  const end = new Date(active.endDate);
+  const totalDays = active.durationDays;
+  const elapsed = Math.max(0, Math.min(totalDays, Math.floor((new Date(todayDate) - start) / 86400000) + 1));
+  const remaining = Math.max(0, totalDays - elapsed);
+  const pct = Math.round(elapsed / totalDays * 100);
+
+  let scoreLead = '', weightLead = '';
+  if (active.items.includes('score')) {
+    const { hTotal, wTotal } = getPoolScores(active.startDate, todayDate);
+    if (hTotal > wTotal) scoreLead = getDisplayName('husband') + ' 领先 (' + hTotal + ' vs ' + wTotal + ')';
+    else if (wTotal > hTotal) scoreLead = getDisplayName('wife') + ' 领先 (' + wTotal + ' vs ' + hTotal + ')';
+    else scoreLead = '暂时持平 (' + hTotal + ' vs ' + wTotal + ')';
+  }
+  if (active.items.includes('weight')) {
+    const hWt = getWeightForDate(todayDate, 'husband');
+    const wWt = getWeightForDate(todayDate, 'wife');
+    if (hWt !== null && wWt !== null && active.startWeight.husband && active.startWeight.wife) {
+      const hPct = calcWeightPct(active.startWeight.husband, hWt);
+      const wPct = calcWeightPct(active.startWeight.wife, wWt);
+      if (hPct > wPct) weightLead = getDisplayName('husband') + ' ' + active.startWeight.husband + '→' + hWt + 'kg（' + formatWeightPct(hPct) + '）';
+      else if (wPct > hPct) weightLead = getDisplayName('wife') + ' ' + active.startWeight.wife + '→' + wWt + 'kg（' + formatWeightPct(wPct) + '）';
+      else weightLead = '持平（' + active.startWeight.husband + '→' + hWt + 'kg, ' + active.startWeight.wife + '→' + wWt + 'kg）';
+    } else {
+      weightLead = '等待体重录入';
+    }
+  }
+
+  const itemsLabel = active.items.includes('score') && active.items.includes('weight') ? '积分+体重' :
+    active.items.includes('score') ? '积分' : '体重';
+
+  area.innerHTML =
+    '<div class="pk-active-card">' +
+      '<div class="pk-active-header">' +
+        '<span class="pk-active-badge">进行中</span>' +
+        '<span class="pk-active-items">' + itemsLabel + 'PK</span>' +
+        '<span class="pk-active-remain">剩余 ' + remaining + ' 天</span>' +
+      '</div>' +
+      '<div class="pk-active-period">' + active.startDate + ' ~ ' + active.endDate + '</div>' +
+      '<div class="pk-progress"><div class="pk-progress-fill" style="width:' + pct + '%"></div></div>' +
+      (scoreLead ? '<div class="pk-lead-row"><span class="pk-lead-label">积分：</span>' + scoreLead + '</div>' : '') +
+      (weightLead ? '<div class="pk-lead-row"><span class="pk-lead-label">体重：</span>' + weightLead + '</div>' : '') +
+      '<div class="pk-formula-note" style="margin-top:8px;">体重按下降百分比换算</div>' +
+    '</div>';
+}
+
+// 结算弹窗渲染
+function renderSettlePopup(round) {
+  const body = document.getElementById('pk-settle-body');
+  if (!body) return;
+  const r = round.result;
+  const items = round.items;
+  const hasScore = items.includes('score');
+  const hasWeight = items.includes('weight');
+  const isFull = hasScore && hasWeight;
+
+  let html = '<div class="pk-settle-period">' + round.startDate + ' ~ ' + round.endDate + '</div>';
+
+  if (r.overall === 'tie') {
+    html += '<div class="pk-settle-title tie">🤝 难分伯仲！</div>';
+  } else if (isFull && ((r.overall === 'husband' && r.score.winner === 'husband' && r.weight.winner === 'husband') || (r.overall === 'wife' && r.score.winner === 'wife' && r.weight.winner === 'wife'))) {
+    html += '<div class="pk-settle-title win">🏆 ' + getDisplayName(r.overall) + ' 完胜！</div>';
+  } else if (r.overall !== 'tie') {
+    html += '<div class="pk-settle-title win">🏆 ' + getDisplayName(r.overall) + ' 胜出！</div>';
+  }
+
+  if (hasScore && r.score) {
+    html += '<div class="pk-settle-item"><span class="pk-settle-label">积分</span>';
+    if (r.score.winner) {
+      html += '<span class="pk-settle-val">' + getDisplayName(r.score.winner) + '胜 ' + r.score.hTotal + ' vs ' + r.score.wTotal + '</span>';
+    } else {
+      html += '<span class="pk-settle-val">平局 ' + r.score.hTotal + ' vs ' + r.score.wTotal + '</span>';
+    }
+    html += '</div>';
+  }
+
+  if (hasWeight && r.weight) {
+    html += '<div class="pk-settle-item"><span class="pk-settle-label">体重</span>';
+    if (r.weight.winner) {
+      html += '<span class="pk-settle-val">' + getDisplayName(r.weight.winner) + '胜 (' + getDisplayName('husband') + ' ' + formatWeightPct(r.weight.hPct) + ', ' + getDisplayName('wife') + ' ' + formatWeightPct(r.weight.wPct) + ')</span>';
+    } else {
+      html += '<span class="pk-settle-val">平局</span>';
+    }
+    html += '</div>';
+    html += '<div class="pk-settle-note">' +
+      getDisplayName('husband') + '：' + round.startWeight.husband + '→' + (round.endWeight.husband || '--') + 'kg，' + formatWeightPct(r.weight.hPct) + '<br>' +
+      getDisplayName('wife') + '：' + round.startWeight.wife + '→' + (round.endWeight.wife || '--') + 'kg，' + formatWeightPct(r.weight.wPct) + '<br>' +
+      '体重按下降百分比换算：(期初−期末)÷期初×100%</div>';
+  }
+
+  if (isFull) {
+    const hWins = (r.score.winner === 'husband' ? 1 : 0) + (r.weight.winner === 'husband' ? 1 : 0);
+    const wWins = (r.score.winner === 'wife' ? 1 : 0) + (r.weight.winner === 'wife' ? 1 : 0);
+    html += '<div class="pk-settle-overall">综合：' + hWins + ' : ' + wWins + '</div>';
+  }
+
+  html += '<button class="modal-btn" style="margin-top:16px;width:100%;" onclick="closePkSettle()">知道了</button>';
+  body.innerHTML = html;
+}
+
+function closePkSettle() {
+  closeModal('modal-pk-settle');
+  const rounds = getPkRounds();
+  rounds.forEach(r => {
+    if (r.status === 'completed' && !r.settlementViewed) {
+      updatePkRound(r.id, { settlementViewed: true });
+    }
+  });
+}
+
+function renderPkHistoryInline() {
+  const el = document.getElementById('pk-history-inline');
+  if (!el) return;
+  const rounds = getPkRounds().filter(r => r.status === 'completed');
+  if (rounds.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">暂无已完成的PK记录</div>';
+    return;
+  }
+  // 最近3条
+  const recent = [...rounds].reverse().slice(0, 3);
+  el.innerHTML = recent.map(r => {
+    const rw = r.result;
+    const hName = getDisplayName('husband');
+    const wName = getDisplayName('wife');
+    let detail = '';
+    if (r.items.includes('score') && rw.score) {
+      detail += hName + ' ' + rw.score.hTotal + ' : ' + wName + ' ' + rw.score.wTotal;
+    }
+    if (r.items.includes('weight') && rw.weight) {
+      if (detail) detail += '　';
+      detail += hName + ' ↓' + rw.weight.hPct.toFixed(1) + '% : ' + wName + ' ↓' + rw.weight.wPct.toFixed(1) + '%';
+    }
+    let badge = '';
+    if (rw.overall === 'tie') badge = '<span style="color:#999;">平局</span>';
+    else badge = '<span style="color:var(--blue-deep);">' + getDisplayName(rw.overall) + '胜</span>';
+    return '<div class="pk-inline-item" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">' +
+      '<span style="color:var(--text-muted);">' + r.startDate + '~' + r.endDate + '</span>' +
+      '<span style="flex:1;margin:0 8px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + detail + '</span>' +
+      badge +
+      '</div>';
+  }).join('');
+}
+
+function showPkHistory() {
+  const rounds = getPkRounds().filter(r => r.status === 'completed');
+  const list = document.getElementById('pk-history-list');
+  if (rounds.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">暂无PK记录</div>';
+  } else {
+    list.innerHTML = rounds.reverse().map(r => renderHistoryItem(r)).join('');
+  }
+  openModal('modal-pk-history');
+}
+
+function renderHistoryItem(round) {
+  const r = round.result;
+  const itemsLabel = round.items.includes('score') && round.items.includes('weight') ? '积分+体重' :
+    round.items.includes('score') ? '积分' : '体重';
+  let winnerText = '';
+  if (r.overall === 'tie') winnerText = '平局';
+  else winnerText = getDisplayName(r.overall) + '胜';
+
+  let html = '<div class="pk-history-item">' +
+    '<div class="pk-history-top">' +
+      '<span class="pk-history-period">' + round.startDate + ' ~ ' + round.endDate + '</span>' +
+      '<span class="pk-history-items">' + itemsLabel + '</span>' +
+      '<span class="pk-history-winner">' + winnerText + '</span>' +
+    '</div>';
+
+  html += '<div class="pk-history-detail">';
+  if (round.items.includes('score') && r.score) {
+    html += '<div>积分：' + getDisplayName('husband') + ' ' + r.score.hTotal + ' vs ' + getDisplayName('wife') + ' ' + r.score.wTotal;
+    if (r.score.winner) html += '（' + getDisplayName(r.score.winner) + '胜）';
+    html += '</div>';
+  }
+  if (round.items.includes('weight') && r.weight) {
+    html += '<div>体重：' + getDisplayName('husband') + ' ' + round.startWeight.husband + '→' + round.endWeight.husband + 'kg（' + formatWeightPct(r.weight.hPct) + '） vs ' + getDisplayName('wife') + ' ' + round.startWeight.wife + '→' + round.endWeight.wife + 'kg（' + formatWeightPct(r.weight.wPct) + '）';
+    if (r.weight.winner) html += '（' + getDisplayName(r.weight.winner) + '胜）';
+    html += '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function checkPkAutoSettle() {
+  const rounds = getPkRounds();
+  const todayDate = today();
+  let needsSettle = false;
+
+  rounds.forEach(r => {
+    if (r.status === 'active' && r.endDate < todayDate) {
+      settlePkRound(r);
+      needsSettle = true;
+    }
+  });
+
+  if (needsSettle) {
+    const unsettled = getPkRounds().find(r => r.status === 'completed' && !r.settlementViewed);
+    if (unsettled) {
+      renderSettlePopup(unsettled);
+      openModal('modal-pk-settle');
+    }
+  }
 }
 
 // ========== 重置数据 ==========
