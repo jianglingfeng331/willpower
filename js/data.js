@@ -664,6 +664,13 @@ function updatePkRound(roundId, updates) {
   saveData(data);
 }
 
+function cancelPkRound(roundId) {
+  const data = loadData();
+  if (!data.pkRounds) return;
+  data.pkRounds = data.pkRounds.filter(r => r.id !== roundId);
+  saveData(data);
+}
+
 function getActivePkRound() {
   const rounds = getPkRounds();
   return rounds.find(r => r.status === 'active') || null;

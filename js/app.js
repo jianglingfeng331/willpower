@@ -1650,7 +1650,17 @@ function renderPkCard() {
       (scoreLead ? '<div class="pk-lead-row"><span class="pk-lead-label">积分：</span>' + scoreLead + '</div>' : '') +
       (weightLead ? '<div class="pk-lead-row"><span class="pk-lead-label">体重：</span>' + weightLead + '</div>' : '') +
       '<div class="pk-formula-note" style="margin-top:8px;">体重按下降百分比换算</div>' +
+      '<div style="text-align:center;margin-top:12px;"><a href="javascript:void(0)" style="color:var(--text-muted);font-size:13px;text-decoration:none;" onclick="cancelActivePk()">取消本次PK</a></div>' +
     '</div>';
+}
+
+function cancelActivePk() {
+  const active = getActivePkRound();
+  if (!active) return;
+  if (!confirm('确定取消本轮PK「' + active.startDate + ' ~ ' + active.endDate + '」吗？')) return;
+  cancelPkRound(active.id);
+  updateAllUI();
+  showToast('PK已取消');
 }
 
 // 结算弹窗渲染
