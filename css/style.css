@@ -1536,6 +1536,7 @@ body {
 
 /* ========== PK结算弹窗 ========== */
 .pk-settle-modal { max-width: 360px; }
+#modal-pk-start .modal-content { max-width: 360px; }
 .pk-settle-period { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 12px; }
 .pk-settle-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 16px; }
 .pk-settle-title.win { color: #4CAF50; }
