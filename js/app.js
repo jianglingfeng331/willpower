@@ -1654,11 +1654,21 @@ function renderPkCard() {
     '</div>';
 }
 
+let _cancelPkTargetId = null;
+
 function cancelActivePk() {
   const active = getActivePkRound();
   if (!active) return;
-  if (!confirm('确定取消本轮PK「' + active.startDate + ' ~ ' + active.endDate + '」吗？')) return;
-  cancelPkRound(active.id);
+  _cancelPkTargetId = active.id;
+  document.getElementById('cancel-pk-desc').textContent = active.startDate + ' ~ ' + active.endDate;
+  openModal('modal-cancel-pk');
+}
+
+function confirmCancelPk() {
+  if (!_cancelPkTargetId) return;
+  cancelPkRound(_cancelPkTargetId);
+  _cancelPkTargetId = null;
+  closeModal('modal-cancel-pk');
   updateAllUI();
   showToast('PK已取消');
 }

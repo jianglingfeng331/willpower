@@ -825,6 +825,20 @@
   </div>
 </div>
 
+<!-- 取消PK确认弹窗 -->
+<div class="modal-overlay" id="modal-cancel-pk">
+  <div class="modal-content" style="max-width:300px;">
+    <div class="modal-body" style="text-align:center;padding:28px 24px 20px;">
+      <div style="font-size:15px;color:var(--text-primary);margin-bottom:6px;">确定取消本轮PK？</div>
+      <div id="cancel-pk-desc" style="font-size:13px;color:var(--text-muted);margin-bottom:20px;"></div>
+      <div style="display:flex;gap:12px;">
+        <button class="modal-btn" style="flex:1;background:#f0f0f0;color:var(--text-secondary);box-shadow:none;" onclick="closeModal('modal-cancel-pk')">再想想</button>
+        <button class="modal-btn" style="flex:1;background:var(--accent-card);box-shadow:0 4px 14px rgba(212,165,116,0.3);" onclick="confirmCancelPk()">确定取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 昵称编辑弹窗 -->
 <div class="modal-overlay" id="modal-nickname">
   <div class="modal">
