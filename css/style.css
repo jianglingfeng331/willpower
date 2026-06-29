@@ -523,9 +523,9 @@ body {
 }
 
 /* ========== 弹窗通用 ========== */
-.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.40); z-index:200; display:none; justify-content:center; align-items:center; backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); touch-action:none; }
+.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.40); z-index:200; display:none; justify-content:center; align-items:center; backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); touch-action:none; padding:16px; box-sizing:border-box; }
 .modal-overlay.show { display:flex; }
-.modal, .modal-content { width:100%; max-width:430px; max-height:80vh; background:var(--card-bg); border-radius:var(--radius-lg); overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; box-shadow:var(--shadow-modal); animation:modalIn 0.3s var(--ease); }
+.modal, .modal-content { width:100%; max-width:430px; max-height:80vh; background:var(--card-bg); border-radius:var(--radius-lg); overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; touch-action:pan-y; box-shadow:var(--shadow-modal); animation:modalIn 0.3s var(--ease); }
 @keyframes modalIn { from{transform:scale(0.92);opacity:0;} to{transform:scale(1);opacity:1;} }
 .modal-header { display:flex; justify-content:space-between; align-items:center; padding:20px; font-weight:700; font-size:18px; color:var(--text-primary); border-bottom:1px solid var(--divider); position:sticky; top:0; background:var(--card-bg); z-index:1; }
 .modal-header span { display:flex; align-items:center; gap:8px; }
