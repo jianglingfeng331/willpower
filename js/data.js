@@ -1331,6 +1331,10 @@ async function autoSyncToServer() {
       return;
     }
 
+    const currentUser = getCurrentUser();
+    const myRole = currentUser ? currentUser.role : 'husband';
+    const otherRole = myRole === 'husband' ? 'wife' : 'husband';
+
     const localRecords = loadData();
     const localUsers = loadUsers();
     const localAccounts = loadAccounts();
@@ -1342,7 +1346,7 @@ async function autoSyncToServer() {
     let syncData = {
       pk_users: localUsers || {},
       accounts: localAccounts || {},
-      records: localRecords.records || {},
+      records: {},
       pkRounds: localRecords.pkRounds || [],
       currentAccount: localRecords.currentAccount || 'husband',
       custom_foods: localCustomFoods || {},
@@ -1358,20 +1362,22 @@ async function autoSyncToServer() {
         if (serverData) {
           if (serverData.records) {
             for (const date in serverData.records) {
-              if (!syncData.records[date]) {
-                syncData.records[date] = serverData.records[date];
-              } else {
-                for (const account of ['husband', 'wife']) {
-                  if (serverData.records[date][account] && !syncData.records[date][account]) {
-                    syncData.records[date][account] = serverData.records[date][account];
-                  } else if (serverData.records[date][account] && syncData.records[date][account]) {
-                    const serverMeals = serverData.records[date][account].meals || [];
-                    const localMeals = syncData.records[date][account].meals || [];
-                    if (serverMeals.length > localMeals.length) {
-                      syncData.records[date][account] = serverData.records[date][account];
-                    }
-                  }
-                }
+              syncData.records[date] = {};
+              if (serverData.records[date][otherRole]) {
+                syncData.records[date][otherRole] = serverData.records[date][otherRole];
+              }
+              if (localRecords.records && localRecords.records[date] && localRecords.records[date][myRole]) {
+                syncData.records[date][myRole] = localRecords.records[date][myRole];
+              } else if (serverData.records[date][myRole]) {
+                syncData.records[date][myRole] = serverData.records[date][myRole];
+              }
+            }
+          }
+          if (!serverData.records) {
+            for (const date in localRecords.records) {
+              syncData.records[date] = {};
+              if (localRecords.records[date][myRole]) {
+                syncData.records[date][myRole] = localRecords.records[date][myRole];
               }
             }
           }
@@ -1394,9 +1400,22 @@ async function autoSyncToServer() {
             syncData.nicknames = { ...serverData.nicknames, ...syncData.nicknames };
           }
         }
+      } else {
+        for (const date in localRecords.records) {
+          syncData.records[date] = {};
+          if (localRecords.records[date][myRole]) {
+            syncData.records[date][myRole] = localRecords.records[date][myRole];
+          }
+        }
       }
     } catch (e) {
       console.log('[Sync] 读取服务器数据失败，直接上传本地数据:', e.message);
+      for (const date in localRecords.records) {
+        syncData.records[date] = {};
+        if (localRecords.records[date][myRole]) {
+          syncData.records[date][myRole] = localRecords.records[date][myRole];
+        }
+      }
     }
 
     const syncRes = await fetch('/api/sync', {
@@ -1425,28 +1444,29 @@ async function syncFromServer() {
     const serverData = await res.json();
     if (!serverData) return;
 
+    const currentUser = getCurrentUser();
+    const myRole = currentUser ? currentUser.role : 'husband';
+    const otherRole = myRole === 'husband' ? 'wife' : 'husband';
+
     const localData = loadData();
     let needsUpdate = false;
 
     if (serverData.records) {
       for (const date in serverData.records) {
         if (!localData.records[date]) {
-          localData.records[date] = serverData.records[date];
-          needsUpdate = true;
-        } else {
-          for (const account of ['husband', 'wife']) {
-            if (serverData.records[date][account]) {
-              if (!localData.records[date][account]) {
-                localData.records[date][account] = serverData.records[date][account];
-                needsUpdate = true;
-              } else {
-                const localMeals = localData.records[date][account].meals || [];
-                const serverMeals = serverData.records[date][account].meals || [];
-                if (serverMeals.length > localMeals.length) {
-                  localData.records[date][account] = serverData.records[date][account];
-                  needsUpdate = true;
-                }
-              }
+          localData.records[date] = {};
+          localData.records[date][myRole] = {};
+        }
+        if (serverData.records[date][otherRole]) {
+          if (!localData.records[date][otherRole]) {
+            localData.records[date][otherRole] = serverData.records[date][otherRole];
+            needsUpdate = true;
+          } else {
+            const serverMeals = serverData.records[date][otherRole].meals || [];
+            const localMeals = localData.records[date][otherRole].meals || [];
+            if (serverMeals.length > localMeals.length) {
+              localData.records[date][otherRole] = serverData.records[date][otherRole];
+              needsUpdate = true;
             }
           }
         }
