@@ -1,28 +1,28 @@
 {
   "pk_users": {
-    "燃脂侠": {
+    "28895047": {
       "password": "",
       "isAdmin": true,
       "role": "husband",
-      "displayName": "燃脂侠"
+      "displayName": "28895047"
     },
-    "甩肉酱": {
+    "13957156591": {
       "password": "",
       "isAdmin": false,
       "role": "wife",
-      "displayName": "甩肉酱"
+      "displayName": "13957156591"
     }
   },
   "accounts": {
     "husband": {
-      "name": "燃脂侠",
+      "name": "28895047",
       "icon": "",
       "dailyCalorieBudget": 2000,
       "initialWeight": 98,
       "targetWeight": 90
     },
     "wife": {
-      "name": "甩肉酱",
+      "name": "13957156591",
       "icon": "",
       "dailyCalorieBudget": 1500,
       "initialWeight": 60,
@@ -30,629 +30,1933 @@
     }
   },
   "records": {
-    "2026-07-01": {
+    "2026-06-19": {
+      "wife": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "80克肉粽",
+            "calories": 150,
+            "unit": "",
+            "time": "2026-06-19T02:34:38.552Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "8颗大杨梅",
+            "calories": 40,
+            "unit": "",
+            "time": "2026-06-19T03:25:55.091Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "拿铁",
+            "calories": 80,
+            "unit": "",
+            "time": "2026-06-19T03:37:33.902Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "巧克力冰淇淋雪糕",
+            "calories": 220,
+            "unit": "",
+            "time": "2026-06-19T07:49:06.394Z",
+            "supervised": false
+          }
+        ],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
       "husband": {
         "meals": [
           {
             "type": "manual",
-            "name": "美式咖啡(杯)",
-            "calories": 5,
+            "name": "330克肉粽",
+            "calories": 600,
             "unit": "",
-            "quantity": 1,
-            "totalCalories": 5,
-            "time": "2026-07-01T04:27:48.760Z",
-            "supervised": false,
-            "nutritionInfo": {
-              "carbs": 0,
-              "protein": 0,
-              "fat": 0,
-              "fiber": 0,
-              "sugar": 0,
-              "sodium": 10,
-              "tip": "适量饮用，注意糖分摄入"
-            }
+            "time": "2026-06-19T02:54:16.969Z",
+            "supervised": false
           },
           {
             "type": "manual",
-            "name": "柠檬茶",
-            "calories": 80,
+            "name": "日料",
+            "calories": 600,
             "unit": "",
-            "quantity": 1,
-            "totalCalories": 80,
-            "time": "2026-07-01T04:31:19.921Z",
-            "supervised": false,
-            "nutritionInfo": {
-              "carbs": 20,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 2,
-              "sugar": 15,
-              "sodium": 50,
-              "tip": "适量饮用，注意糖分摄入"
-            }
+            "time": "2026-06-19T07:47:05.951Z",
+            "supervised": false
           },
           {
             "type": "manual",
-            "name": "香蕉",
-            "calories": 100,
+            "name": "巧克力冰棒",
+            "calories": 250,
             "unit": "",
-            "quantity": 1,
-            "totalCalories": 100,
-            "time": "2026-07-01T05:03:32.262Z",
-            "supervised": false,
-            "nutritionInfo": {
-              "carbs": 27,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 3,
-              "sugar": 14,
-              "sodium": 1,
-              "tip": "香蕉是快速能量的好来源。"
-            }
-          },
-          {
-            "type": "manual",
-            "name": "柠檬茶",
-            "calories": 80,
-            "unit": "",
-            "quantity": 1,
-            "totalCalories": 80,
-            "time": "2026-07-01T05:58:18.275Z",
-            "supervised": false,
-            "nutritionInfo": {
-              "carbs": 20,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 2,
-              "sugar": 15,
-              "sodium": 50,
-              "tip": "适量饮用，注意糖分摄入"
-            }
+            "time": "2026-06-19T07:50:38.845Z",
+            "supervised": false
           }
         ],
-        "water": [],
-        "exercises": [],
-        "weight": null
-      }
-    },
-    "2026-06-22": {
-      "wife": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
-      },
-      "husband": {
-        "meals": [],
         "water": [
           {
-            "amount": 500,
-            "time": "2026-06-22T06:18:07.040Z"
-          }
-        ],
-        "exercises": [
+            "amount": 200,
+            "time": "2026-06-19T03:00:06.102Z"
+          },
           {
-            "type": "custom_ex_1782129666494",
-            "name": "无绳跳绳",
-            "duration": 15,
-            "calories": 25,
-            "time": "2026-06-22T12:03:01.998Z"
+            "amount": 200,
+            "time": "2026-06-19T03:00:07.251Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-19T03:18:34.324Z"
           }
         ],
+        "exercises": [],
+        "weight": 96.7
+      }
+    },
+    "2026-06-18": {
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
         "weight": null
       }
     },
-    "2026-06-23": {
+    "2026-06-20": {
       "husband": {
-        "meals": [],
-        "water": [],
+        "meals": [
+          {
+            "type": "manual",
+            "name": "蛋饼",
+            "calories": 220,
+            "unit": "",
+            "time": "2026-06-20T01:42:01.946Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "豆腐包",
+            "calories": 250,
+            "unit": "",
+            "time": "2026-06-20T01:43:03.337Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "冰棍",
+            "calories": 60,
+            "unit": "",
+            "time": "2026-06-20T07:09:47.737Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "猪肉铺",
+            "calories": 200,
+            "unit": "",
+            "time": "2026-06-20T08:08:06.614Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-20T01:42:29.256Z"
+          }
+        ],
         "exercises": [],
-        "weight": 80
+        "weight": 97.4
       },
       "wife": {
-        "meals": [],
-        "water": [],
+        "meals": [
+          {
+            "type": "manual",
+            "name": "一根香蕉➕8滴麻油",
+            "calories": 150,
+            "unit": "",
+            "time": "2026-06-20T01:43:09.600Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "白面包",
+            "calories": 80,
+            "unit": "",
+            "time": "2026-06-20T02:55:37.725Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "两片白面包",
+            "calories": 160,
+            "unit": "",
+            "time": "2026-06-20T03:01:28.711Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "方便面1/4",
+            "calories": 120,
+            "unit": "",
+            "time": "2026-06-20T04:56:44.839Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "干菜扣肉包心菜",
+            "calories": 300,
+            "unit": "",
+            "time": "2026-06-20T04:57:33.067Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "3块炸鸡",
+            "calories": 300,
+            "unit": "",
+            "time": "2026-06-20T04:57:49.004Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "棒冰",
+            "calories": 60,
+            "unit": "",
+            "time": "2026-06-20T07:11:19.004Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "桃子半颗",
+            "calories": 30,
+            "unit": "",
+            "time": "2026-06-20T08:17:28.550Z",
+            "supervised": true
+          }
+        ],
+        "water": [
+          {
+            "amount": 800,
+            "time": "2026-06-20T03:01:37.256Z"
+          }
+        ],
         "exercises": [],
-        "weight": 55
-      }
-    },
-    "2026-06-24": {
-      "husband": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": 78
-      },
-      "wife": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": 55.5
+        "weight": 70.3
       }
     },
     "2026-06-21": {
       "wife": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
-      }
-    },
-    "2026-06-25": {
-      "husband": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
-      }
-    },
-    "2026-06-29": {
-      "husband": {
         "meals": [
           {
-            "mealId": "meal_1782723578322_yvqj",
-            "type": "ai_photo",
-            "name": "无糖豆浆(300ml)",
-            "calories": 90,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 90,
-            "time": "2026-06-29T08:59:38.322Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 6,
-              "protein": 9,
-              "fat": 4,
-              "fiber": 2,
-              "sugar": 1,
-              "sodium": 15
-            },
-            "tip": "优质植物蛋白，含大豆异黄酮，早餐搭配佳选"
-          },
-          {
-            "mealId": "meal_1782724047139_iga2",
-            "type": "ai_photo",
-            "name": "麻婆豆腐",
-            "calories": 350,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 350,
-            "time": "2026-06-29T09:07:27.139Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 15,
-              "protein": 20,
-              "fat": 24,
-              "fiber": 4,
-              "sugar": 3,
-              "sodium": 880
-            },
-            "tip": "豆腐是优质植物蛋白来源，但麻婆做法钠含量偏高，注意控盐"
-          },
-          {
-            "mealId": "meal_1782736582844_pg4v",
-            "type": "ai_photo",
-            "name": "苹果(1个)",
-            "calories": 95,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 95,
-            "time": "2026-06-29T12:36:22.844Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 25,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 5,
-              "sugar": 19,
-              "sodium": 2
-            },
-            "tip": "富含果胶和膳食纤维，饱腹感强，适合加餐食用"
-          },
-          {
-            "mealId": "meal_1782737053154_s6l5",
-            "type": "ai_photo",
-            "name": "苹果(1个)",
-            "calories": 95,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 95,
-            "time": "2026-06-29T12:44:13.154Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 25,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 5,
-              "sugar": 19,
-              "sodium": 2
-            },
-            "tip": "富含果胶和膳食纤维，饱腹感强，适合加餐食用"
-          },
-          {
-            "type": "manual",
-            "name": "香蕉",
-            "calories": 100,
-            "unit": "",
-            "quantity": 1,
-            "totalCalories": 100,
-            "time": "2026-06-29T14:55:12.315Z",
+            "type": "ai",
+            "name": "鸡蛋",
+            "calories": 70,
+            "unit": "个",
+            "time": "2026-06-21T00:45:45.460Z",
             "supervised": false
           },
           {
             "type": "manual",
-            "name": "113",
-            "calories": 100,
+            "name": "小黄油美式",
+            "calories": 170,
             "unit": "",
-            "quantity": 1,
-            "totalCalories": 100,
-            "time": "2026-06-29T15:13:20.961Z",
+            "time": "2026-06-21T04:13:57.639Z",
             "supervised": false
-          }
-        ],
-        "water": [],
-        "exercises": [],
-        "weight": 98
-      },
-      "wife": {
-        "meals": [
-          {
-            "type": "ai_photo",
-            "name": "拿铁咖啡",
-            "calories": 190,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 190,
-            "time": "2026-06-29T07:37:55.335Z",
-            "nutrients": {
-              "carbs": 15,
-              "protein": 8,
-              "fat": 9,
-              "fiber": 0,
-              "sugar": 12,
-              "sodium": 120
-            },
-            "tip": "适量饮用提神醒脑，建议不加糖"
           },
           {
-            "type": "ai_photo",
-            "name": "红烧肉",
-            "calories": 580,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 580,
-            "time": "2026-06-29T08:06:13.492Z",
-            "nutrients": {
-              "carbs": 38,
-              "protein": 28,
-              "fat": 42,
-              "fiber": 2,
-              "sugar": 5,
-              "sodium": 680
-            },
-            "tip": "红烧肉脂肪含量较高，建议搭配蔬菜食用"
+            "type": "manual",
+            "name": "香辣鸡翅一对",
+            "calories": 250,
+            "unit": "",
+            "time": "2026-06-21T04:14:13.626Z",
+            "supervised": false
           },
           {
-            "mealId": "meal_1782723380820_mp1a",
-            "type": "ai_photo",
-            "name": "糖醋排骨",
-            "calories": 520,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 520,
-            "time": "2026-06-29T08:56:20.820Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 36,
-              "protein": 26,
-              "fat": 32,
-              "fiber": 1,
-              "sugar": 18,
-              "sodium": 650
-            },
-            "tip": "糖醋汁含糖量高，偶尔解馋即可，不宜常吃"
-          },
-          {
-            "mealId": "meal_1782739456202_wtmq",
-            "type": "ai_photo",
-            "name": "清蒸鲈鱼",
-            "calories": 280,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 280,
-            "time": "2026-06-29T13:24:16.202Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 2,
-              "protein": 42,
-              "fat": 12,
-              "fiber": 0,
-              "sugar": 1,
-              "sodium": 380
-            },
-            "tip": "清蒸做法锁住营养，鱼肉富含Omega-3，减脂期优选"
-          },
-          {
-            "mealId": "meal_1782739802982_sukv",
-            "type": "ai_photo",
-            "name": "拿铁咖啡(中杯)",
-            "calories": 190,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 190,
-            "time": "2026-06-29T13:30:02.982Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 15,
-              "protein": 8,
-              "fat": 9,
-              "fiber": 0,
-              "sugar": 12,
-              "sodium": 120
-            },
-            "tip": "适量饮用提神醒脑，建议不加糖，可选脱脂奶降低热量"
-          },
-          {
-            "mealId": "meal_1782740879427_oh0y",
-            "type": "ai_photo",
-            "name": "香蕉(1根)",
-            "calories": 105,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 105,
-            "time": "2026-06-29T13:47:59.427Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 27,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 3,
-              "sugar": 14,
-              "sodium": 1
-            },
-            "tip": "运动后补钾首选，天然能量棒，但碳水密度偏高"
+            "type": "manual",
+            "name": "伯力爵碱水面包丁（海盐焦糖味）",
+            "calories": 179,
+            "unit": "",
+            "time": "2026-06-21T08:28:56.041Z",
+            "supervised": true
           }
         ],
         "water": [],
         "exercises": [],
         "weight": 70
-      }
-    },
-    "2026-06-28": {
-      "wife": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
       },
       "husband": {
-        "meals": [],
-        "water": [],
+        "meals": [
+          {
+            "type": "manual",
+            "name": "香辣鸡翅两对",
+            "calories": 500,
+            "unit": "",
+            "time": "2026-06-21T04:11:42.076Z",
+            "supervised": false
+          },
+          {
+            "type": "ai",
+            "name": "鸡蛋",
+            "calories": 70,
+            "unit": "个",
+            "time": "2026-06-21T04:12:04.225Z",
+            "supervised": false
+          },
+          {
+            "type": "ai",
+            "name": "鸡蛋",
+            "calories": 70,
+            "unit": "个",
+            "time": "2026-06-21T04:12:07.117Z",
+            "supervised": false
+          },
+          {
+            "type": "ai",
+            "name": "鸡蛋",
+            "calories": 70,
+            "unit": "个",
+            "time": "2026-06-21T04:12:09.276Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "澳瑞白",
+            "calories": 170,
+            "unit": "",
+            "time": "2026-06-21T04:14:57.998Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "乌龙茶",
+            "calories": 40,
+            "unit": "",
+            "time": "2026-06-21T04:16:11.873Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "雪糕（冰淇淋棒）",
+            "calories": 150,
+            "unit": "",
+            "time": "2026-06-21T06:15:56.828Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蟹籽馄饨",
+            "calories": 450,
+            "unit": "",
+            "time": "2026-06-21T06:17:14.989Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小小酥 60 克",
+            "calories": 330,
+            "unit": "",
+            "time": "2026-06-21T10:52:21.683Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "晚餐",
+            "calories": 500,
+            "unit": "",
+            "time": "2026-06-21T10:52:34.533Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-21T04:16:23.204Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-21T10:52:39.858Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-21T10:52:44.375Z"
+          }
+        ],
         "exercises": [],
-        "weight": null
+        "weight": 97
+      }
+    },
+    "2026-06-22": {
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "面条",
+            "calories": 450,
+            "unit": "",
+            "time": "2026-06-22T00:33:48.875Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "生煎",
+            "calories": 120,
+            "unit": "",
+            "time": "2026-06-22T00:34:39.219Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "豆浆",
+            "calories": 60,
+            "unit": "",
+            "time": "2026-06-22T03:09:10.489Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "冰美式",
+            "calories": 20,
+            "unit": "",
+            "time": "2026-06-22T03:41:58.433Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "半个蛋饼",
+            "calories": 130,
+            "unit": "",
+            "time": "2026-06-22T05:26:22.864Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "肉包",
+            "calories": 240,
+            "unit": "",
+            "time": "2026-06-22T05:26:36.222Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小鲍鱼",
+            "calories": 42,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 42,
+            "time": "2026-06-22T13:25:40.980Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "炒四季豆",
+            "calories": 33,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 33,
+            "time": "2026-06-22T13:25:40.981Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "杨梅",
+            "calories": 45,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 45,
+            "time": "2026-06-22T13:37:02.293Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-22T03:42:02.669Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-22T05:26:46.674Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-22T06:18:07.040Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-22T11:25:15.758Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-22T12:48:28.100Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782133521041",
+            "name": "无绳跳绳",
+            "duration": 15,
+            "calories": 100,
+            "time": "2026-06-22T13:06:11.574Z"
+          },
+          {
+            "type": "custom_ex_1782133552095",
+            "name": "HIIT",
+            "duration": 30,
+            "calories": 120,
+            "time": "2026-06-22T13:06:24.588Z"
+          }
+        ],
+        "weight": 96.7
+      },
+      "wife": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "鸡蛋",
+            "calories": 70,
+            "unit": "",
+            "time": "2026-06-22T00:40:03.831Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "一根香蕉",
+            "calories": 100,
+            "unit": "",
+            "time": "2026-06-22T02:24:03.590Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "苹果c美式热",
+            "calories": 140,
+            "unit": "",
+            "time": "2026-06-22T02:47:00.479Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "一碗青菜、一小碗片儿川、一个千张包子、一块素鸡",
+            "calories": 700,
+            "unit": "",
+            "time": "2026-06-22T06:16:42.212Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "瑞幸芝士吐司半片",
+            "calories": 180,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 180,
+            "time": "2026-06-22T11:56:57.525Z"
+          },
+          {
+            "type": "manual",
+            "name": "清炒10颗虾仁、清炒包心菜、鸭翅膀和一块鸭肉（炖汤）",
+            "calories": 300,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 300,
+            "time": "2026-06-22T12:00:52.922Z"
+          }
+        ],
+        "water": [
+          {
+            "amount": 1000,
+            "time": "2026-06-22T07:58:26.989Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-22T07:58:34.565Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-22T12:02:37.126Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "walk",
+            "name": "散步",
+            "duration": 60,
+            "calories": 200,
+            "time": "2026-06-22T06:17:04.477Z"
+          }
+        ],
+        "weight": 70
+      }
+    },
+    "2026-06-23": {
+      "wife": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "香肠包",
+            "calories": 100,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-06-22T23:50:05.918Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "青菜包心菜鸡肉鲈鱼虾",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-23T08:21:20.700Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小黄油美式",
+            "calories": 170,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 170,
+            "time": "2026-06-23T08:21:38.639Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "葫芦、腰花",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-23T14:30:12.534Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-22T23:17:59.579Z"
+          },
+          {
+            "amount": 800,
+            "time": "2026-06-23T08:20:52.522Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-23T14:29:17.316Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782224923180",
+            "name": "爬山",
+            "duration": 90,
+            "calories": 240,
+            "time": "2026-06-23T14:29:04.287Z"
+          }
+        ],
+        "weight": 69.8
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "卤牛肉 140 克",
+            "calories": 266,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 266,
+            "time": "2026-06-23T03:50:35.702Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "杨枝甘露司康",
+            "calories": 156,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 156,
+            "time": "2026-06-23T07:49:19.835Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "鸡肉、洋葱、腰花 50 克",
+            "calories": 300,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 300,
+            "time": "2026-06-23T12:49:05.565Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "八宝粥",
+            "calories": 230,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 230,
+            "time": "2026-06-23T15:32:33.941Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "冰棍",
+            "calories": 55,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 55,
+            "time": "2026-06-23T15:32:33.941Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-22T23:43:34.217Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-23T03:20:45.792Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-23T03:50:37.984Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-23T06:54:49.335Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-23T12:48:31.606Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-23T12:48:32.371Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782133521041",
+            "name": "无绳跳绳",
+            "duration": 15,
+            "calories": 100,
+            "time": "2026-06-23T12:48:01.196Z"
+          },
+          {
+            "type": "custom_ex_1782133552095",
+            "name": "HIIT",
+            "duration": 30,
+            "calories": 120,
+            "time": "2026-06-23T12:48:11.473Z"
+          }
+        ],
+        "weight": 96.1
+      }
+    },
+    "2026-06-24": {
+      "wife": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "酸菜豆腐包",
+            "calories": 160,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 160,
+            "time": "2026-06-24T01:05:38.225Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "大窑200ml",
+            "calories": 30,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 30,
+            "time": "2026-06-24T05:15:03.091Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "青菜蘑菇",
+            "calories": 40,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 40,
+            "time": "2026-06-24T05:18:46.848Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "千张包子一个",
+            "calories": 120,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-24T05:18:46.848Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "片儿川",
+            "calories": 450,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 450,
+            "time": "2026-06-24T05:18:46.848Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "晚餐",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-24T13:16:59.407Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-24T01:04:30.662Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-24T02:46:28.332Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-24T07:59:18.294Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-24T13:17:16.782Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-24T13:17:19.499Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782268404617",
+            "name": "核心床普拉提",
+            "duration": 60,
+            "calories": 400,
+            "time": "2026-06-24T02:46:22.467Z"
+          }
+        ],
+        "weight": 69.2
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "烧饼",
+            "calories": 330,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 330,
+            "time": "2026-06-24T06:04:48.843Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "油条",
+            "calories": 380,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 380,
+            "time": "2026-06-24T06:04:48.843Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "煎饺",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-24T06:04:48.843Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "晚餐",
+            "calories": 700,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 700,
+            "time": "2026-06-24T14:39:28.193Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-23T23:37:18.928Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-24T02:15:57.872Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-24T06:39:47.399Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-24T08:20:52.624Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-24T08:21:12.058Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-24T14:38:43.219Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782133521041",
+            "name": "无绳跳绳",
+            "duration": 30,
+            "calories": 200,
+            "time": "2026-06-24T14:38:34.626Z"
+          }
+        ],
+        "weight": 96
+      }
+    },
+    "2026-06-25": {
+      "wife": {
+        "meals": [
+          {
+            "type": "custom",
+            "name": "100g葱油拌面",
+            "calories": 100,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-06-25T00:12:06.227Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "荷包蛋",
+            "calories": 120,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-25T00:12:06.232Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小黄油美式",
+            "calories": 170,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 170,
+            "time": "2026-06-25T06:41:16.294Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "咬不得2个煎包➕鸭血粉丝没吃完",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-25T06:43:46.337Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "红薯",
+            "calories": 110,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 110,
+            "time": "2026-06-25T09:11:32.808Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-25T00:12:18.859Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-25T04:44:06.853Z"
+          },
+          {
+            "amount": 800,
+            "time": "2026-06-25T15:12:56.825Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782368634566",
+            "name": "羽毛球",
+            "duration": 30,
+            "calories": 250,
+            "time": "2026-06-25T06:24:02.069Z"
+          }
+        ],
+        "weight": 69.3
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "烧饼油条",
+            "calories": 550,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 550,
+            "time": "2026-06-25T05:06:54.895Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小笼包",
+            "calories": 440,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 440,
+            "time": "2026-06-25T05:06:54.895Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-24T23:07:50.440Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-25T05:06:59.401Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-25T05:07:01.070Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 96.6
       }
     },
     "2026-06-26": {
       "wife": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
+        "meals": [
+          {
+            "type": "custom",
+            "name": "酸菜豆腐包",
+            "calories": 200,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-26T00:46:17.540Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "瑞幸小黄油美式",
+            "calories": 170,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 170,
+            "time": "2026-06-26T07:48:10.476Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "片儿川",
+            "calories": 450,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 450,
+            "time": "2026-06-26T07:48:27.607Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "青菜蘑菇",
+            "calories": 40,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 40,
+            "time": "2026-06-26T07:48:27.607Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "卤鸭去皮➕5片土豆",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-26T11:41:17.798Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 500,
+            "time": "2026-06-26T07:47:50.744Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-26T07:48:01.866Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "walk",
+            "name": "散步",
+            "duration": 20,
+            "calories": 67,
+            "time": "2026-06-26T00:46:29.263Z"
+          }
+        ],
+        "weight": 69.1
       },
       "husband": {
-        "meals": [],
-        "water": [],
+        "meals": [
+          {
+            "type": "manual",
+            "name": "四个小笼包",
+            "calories": 240,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 240,
+            "time": "2026-06-26T14:46:48.489Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "四分之一西瓜",
+            "calories": 75,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 75,
+            "time": "2026-06-26T14:46:48.489Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小龙虾 15 只",
+            "calories": 670,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 670,
+            "time": "2026-06-26T14:46:48.490Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "50 克炒饭",
+            "calories": 90,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 90,
+            "time": "2026-06-26T14:46:48.490Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "啤酒两瓶",
+            "calories": 300,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 300,
+            "time": "2026-06-26T14:46:48.490Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-26T05:08:27.866Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-26T14:44:31.580Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-26T14:44:33.896Z"
+          }
+        ],
         "exercises": [],
-        "weight": null
+        "weight": 95
       }
     },
     "2026-06-27": {
       "wife": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
-      },
-      "husband": {
-        "meals": [],
-        "water": [],
-        "exercises": [],
-        "weight": null
-      }
-    },
-    "2026-06-30": {
-      "husband": {
         "meals": [
           {
-            "mealId": "meal_1782797862763_e8nv",
-            "type": "ai_photo",
-            "name": "草莓蛋糕卷",
-            "calories": 300,
-            "unit": "份",
+            "type": "manual",
+            "name": "鲜虾蟹籽云吞5个",
+            "calories": 275,
+            "unit": "",
             "quantity": 1,
-            "totalCalories": 300,
-            "time": "2026-06-30T05:37:42.764Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 50,
-              "protein": 5,
-              "fat": 10,
-              "fiber": 2,
-              "sugar": 20,
-              "sodium": 200
-            },
-            "tip": "适量食用，享受美味的同时注意控制摄入量"
-          },
-          {
-            "mealId": "meal_1782798776266_ig2f",
-            "type": "ai_photo",
-            "name": "柠檬茶",
-            "calories": 80,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 80,
-            "time": "2026-06-30T05:52:56.339Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 20,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 2,
-              "sugar": 15,
-              "sodium": 50
-            },
-            "tip": "适量饮用，注意糖分摄入"
-          },
-          {
-            "mealId": "meal_1782798832368_y43h",
-            "type": "ai_photo",
-            "name": "柠檬茶",
-            "calories": 200,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 200,
-            "time": "2026-06-30T05:53:52.401Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 50,
-              "protein": 2,
-              "fat": 0,
-              "fiber": 5,
-              "sugar": 40,
-              "sodium": 100
-            },
-            "tip": "适量饮用，注意糖分摄入"
-          },
-          {
-            "mealId": "meal_1782799675394_0539",
-            "type": "ai_photo",
-            "name": "柠檬茶",
-            "calories": 80,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 80,
-            "time": "2026-06-30T06:07:55.480Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 20,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 2,
-              "sugar": 15,
-              "sodium": 50
-            },
-            "tip": "适量饮用，注意糖分摄入"
-          },
-          {
-            "mealId": "meal_1782801250846_kcko",
-            "type": "ai_photo",
-            "name": "饮料",
-            "calories": 200,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 200,
-            "time": "2026-06-30T06:34:10.948Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 50,
-              "protein": 0,
-              "fat": 0,
-              "fiber": 0,
-              "sugar": 40,
-              "sodium": 100
-            },
-            "tip": "适量饮用含糖饮料"
-          },
-          {
-            "mealId": "meal_1782801710081_7wvv",
-            "type": "ai_photo",
-            "name": "桃子",
-            "calories": 60,
-            "unit": "份",
-            "quantity": 1,
-            "totalCalories": 60,
-            "time": "2026-06-30T06:41:50.160Z",
-            "imageStored": true,
-            "nutrients": {
-              "carbs": 15,
-              "protein": 1,
-              "fat": 0,
-              "fiber": 2,
-              "sugar": 10,
-              "sodium": 1
-            },
-            "tip": "桃子富含维生素C和膳食纤维，有助于消化健康。"
-          },
-          {
-            "type": "preset",
-            "name": "鸡胸肉",
-            "calories": 200,
-            "unit": "份(100g)",
-            "quantity": 1,
-            "totalCalories": 200,
-            "time": "2026-06-30T10:05:38.202Z",
+            "totalCalories": 275,
+            "time": "2026-06-27T00:07:08.119Z",
             "supervised": false
           },
           {
             "type": "manual",
-            "name": "蜜桃乌龙茶饮料",
+            "name": "卤鸭子去皮➕番茄炒蛋",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-27T07:46:56.068Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "美式",
+            "calories": 15,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 15,
+            "time": "2026-06-27T07:48:22.454Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-27T00:05:44.512Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-27T07:48:27.595Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 69.3
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "五个虾肉蟹子馄饨",
+            "calories": 270,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 270,
+            "time": "2026-06-27T10:46:41.829Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "金汤肥牛 100 克",
+            "calories": 120,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-27T14:43:17.545Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蒜蓉小龙虾 5 只",
+            "calories": 345,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 345,
+            "time": "2026-06-27T14:43:17.545Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "补水啦",
+            "calories": 35,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 35,
+            "time": "2026-06-27T14:44:56.825Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "拿铁",
+            "calories": 120,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-27T14:44:56.825Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-27T10:44:55.811Z"
+          },
+          {
+            "amount": 200,
+            "time": "2026-06-27T10:44:56.378Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-27T14:40:53.458Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 95.5
+      }
+    },
+    "2026-06-28": {
+      "wife": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "半个肉粽",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-28T02:09:07.049Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "1个嵊州小笼包",
+            "calories": 60,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 60,
+            "time": "2026-06-28T02:09:36.222Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "红豆沙一碗",
             "calories": 150,
             "unit": "",
             "quantity": 1,
             "totalCalories": 150,
-            "time": "2026-06-30T15:00:27.925Z",
+            "time": "2026-06-28T05:48:33.257Z",
             "supervised": false
           },
           {
             "type": "manual",
-            "name": "蜜桃乌龙茶",
-            "calories": 50,
+            "name": "1个水蜜桃",
+            "calories": 80,
             "unit": "",
             "quantity": 1,
-            "totalCalories": 50,
-            "time": "2026-06-30T15:08:39.549Z",
+            "totalCalories": 80,
+            "time": "2026-06-28T07:53:16.310Z",
             "supervised": false
           },
           {
             "type": "manual",
-            "name": "蜜桃乌龙茶",
-            "calories": 50,
+            "name": "1根迷你梦龙",
+            "calories": 140,
             "unit": "",
             "quantity": 1,
-            "totalCalories": 50,
-            "time": "2026-06-30T15:09:49.592Z",
-            "supervised": false
-          },
-          {
-            "type": "manual",
-            "name": "蜜桃乌龙茶饮料",
-            "calories": 120,
-            "unit": "",
-            "quantity": 1,
-            "totalCalories": 120,
-            "time": "2026-06-30T15:25:41.862Z",
-            "supervised": false
-          },
-          {
-            "type": "manual",
-            "name": "蜜桃乌龙茶饮料",
-            "calories": 120,
-            "unit": "",
-            "quantity": 1,
-            "totalCalories": 120,
-            "time": "2026-06-30T16:01:53.214Z",
+            "totalCalories": 140,
+            "time": "2026-06-28T07:54:01.170Z",
             "supervised": false
           }
         ],
-        "water": [],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-28T02:05:16.169Z"
+          }
+        ],
         "exercises": [],
-        "weight": null
+        "weight": 68.5
       },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "半个肉粽",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-28T06:25:41.535Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小笼包两个",
+            "calories": 120,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-28T06:25:41.535Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "绿豆沙一碗",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-28T06:36:53.008Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "抹茶奶油蛋糕卷 120 克",
+            "calories": 370,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 370,
+            "time": "2026-06-28T15:07:06.288Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "卤鸡架三个",
+            "calories": 400,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 400,
+            "time": "2026-06-28T15:08:04.062Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "晚餐",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-28T15:08:32.428Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-28T06:37:01.903Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-28T15:05:27.379Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 95.4
+      }
+    },
+    "2026-06-29": {
       "wife": {
+        "meals": [
+          {
+            "type": "custom",
+            "name": "千张包子一个",
+            "calories": 120,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-29T08:02:58.180Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "尖椒豆干肉丝盖饭1/3",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-29T08:03:26.718Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "青菜蘑菇",
+            "calories": 40,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 40,
+            "time": "2026-06-29T08:03:37.319Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "全家金枪鱼沙拉手卷1个",
+            "calories": 150,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 150,
+            "time": "2026-06-29T08:04:23.823Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "瑞幸小黄油美式",
+            "calories": 170,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 170,
+            "time": "2026-06-29T08:05:04.356Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蒜泥小龙虾10只",
+            "calories": 130,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 130,
+            "time": "2026-06-29T11:45:30.067Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "椒盐猪蹄半只",
+            "calories": 350,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 350,
+            "time": "2026-06-29T11:48:02.663Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 500,
+            "time": "2026-06-29T08:04:32.843Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-29T08:04:34.345Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-29T11:49:06.456Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "walk",
+            "name": "散步",
+            "duration": 45,
+            "calories": 150,
+            "time": "2026-06-29T08:04:47.846Z"
+          }
+        ],
+        "weight": 68.6
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "拿铁（燕麦奶）",
+            "calories": 280,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 280,
+            "time": "2026-06-29T03:01:51.568Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "煎饺 10 个",
+            "calories": 600,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 600,
+            "time": "2026-06-29T06:02:58.283Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "小龙虾加荞麦面",
+            "calories": 250,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 250,
+            "time": "2026-06-29T14:34:35.447Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "咸猪蹄半只",
+            "calories": 350,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 350,
+            "time": "2026-06-29T14:34:57.652Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "肉沫蛋盖饭",
+            "calories": 400,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 400,
+            "time": "2026-06-29T14:35:31.717Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 500,
+            "time": "2026-06-29T02:53:35.989Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-29T14:33:39.325Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-29T14:33:40.910Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 96.1
+      }
+    },
+    "2026-06-30": {
+      "wife": {
+        "meals": [
+          {
+            "type": "custom",
+            "name": "100g葱油拌面",
+            "calories": 100,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-06-30T01:03:53.863Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "两条小黄鱼➕苦瓜➕3口米饭➕衢州三丝",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-30T05:03:19.950Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "瑞幸澳瑞白",
+            "calories": 150,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 150,
+            "time": "2026-06-30T07:46:21.356Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "一席地➕荞麦面➕巧克力棒冰",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-06-30T14:42:38.535Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "1根香蕉",
+            "calories": 100,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-06-30T15:01:48.005Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-30T01:03:56.377Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-30T05:03:22.211Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-30T15:02:22.789Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "walk",
+            "name": "散步",
+            "duration": 45,
+            "calories": 150,
+            "time": "2026-06-30T15:02:13.737Z"
+          }
+        ],
+        "weight": 68.5
+      },
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "烧饼",
+            "calories": 330,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 330,
+            "time": "2026-06-30T06:39:02.382Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "油条",
+            "calories": 380,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 380,
+            "time": "2026-06-30T06:39:02.382Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "煎饺",
+            "calories": 200,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-30T06:39:02.382Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "一席地半分",
+            "calories": 250,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 250,
+            "time": "2026-06-30T14:21:09.993Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "荞麦面 100 克",
+            "calories": 135,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 135,
+            "time": "2026-06-30T14:21:09.993Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "奶油提子冰棍",
+            "calories": 110,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 110,
+            "time": "2026-06-30T14:21:09.994Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "桃子",
+            "calories": 60,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 60,
+            "time": "2026-06-30T14:21:31.490Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "自制美式",
+            "calories": 10,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 10,
+            "time": "2026-06-30T14:22:20.236Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-06-30T06:37:05.161Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-30T06:37:05.844Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-30T06:37:06.845Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-06-30T14:18:32.632Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 96.3
+      }
+    },
+    "2026-07-01": {
+      "husband": {
         "meals": [],
         "water": [],
         "exercises": [],
-        "weight": null
+        "weight": 96.4
+      },
+      "wife": {
+        "meals": [
+          {
+            "type": "custom",
+            "name": "酸菜豆腐包",
+            "calories": 200,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-07-01T01:21:21.518Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "鲫鱼豆腐汤➕清炒苦瓜➕蛋黄南瓜",
+            "calories": 500,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 500,
+            "time": "2026-07-01T05:19:37.532Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "瑞幸澳瑞白",
+            "calories": 150,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 150,
+            "time": "2026-07-01T05:19:49.909Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "❌❌鱼➕条头糕➕半个肉粽",
+            "calories": 800,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 800,
+            "time": "2026-07-01T14:19:21.022Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 500,
+            "time": "2026-07-01T01:21:15.744Z"
+          },
+          {
+            "amount": 1000,
+            "time": "2026-07-01T14:19:34.115Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782268404617",
+            "name": "核心床普拉提",
+            "duration": 45,
+            "calories": 300,
+            "time": "2026-07-01T01:21:13.185Z"
+          }
+        ],
+        "weight": 68.8
+      }
+    },
+    "2026-07-02": {
+      "husband": {
+        "meals": [],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-07-01T23:29:28.973Z"
+          }
+        ],
+        "exercises": [],
+        "weight": 95.8
+      },
+      "wife": {
+        "meals": [
+          {
+            "type": "custom",
+            "name": "酸菜豆腐包",
+            "calories": 200,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-07-02T00:48:01.548Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "100g葱油拌面",
+            "calories": 100,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-07-02T00:48:01.549Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "片儿川",
+            "calories": 450,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 450,
+            "time": "2026-07-02T05:37:59.743Z",
+            "supervised": false
+          },
+          {
+            "type": "custom",
+            "name": "瑞幸澳瑞白",
+            "calories": 150,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 150,
+            "time": "2026-07-02T05:37:59.748Z",
+            "supervised": false
+          }
+        ],
+        "water": [
+          {
+            "amount": 200,
+            "time": "2026-07-02T00:48:15.678Z"
+          },
+          {
+            "amount": 500,
+            "time": "2026-07-02T05:38:02.740Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782368634566",
+            "name": "羽毛球",
+            "duration": 30,
+            "calories": 250,
+            "time": "2026-07-02T05:38:20.830Z"
+          }
+        ],
+        "weight": 69.2
       }
     }
   }

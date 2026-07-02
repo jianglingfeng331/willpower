@@ -45,6 +45,7 @@ function loadAccounts() {
 function saveAccounts(accounts) {
   try {
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+    autoSyncToServer();
   } catch (e) {
     console.error('[Storage] 保存账号失败:', e);
   }
@@ -1247,8 +1248,8 @@ async function login(accountName, password) {
   let users = loadUsers();
   if (!users) {
     users = {
-      '燃脂侠': { password: '', isAdmin: true, role: 'husband', displayName: '燃脂侠' },
-      '甩肉酱': { password: '', isAdmin: false, role: 'wife', displayName: '甩肉酱' }
+      '28895047': { password: '', isAdmin: true, role: 'husband', displayName: '28895047' },
+      '13957156591': { password: '', isAdmin: false, role: 'wife', displayName: '13957156591' }
     };
     saveUsers(users);
   }
