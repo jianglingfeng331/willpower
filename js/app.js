@@ -259,7 +259,7 @@ function showToast(msg) {
 }
 
 // ========== Tab 切换 ==========
-function switchTab(tab) {
+async function switchTab(tab) {
   document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
 
@@ -285,7 +285,7 @@ function switchTab(tab) {
   if (tab === 'home') updateHomePage();
   if (tab === 'record') { recordViewRole = currentRole; updateRecordPage(); }
   if (tab === 'stats') { destroyCharts(); renderAllCharts(); renderWaterStats(); }
-  if (tab === 'me') updateMePage();
+  if (tab === 'me') await updateMePage();
 }
 
 // ========== 全量UI更新 ==========
@@ -510,7 +510,7 @@ function updateRecordPage() {
       '<span>消耗 ' + stats.calOut + ' kcal</span>' +
       '<span>饮水 ' + stats.waterTotal + ' ml</span>' +
       '<span>得分 ' + stats.score + '</span>' +
-      '<button class="diary-entry-btn inline" onclick="openDiaryDetail(\'' + dt + '\', \'' + viewRole + '\')">饮食日记 →</button>';
+      '<button class="diary-entry-btn inline" onclick="openDiaryDetail(\'' + dt + '\', \'' + viewRole + '\')">美食日记 →</button>';
   }
 
   // 查看对方数据时隐藏录入按钮；历史日期也隐藏
@@ -1119,7 +1119,7 @@ function checkKillDuelPopup() {
 }
 
 // ========== 我的页面 ==========
-function updateMePage() {
+async function updateMePage() {
   const account = currentRole;
   const info = getAccountInfo(account);
 
@@ -1156,7 +1156,7 @@ function updateMePage() {
   }
 
   // 自律大PK卡片
-  renderPkCard();
+  await renderPkCard();
   renderPkHistoryInline();
 }
 
@@ -1329,7 +1329,7 @@ async function startPkRound() {
 }
 
 // 渲染PK卡片（我的页面）
-function renderPkCard() {
+async function renderPkCard() {
   const area = document.getElementById('pk-status-area');
   if (!area) return;
   const active = getActivePkRound();
@@ -1354,8 +1354,8 @@ function renderPkCard() {
     else scoreLead = '暂时持平 (' + hTotal + ' vs ' + wTotal + ')';
   }
   if (active.items.includes('weight')) {
-    const hWt = getWeightForDate(todayDate, 'husband');
-    const wWt = getWeightForDate(todayDate, 'wife');
+    const hWt = await getWeightForDate(todayDate, 'husband');
+    const wWt = await getWeightForDate(todayDate, 'wife');
     if (hWt !== null && wWt !== null && active.startWeight.husband && active.startWeight.wife) {
       const hPct = calcWeightPct(active.startWeight.husband, hWt);
       const wPct = calcWeightPct(active.startWeight.wife, wWt);
@@ -2001,7 +2001,7 @@ function openFoodCard() {
 }
 
 
-// ========== 饮食日记详情 ==========
+// ========== 美食日记详情 ==========
 let diaryCurrentDate = '';
 let diaryCurrentRole = '';
 
@@ -2247,6 +2247,30 @@ async function handleCameraFile(event) {
   event.target.value = '';
 }
 
+const healthTips = [
+  '💡 多吃蔬菜可以补充维生素',
+  '💧 每天喝8杯水保持身体水分',
+  '🥗 均衡饮食让营养更全面',
+  '🍎 苹果富含膳食纤维',
+  '🍊 橙子是维生素C的好来源',
+  '🥛 牛奶提供优质蛋白质',
+  '🥦 西兰花营养价值很高',
+  '🍌 香蕉能快速补充能量',
+  '🥑 牛油果富含健康脂肪',
+  '🍚 适量粗粮有益肠道健康',
+  '🍗 鸡胸肉是优质蛋白来源',
+  '🥕 胡萝卜富含胡萝卜素'
+];
+
+function showRandomHealthTip() {
+  const tipEl = document.getElementById('processing-tip');
+  if (!tipEl) return;
+  const randomTip = healthTips[Math.floor(Math.random() * healthTips.length)];
+  tipEl.textContent = randomTip;
+}
+
+let healthTipInterval = null;
+
 // 处理图片（抠图 + AI识别 + 异步生成贴纸）
 async function processImage(imageBase64) {
   console.log('[相机] 开始处理图片...');
@@ -2254,33 +2278,63 @@ async function processImage(imageBase64) {
   const choiceArea = document.getElementById('camera-choice-area');
   const processing = document.getElementById('camera-processing');
   const processingText = document.getElementById('processing-text');
+  const cameraResult = document.getElementById('camera-result');
+  const cameraTitle = document.getElementById('camera-modal-title');
+  const cameraSubtitle = document.getElementById('camera-subtitle');
 
   if (choiceArea) choiceArea.classList.add('hidden');
   if (processing) processing.classList.remove('hidden');
 
+  if (cameraTitle) cameraTitle.textContent = '正在解析你的美味佳肴';
+  if (cameraSubtitle) cameraSubtitle.textContent = 'AI 正在认真识别菜品中，马上为你算出热量、碳水、蛋白质三大营养数据哦，请稍等片刻～';
+
+  showRandomHealthTip();
+  healthTipInterval = setInterval(showRandomHealthTip, 2500);
+
   try {
+    // 步骤0：立即显示原图（0秒反馈）
+    console.log('[相机] 步骤0：显示原图...');
+    if (processingText) processingText.textContent = '正在准备图片...';
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     // 步骤1：抠图去除背景
     console.log('[相机] 步骤1：抠图去除背景...');
-    if (processingText) processingText.textContent = '正在抠图去除背景...';
+    if (processingText) processingText.textContent = '正在精准抠图...';
     const t1 = Date.now();
     const processedImage = await removeBackground(imageBase64);
     currentProcessedImage = processedImage;
     console.log('[相机] 抠图完成，耗时:', (Date.now() - t1) + 'ms');
 
-    // 步骤2：AI识别食物
-    console.log('[相机] 步骤2：AI识别食物...');
-    if (processingText) processingText.textContent = 'AI 正在识别食物...';
+    // 步骤2：显示抠图结果（即时反馈）
+    console.log('[相机] 步骤2：显示抠图结果...');
+    if (processing) processing.classList.add('hidden');
+    if (cameraResult) cameraResult.classList.remove('hidden');
+    
+    const resultImg = document.getElementById('result-food-image');
+    if (resultImg) {
+      resultImg.src = processedImage;
+      resultImg.classList.remove('hidden');
+    }
+
+    // 步骤3：AI识别食物（后台进行）
+    console.log('[相机] 步骤3：AI识别食物...');
+    const resultFoodName = document.getElementById('result-food-name');
+    if (resultFoodName) resultFoodName.textContent = '识别中...';
+    
     const t2 = Date.now();
     const recognizedData = await recognizeFood(processedImage);
     currentRecognizedData = recognizedData;
     console.log('[相机] AI识别完成，耗时:', (Date.now() - t2) + 'ms, 结果:', recognizedData);
 
-    // 步骤3：立即显示结果（不等生图）
-    console.log('[相机] 显示识别结果...');
+    // 步骤4：显示识别结果（即时反馈）
+    console.log('[相机] 步骤4：显示识别结果...');
+    if (cameraTitle) cameraTitle.textContent = '本次美食小档案';
+    if (cameraSubtitle) cameraSubtitle.textContent = '';
+    
     showRecognitionResult(null, { ...recognizedData, isSticker: false });
     console.log('[相机] 识别流程完成，用户可操作，耗时:', (Date.now() - totalStart) + 'ms (约' + ((Date.now() - totalStart)/1000).toFixed(1) + '秒)');
 
-    // 步骤4：后台异步生图（不阻塞用户操作）
+    // 步骤5：后台异步生图（不阻塞用户操作）
     console.log('[相机] 后台异步生成卡通贴纸...');
     generateStickerAsync(processedImage, recognizedData.foodName);
 
@@ -2288,6 +2342,11 @@ async function processImage(imageBase64) {
     console.error('[相机] 图片处理失败:', error);
     showToast('识别失败，请重试');
     closeCameraModal();
+  } finally {
+    if (healthTipInterval) {
+      clearInterval(healthTipInterval);
+      healthTipInterval = null;
+    }
   }
 }
 
@@ -2742,7 +2801,7 @@ async function saveRecognizedFood() {
   closeCameraModal();
   await updateAllUI();
 
-  // 立即更新饮食日记页面
+  // 立即更新美食日记页面
   if (typeof renderDiaryDetail === 'function') {
     renderDiaryDetail();
   }

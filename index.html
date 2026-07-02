@@ -198,6 +198,10 @@
         <span class="score-entry-arrow"><svg width="16" height="16"><use href="#ic-chevron-down"/></svg></span>
       </div>
       <span class="score-rules-link" onclick="openScoreRules()">积分规则</span>
+      <button class="diary-icon-btn" onclick="openDiaryDetail(null, null)">
+        <svg class="diary-icon-svg" width="18" height="18"><use href="#ic-utensils"/></svg>
+        <span class="diary-icon-text">美食日记</span>
+      </button>
     </div>
 
     <!-- 双方今日概览 -->
@@ -353,7 +357,7 @@
       <button class="diary-back-btn" onclick="closeDiaryDetail()">
         <svg width="20" height="20"><use href="#ic-chevron-left"/></svg>
       </button>
-      <div class="diary-header-title" id="diary-header-title">饮食日记</div>
+      <div class="diary-header-title" id="diary-header-title">美食日记</div>
       <div class="diary-header-account" id="diary-header-account"></div>
     </div>
 
@@ -669,9 +673,12 @@
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
       </button>
-      <span class="camera-title">拍照识别食物</span>
+      <span class="camera-title" id="camera-modal-title">拍照记录美食</span>
       <div style="width:24px"></div>
     </div>
+
+    <!-- 状态引导文案 -->
+    <div class="camera-subtitle" id="camera-subtitle">随手拍一餐，轻松搞定卡路里计算，好好吃饭也能好好变瘦～</div>
 
     <!-- 选择方式区域 -->
     <div class="camera-choice-area" id="camera-choice-area">
@@ -705,6 +712,7 @@
     <div class="camera-processing hidden" id="camera-processing">
       <div class="processing-spinner"></div>
       <div class="processing-text" id="processing-text">正在处理图片...</div>
+      <div class="processing-tip" id="processing-tip">💡 健康小贴士：保持均衡饮食有助于身体健康</div>
     </div>
 
     <!-- 结果展示区域 -->

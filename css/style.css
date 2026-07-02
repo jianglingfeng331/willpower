@@ -1042,6 +1042,85 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   background: var(--orange-light-bg);
 }
 
+.diary-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF9800 50%, #FFEB3B 100%);
+  background-size: 200% 200%;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(255,107,107,0.4);
+  animation: diaryBtnAnim 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.diary-icon-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: diaryBtnShine 2s ease-in-out infinite;
+}
+
+.diary-icon-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(255,107,107,0.5);
+}
+
+.diary-icon-btn:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 2px 10px rgba(255,107,107,0.3);
+}
+
+.diary-icon-svg {
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+  animation: iconBounce 2s ease-in-out infinite;
+}
+
+.diary-icon-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+@keyframes diaryBtnAnim {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 0 4px 15px rgba(255,107,107,0.4);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 0 6px 22px rgba(255,152,0,0.5);
+  }
+}
+
+@keyframes diaryBtnShine {
+  0%, 100% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+}
+
+@keyframes iconBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 /* ========== 积分规则弹窗 ========== */
 .score-rules-list {
   display: flex; flex-direction: column; gap: 0;
@@ -1958,7 +2037,7 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 .pk-history-winner { margin-left: auto; font-size: 13px; font-weight: 600; }
 .pk-history-detail { margin-top: 6px; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 
-/* ========== 饮食日记详情 ========== */
+/* ========== 美食日记详情 ========== */
 
 /* --- 日记头部 --- */
 .diary-header {
@@ -2199,9 +2278,21 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 }
 
 .camera-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text-primary);
+}
+
+.camera-subtitle {
+  font-size: 13px;
+  color: #9E9E9E;
+  text-align: center;
+  padding: 8px 30px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  background: rgba(255,255,255,0.8);
+  border-radius: 8px;
 }
 
 .camera-choice-area {
@@ -2281,9 +2372,23 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   to { transform: rotate(360deg); }
 }
 
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 .processing-text {
   font-size: 15px;
   color: var(--text-secondary);
+}
+
+.processing-tip {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 280px;
+  margin-top: 10px;
+  animation: fadeInOut 2.5s ease-in-out infinite;
 }
 
 .camera-result {
@@ -2292,12 +2397,13 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   flex-direction: column;
   background: var(--bg-main);
   min-height: 100%;
+  gap: 12px;
 }
 
 /* 顶部白色图片卡片 */
 .result-image-card {
   background: var(--card-bg);
-  padding: 24px 20px 20px;
+  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2309,8 +2415,8 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 /* 图片容器 - 固定大小确保两个图片重叠在同一位置 */
 .result-image-wrapper {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2319,8 +2425,8 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 .result-food-image,
 .result-sticker-image {
   position: absolute;
-  max-width: 200px;
-  max-height: 200px;
+  max-width: 160px;
+  max-height: 160px;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -2386,18 +2492,18 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 /* 食物信息区域 */
 .result-food-info {
   background: var(--card-bg);
-  padding: 20px;
-  margin: 16px 16px 0;
+  padding: 16px;
+  margin: 0 16px;
   border-radius: 16px;
   box-shadow: var(--shadow-card);
   text-align: center;
 }
 
 .result-food-name {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: #3E2723;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   outline: none;
   cursor: text;
   letter-spacing: 1px;
@@ -2419,7 +2525,7 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 }
 
 .result-cal-value {
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 800;
   color: #D4A574;
   outline: none;
@@ -2474,25 +2580,25 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 .result-nutrient-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
   padding: 0 16px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .nutrient-card {
   background: #FFFFFF;
   border-radius: 12px;
-  padding: 18px 12px;
+  padding: 14px 10px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid #F0F0F0;
 }
 
 .nutrient-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #9E9E9E;
 }
@@ -2531,17 +2637,17 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
   border: 1px solid #FFE08A;
   border-radius: 12px;
-  padding: 16px;
-  margin: 16px;
+  padding: 12px 14px;
+  margin: 0 16px;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   box-shadow: 0 2px 8px rgba(255,193,7,0.12);
 }
 
 .result-tip-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
   border-radius: 50%;
   display: flex;
@@ -2553,10 +2659,15 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   box-shadow: 0 2px 6px rgba(255,193,7,0.3);
 }
 
+.result-tip-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
 .result-tip-text {
   flex: 1;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
   color: #5D4037;
   font-weight: 500;
 }
@@ -2567,8 +2678,8 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
   align-items: center;
   gap: 6px;
   padding: 0 16px;
-  margin-bottom: 12px;
-  font-size: 13px;
+  margin: 8px 0;
+  font-size: 12px;
   color: #9E9E9E;
 }
 
@@ -2585,9 +2696,9 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 .result-actions {
   display: flex;
   gap: 12px;
-  padding: 16px;
+  padding: 5px;
   margin-top: auto;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  padding-bottom: max(5px, env(safe-area-inset-bottom, 5px));
 }
 
 .result-btn {
@@ -2606,15 +2717,15 @@ img, video, canvas, svg, table, input, select, textarea, iframe {
 }
 
 .result-btn-confirm {
-  background: linear-gradient(135deg, #4CAF50 0%, #43A047 100%);
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   color: #FFFFFF;
-  box-shadow: 0 4px 16px rgba(76,175,80,0.35);
+  box-shadow: 0 4px 16px rgba(255,152,0,0.35);
 }
 
 .result-btn-confirm:active {
-  background: linear-gradient(135deg, #43A047 0%, #388E3C 100%);
+  background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
   transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(76,175,80,0.25);
+  box-shadow: 0 2px 8px rgba(255,152,0,0.25);
 }
 
 .result-btn-cancel {
