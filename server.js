@@ -175,7 +175,7 @@ app.post('/api/food-recognize', async (req, res) => {
               },
               {
                 type: 'text',
-                text: '请识别这张图片中的食物，并以JSON格式返回营养信息。请严格按照以下格式返回，不要添加任何其他文字：\n{\n  "foodName": "食物名称",\n  "calories": 热量数值,\n  "carbs": 碳水化合物克数,\n  "protein": 蛋白质克数,\n  "fat": 脂肪克数,\n  "fiber": 膳食纤维克数,\n  "sugar": 糖分克数,\n  "sodium": 钠毫克数,\n  "tip": "一句简短的饮食建议"\n}\n请估算合理的营养成分值，以整数值返回。只返回JSON，不要有其他说明文字。'
+                text: '请识别这张图片中的食物，并根据图片中食物的实际份量估算营养信息。请严格按照以下格式返回，不要添加任何其他文字：\n{\n  "foodName": "食物名称",\n  "estimatedWeight": 估算的食物份量（克数）,\n  "caloriesPer100g": 每100g热量（千卡）,\n  "carbsPer100g": 每100g碳水化合物（克）,\n  "proteinPer100g": 每100g蛋白质（克）,\n  "fatPer100g": 每100g脂肪（克）,\n  "fiberPer100g": 每100g膳食纤维（克）,\n  "sugarPer100g": 每100g糖分（克）,\n  "sodiumPer100g": 每100g钠（毫克）,\n  "tip": "一句简短的饮食建议"\n}\n请根据图片中食物的大小、数量来估算实际份量（estimatedWeight），并返回每100g的营养成分标准值。以整数值返回。只返回JSON，不要有其他说明文字。'
               }
             ]
           }
@@ -249,17 +249,37 @@ app.post('/api/food-recognize', async (req, res) => {
       }
 
       console.log('[食物识别] 完成，耗时:', (Date.now() - startTime) + 'ms');
+      
+      const estimatedWeight = parseInt(foodData.estimatedWeight) || 100;
+      const caloriesPer100g = parseInt(foodData.caloriesPer100g) || parseInt(foodData.calories) || 0;
+      const carbsPer100g = parseInt(foodData.carbsPer100g) || parseInt(foodData.carbs) || 0;
+      const proteinPer100g = parseInt(foodData.proteinPer100g) || parseInt(foodData.protein) || 0;
+      const fatPer100g = parseInt(foodData.fatPer100g) || parseInt(foodData.fat) || 0;
+      const fiberPer100g = parseInt(foodData.fiberPer100g) || parseInt(foodData.fiber) || 0;
+      const sugarPer100g = parseInt(foodData.sugarPer100g) || parseInt(foodData.sugar) || 0;
+      const sodiumPer100g = parseInt(foodData.sodiumPer100g) || parseInt(foodData.sodium) || 0;
+      
+      const ratio = estimatedWeight / 100;
+      
       res.json({
         success: true,
         data: {
           foodName: foodData.foodName || '未知食物',
-          calories: parseInt(foodData.calories) || 0,
-          carbs: parseInt(foodData.carbs) || 0,
-          protein: parseInt(foodData.protein) || 0,
-          fat: parseInt(foodData.fat) || 0,
-          fiber: parseInt(foodData.fiber) || 0,
-          sugar: parseInt(foodData.sugar) || 0,
-          sodium: parseInt(foodData.sodium) || 0,
+          estimatedWeight: estimatedWeight,
+          calories: Math.round(caloriesPer100g * ratio),
+          carbs: Math.round(carbsPer100g * ratio),
+          protein: Math.round(proteinPer100g * ratio),
+          fat: Math.round(fatPer100g * ratio),
+          fiber: Math.round(fiberPer100g * ratio),
+          sugar: Math.round(sugarPer100g * ratio),
+          sodium: Math.round(sodiumPer100g * ratio),
+          caloriesPer100g: caloriesPer100g,
+          carbsPer100g: carbsPer100g,
+          proteinPer100g: proteinPer100g,
+          fatPer100g: fatPer100g,
+          fiberPer100g: fiberPer100g,
+          sugarPer100g: sugarPer100g,
+          sodiumPer100g: sodiumPer100g,
           tip: foodData.tip || '建议搭配蔬菜，营养均衡更健康'
         },
         duration: Date.now() - startTime
@@ -274,9 +294,175 @@ app.post('/api/food-recognize', async (req, res) => {
   }
 });
 
+// 根据食物名称获取营养信息接口
+app.post('/api/food-info', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { foodName } = req.body;
+
+    if (!foodName) {
+      return res.status(400).json({ error: '缺少食物名称' });
+    }
+
+    console.log('[食物营养查询] 查询:', foodName);
+
+    const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ZHIPU_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'glm-4-flash',
+        messages: [
+          {
+            role: 'user',
+            content: `请查询"${foodName}"的营养信息，并以JSON格式返回。请严格按照以下格式返回，不要添加任何其他文字：\n{\n  "foodName": "${foodName}",\n  "estimatedWeight": 一份常见份量（克数）,\n  "caloriesPer100g": 每100g热量（千卡）,\n  "carbsPer100g": 每100g碳水化合物（克）,\n  "proteinPer100g": 每100g蛋白质（克）,\n  "fatPer100g": 每100g脂肪（克）,\n  "fiberPer100g": 每100g膳食纤维（克）,\n  "sugarPer100g": 每100g糖分（克）,\n  "sodiumPer100g": 每100g钠（毫克）,\n  "tip": "一句简短的饮食建议"\n}\n请返回每100g的标准营养成分值，并估算一份常见份量（estimatedWeight）。以整数值返回。只返回JSON，不要有其他说明文字。`
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 500
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('智谱AI错误:', errorText);
+      const mockData = getMockFoodData();
+      return res.json({
+        success: true,
+        data: {
+          foodName: foodName,
+          calories: mockData.calories,
+          carbs: mockData.carbs,
+          protein: mockData.protein,
+          fat: mockData.fat,
+          fiber: mockData.fiber,
+          sugar: mockData.sugar,
+          sodium: mockData.sodium,
+          tip: mockData.tip
+        },
+        fallback: true,
+        duration: Date.now() - startTime
+      });
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error('智谱AI返回错误:', data.error.message);
+      const mockData = getMockFoodData();
+      return res.json({
+        success: true,
+        data: {
+          foodName: foodName,
+          calories: mockData.calories,
+          carbs: mockData.carbs,
+          protein: mockData.protein,
+          fat: mockData.fat,
+          fiber: mockData.fiber,
+          sugar: mockData.sugar,
+          sodium: mockData.sodium,
+          tip: mockData.tip
+        },
+        fallback: true,
+        duration: Date.now() - startTime
+      });
+    }
+
+    const content = data.choices[0].message.content;
+    console.log('AI返回内容:', content);
+
+    let foodData;
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*?\}/);
+      if (jsonMatch) {
+        foodData = JSON.parse(jsonMatch[0]);
+      } else {
+        foodData = JSON.parse(content);
+      }
+
+      console.log('[食物营养查询] 完成，耗时:', (Date.now() - startTime) + 'ms');
+      
+      const estimatedWeight = parseInt(foodData.estimatedWeight) || 100;
+      const caloriesPer100g = parseInt(foodData.caloriesPer100g) || parseInt(foodData.calories) || 0;
+      const carbsPer100g = parseInt(foodData.carbsPer100g) || parseInt(foodData.carbs) || 0;
+      const proteinPer100g = parseInt(foodData.proteinPer100g) || parseInt(foodData.protein) || 0;
+      const fatPer100g = parseInt(foodData.fatPer100g) || parseInt(foodData.fat) || 0;
+      const fiberPer100g = parseInt(foodData.fiberPer100g) || parseInt(foodData.fiber) || 0;
+      const sugarPer100g = parseInt(foodData.sugarPer100g) || parseInt(foodData.sugar) || 0;
+      const sodiumPer100g = parseInt(foodData.sodiumPer100g) || parseInt(foodData.sodium) || 0;
+      
+      const ratio = estimatedWeight / 100;
+      
+      res.json({
+        success: true,
+        data: {
+          foodName: foodData.foodName || foodName,
+          estimatedWeight: estimatedWeight,
+          calories: Math.round(caloriesPer100g * ratio),
+          carbs: Math.round(carbsPer100g * ratio),
+          protein: Math.round(proteinPer100g * ratio),
+          fat: Math.round(fatPer100g * ratio),
+          fiber: Math.round(fiberPer100g * ratio),
+          sugar: Math.round(sugarPer100g * ratio),
+          sodium: Math.round(sodiumPer100g * ratio),
+          caloriesPer100g: caloriesPer100g,
+          carbsPer100g: carbsPer100g,
+          proteinPer100g: proteinPer100g,
+          fatPer100g: fatPer100g,
+          fiberPer100g: fiberPer100g,
+          sugarPer100g: sugarPer100g,
+          sodiumPer100g: sodiumPer100g,
+          tip: foodData.tip || '建议搭配蔬菜，营养均衡更健康'
+        },
+        duration: Date.now() - startTime
+      });
+    } catch (parseError) {
+      console.error('解析响应失败:', parseError, content);
+      const mockData = getMockFoodData();
+      res.json({
+        success: true,
+        data: {
+          foodName: foodName,
+          calories: mockData.calories,
+          carbs: mockData.carbs,
+          protein: mockData.protein,
+          fat: mockData.fat,
+          fiber: mockData.fiber,
+          sugar: mockData.sugar,
+          sodium: mockData.sodium,
+          tip: mockData.tip
+        },
+        fallback: true,
+        duration: Date.now() - startTime
+      });
+    }
+  } catch (error) {
+    console.error('服务器错误:', error);
+    const mockData = getMockFoodData();
+    res.json({
+      success: true,
+      data: {
+        foodName: req.body.foodName || '未知食物',
+        calories: mockData.calories,
+        carbs: mockData.carbs,
+        protein: mockData.protein,
+        fat: mockData.fat,
+        fiber: mockData.fiber,
+        sugar: mockData.sugar,
+        sodium: mockData.sodium,
+        tip: mockData.tip
+      },
+      fallback: true,
+      duration: Date.now() - startTime
+    });
+  }
+});
+
 // AI生成卡通冰箱贴接口
 // 通用提示词：日系治愈扁平卡通插画，美食食物，完整保留原图食物外形、比例、色彩特征，圆润柔和质感，清新马卡龙柔和配色，细腻柔和阴影，干净简约轮廓线条，软萌 Q 版画风，高清细节，圆角异形白色描边，透明背景，冰箱贴贴纸样式，居中构图，柔和自然光，商品贴纸拍摄，8K 超高清晰度，无多余杂物，画面干净简洁
-const STICKER_PROMPT = '杰作，最佳画质，8K 分辨率，极致细节，半写实日系插画风格，完整保留参考图中食物原本的外形轮廓、色彩、表皮纹理以及所有细节特征，仅做画质精细化优化，柔和哑光质感，自然细腻光影，干净纤细轮廓线，清新柔和色调，美食冰箱贴纸，异形圆角白色粗描边，纯白色背景无纹理无阴影无渐变无装饰，居中构图，柔和漫射自然光，无任何多余元素；图生图重绘幅度：0.3；采样器：DPM++ 2M Karras；采样步数：24 步；生成图片分辨率和原图尺寸保持一致';
+const STICKER_PROMPT = '日系卡通插画风格，美食食物，完整保留原图食物外形轮廓、色彩特征，柔和质感，清新柔和配色，干净轮廓线条，圆角白色描边，纯白色背景，居中构图，无多余元素，简洁干净';
 
 app.post('/api/generate-sticker', async (req, res) => {
   const startTime = Date.now();
