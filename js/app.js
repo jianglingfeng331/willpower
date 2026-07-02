@@ -45,7 +45,7 @@ function formatDateDisplay(d) {
 document.addEventListener('DOMContentLoaded', async () => {
   await initData();
   await syncFromServer();
-  if (!checkAuth()) return;
+  if (!await checkAuth()) return;
   await initMockData();
   await updateAllUI();
   renderAllCharts();
@@ -55,11 +55,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ========== 登录认证 ==========
-function checkAuth() {
+async function checkAuth() {
   let user = getCurrentUser();
   // 自动登录：sessionStorage 无登录态但 localStorage 有
   if (!user) {
-    const result = autoLogin();
+    const result = await autoLogin();
     if (result && result.success) {
       user = getCurrentUser();
     }

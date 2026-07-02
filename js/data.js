@@ -1074,7 +1074,7 @@ function clearAllData() {
 
 async function analyzeFoodImage(base64Image) {
   try {
-    const res = await fetch('http://127.0.0.1:3001/api/food-recognize', {
+    const res = await fetch('/api/food-recognize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64Image })
@@ -1324,7 +1324,7 @@ function logout() {
 // ========== 数据同步到服务器 ==========
 async function autoSyncToServer() {
   try {
-    const healthRes = await fetch('http://127.0.0.1:3001/api/health', { timeout: 3000 });
+    const healthRes = await fetch('/api/health', { timeout: 3000 });
     if (!healthRes.ok) {
       console.log('[Sync] 服务器不可用，跳过同步');
       return;
@@ -1350,7 +1350,7 @@ async function autoSyncToServer() {
       setup_completed: localSetupCompleted ? JSON.parse(localSetupCompleted) : {}
     };
 
-    const syncRes = await fetch('http://127.0.0.1:3001/api/sync', {
+    const syncRes = await fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(syncData),
@@ -1370,7 +1370,7 @@ async function autoSyncToServer() {
 
 async function syncFromServer() {
   try {
-    const res = await fetch('http://127.0.0.1:3001/api/sync', { timeout: 5000 });
+    const res = await fetch('/api/sync', { timeout: 5000 });
     if (!res.ok) return;
 
     const serverData = await res.json();
@@ -1393,8 +1393,8 @@ async function syncFromServer() {
               } else {
                 const localMeals = localData.records[date][account].meals || [];
                 const serverMeals = serverData.records[date][account].meals || [];
-                if (serverMeals.length > localMeals.length) {
-                  localData.records[date][account].meals = serverMeals;
+                if (serverMeals.length > localMeals.length || true) {
+                  localData.records[date][account] = serverData.records[date][account];
                   needsUpdate = true;
                 }
               }
@@ -1402,11 +1402,32 @@ async function syncFromServer() {
           }
         }
       }
+    }
 
-      if (needsUpdate) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
-        console.log('[Sync] 已从服务器同步更新数据');
+    if (serverData.pkRounds && serverData.pkRounds.length > 0) {
+      if (!localData.pkRounds || localData.pkRounds.length === 0) {
+        localData.pkRounds = serverData.pkRounds;
+        needsUpdate = true;
+        console.log('[Sync] 已从服务器同步PK数据');
+      } else {
+        const serverRoundIds = new Set(serverData.pkRounds.map(r => r.id));
+        for (const round of serverData.pkRounds) {
+          if (!localData.pkRounds.some(r => r.id === round.id)) {
+            localData.pkRounds.push(round);
+            needsUpdate = true;
+          }
+        }
       }
+    }
+
+    if (serverData.currentAccount) {
+      localData.currentAccount = serverData.currentAccount;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
+      console.log('[Sync] 已从服务器同步更新数据');
     }
 
     if (serverData.pk_users) {
@@ -1415,6 +1436,42 @@ async function syncFromServer() {
         saveUsers(serverData.pk_users);
         console.log('[Sync] 已从服务器恢复用户数据');
       }
+    }
+
+    if (serverData.accounts) {
+      const localAccounts = loadAccounts();
+      for (const role of ['husband', 'wife']) {
+        if (serverData.accounts[role]) {
+          if (!localAccounts[role]) {
+            localAccounts[role] = serverData.accounts[role];
+            saveAccounts(localAccounts);
+            console.log('[Sync] 已从服务器同步账户设置:', role);
+          } else {
+            if (serverData.accounts[role].dailyCalorieBudget && !localAccounts[role].dailyCalorieBudget) {
+              localAccounts[role].dailyCalorieBudget = serverData.accounts[role].dailyCalorieBudget;
+              saveAccounts(localAccounts);
+            }
+            if (serverData.accounts[role].initialWeight && !localAccounts[role].initialWeight) {
+              localAccounts[role].initialWeight = serverData.accounts[role].initialWeight;
+              saveAccounts(localAccounts);
+            }
+            if (serverData.accounts[role].targetWeight && !localAccounts[role].targetWeight) {
+              localAccounts[role].targetWeight = serverData.accounts[role].targetWeight;
+              saveAccounts(localAccounts);
+            }
+          }
+        }
+      }
+    }
+
+    if (serverData.nicknames) {
+      saveNicknames(serverData.nicknames);
+      console.log('[Sync] 已从服务器同步昵称数据');
+    }
+
+    if (serverData.setup_completed) {
+      localStorage.setItem(SETUP_KEY, JSON.stringify(serverData.setup_completed));
+      console.log('[Sync] 已从服务器同步设置完成标记');
     }
   } catch (e) {
     console.log('[Sync] 从服务器拉取数据失败:', e.message);

@@ -4,7 +4,7 @@
 const API_CONFIG = {
   ZHIPU_API_KEY: 'da521b586d1d4279908ba9d1cb69573d.EoiBIgODirND5P5z',
   REMOVE_BG_API_KEY: '', // 可选：remove.bg API Key
-  SERVER_URL: 'http://127.0.0.1:3001'
+  SERVER_URL: ''
 };
 
 // 当前数据
