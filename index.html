@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="该减肥le">
 <meta name="theme-color" content="#7FC3DD">
-<link rel="stylesheet" href="css/style.css?v=20260624b">
+<link rel="stylesheet" href="css/style.css?v=20260629m">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -198,6 +198,10 @@
         <span class="score-entry-arrow"><svg width="16" height="16"><use href="#ic-chevron-down"/></svg></span>
       </div>
       <span class="score-rules-link" onclick="openScoreRules()">积分规则</span>
+      <button class="diary-icon-btn" onclick="openDiaryDetail(null, null)">
+        <svg class="diary-icon-svg" width="18" height="18"><use href="#ic-utensils"/></svg>
+        <span class="diary-icon-text">美食日记</span>
+      </button>
     </div>
 
     <!-- 双方今日概览 -->
@@ -297,7 +301,7 @@
         <span class="toggle-icon" id="meal-toggle"><svg width="14" height="14"><use href="#ic-chevron-down"/></svg></span>
       </div>
       <div class="record-card-body" id="meal-section">
-        <button class="record-btn" onclick="openMealModal()"><svg class="ic-inline" width="16" height="16"><use href="#ic-camera"/></svg> 拍照识别 / 手动记录</button>
+        <button class="record-btn" onclick="openMealModal()"><svg class="ic-inline" width="16" height="16"><use href="#ic-utensils"/></svg> 添加饮食</button>
         <div class="record-list" id="meal-list"></div>
       </div>
     </div>
@@ -344,6 +348,53 @@
         </div>
         <div class="record-list" id="weight-list"></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ===== 饮食日记详情 Tab ===== -->
+  <section class="tab-page" id="tab-diary">
+    <div class="diary-header">
+      <button class="diary-back-btn" onclick="closeDiaryDetail()">
+        <svg width="20" height="20"><use href="#ic-chevron-left"/></svg>
+      </button>
+      <div class="diary-header-title" id="diary-header-title">美食日记</div>
+      <div class="diary-header-account" id="diary-header-account"></div>
+    </div>
+
+    <!-- 日期导航条 -->
+    <div class="date-nav-bar" id="date-nav-bar">
+      <button class="date-nav-arrow" onclick="diaryShiftDate(-1)">
+        <svg width="16" height="16"><use href="#ic-chevron-left"/></svg>
+      </button>
+      <div class="date-nav-scroll" id="date-nav-scroll"></div>
+      <button class="date-nav-arrow" onclick="diaryShiftDate(1)">
+        <svg width="16" height="16"><use href="#ic-chevron-right"/></svg>
+      </button>
+    </div>
+
+    <!-- 总热量概览 -->
+    <div class="diary-summary-card" id="diary-summary-card">
+      <div class="diary-summary-row">
+        <div class="diary-summary-label">总摄入</div>
+        <div class="diary-summary-cal" id="diary-total-cal">0</div>
+        <div class="diary-summary-unit">kcal</div>
+      </div>
+      <div class="diary-budget-row">
+        <span class="diary-budget-label">预算</span>
+        <span class="diary-budget-val" id="diary-budget-val">2000</span>
+        <span class="diary-budget-unit">kcal</span>
+        <span class="diary-remain-label" id="diary-remain-label">剩余</span>
+        <span class="diary-remain-val" id="diary-remain-val">2000</span>
+        <span class="diary-remain-unit">kcal</span>
+      </div>
+      <div class="diary-progress-bar">
+        <div class="diary-progress-fill" id="diary-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- 食物记录列表 -->
+    <div class="diary-food-list" id="diary-food-list">
+      <div class="diary-food-empty" id="diary-food-empty">暂无饮食记录</div>
     </div>
   </section>
 
@@ -546,31 +597,6 @@
     </div>
 
     <div class="settings-card">
-      <div class="settings-title"><svg class="ic-inline" width="18" height="18"><use href="#ic-camera"/></svg> AI识别设置</div>
-      <div class="ai-settings-field">
-        <label class="ai-settings-label">API地址</label>
-        <input type="text" id="ai-api-endpoint" class="settings-input" placeholder="https://api.openai.com/v1/chat/completions" autocomplete="off" style="width:100%;">
-      </div>
-      <div class="ai-settings-field">
-        <label class="ai-settings-label">API Key</label>
-        <input type="text" id="ai-api-key" class="settings-input" placeholder="sk-..." autocomplete="off" style="width:100%;">
-      </div>
-      <div class="ai-settings-field">
-        <label class="ai-settings-label">模型名称</label>
-        <input type="text" id="ai-model" class="settings-input" placeholder="gpt-4o" autocomplete="off" style="width:100%;">
-      </div>
-      <div style="display:flex;gap:10px;padding:12px 0;">
-        <button class="settings-save-btn" onclick="saveAISettings()" style="flex:1;">保存设置</button>
-        <button class="settings-save-btn" id="ai-test-btn" onclick="testAIConnection()" style="flex:1;background:var(--orange-accent);">测试连接</button>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 0;">
-        <span style="font-size:12px;color:var(--text-muted);line-height:1.4;">支持 OpenAI 兼容接口（GPT-4o / Claude / Gemini 等多模态模型）</span>
-        <button class="ai-restore-btn" onclick="restoreAIDefaults()">恢复默认</button>
-      </div>
-      <div id="ai-test-result" class="hidden" style="font-size:13px;text-align:center;padding:0 0 12px;color:var(--text-muted);"></div>
-    </div>
-
-    <div class="settings-card">
       <div class="settings-title">账号安全</div>
       <div id="admin-password-section" style="display:none">
         <div class="admin-form-row">
@@ -601,6 +627,215 @@
 
 </main>
 
+<!-- ========== 底部浮动按钮栏 ========== -->
+<div class="bottom-action-bar">
+  <button class="action-bar-btn" onclick="switchTab('home')" title="首页">
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7M11 3L9 17"/>
+    </svg>
+    <span>首页</span>
+  </button>
+  <button class="action-bar-btn" onclick="switchTab('record')" title="记录">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"/>
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L14.5 5.5a2.121 2.121 0 0 1 3-3L16.5 3.5z"/>
+    </svg>
+    <span>记录</span>
+  </button>
+  <button class="action-bar-btn action-bar-main" onclick="openCameraModal()" title="拍照识别食物">
+    <svg width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M10 3v14M3 10h14"/>
+    </svg>
+  </button>
+  <button class="action-bar-btn" onclick="switchTab('stats')" title="统计">
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M12 20V10M6 20V4M18 20v-8"/>
+    </svg>
+    <span>统计</span>
+  </button>
+  <button class="action-bar-btn" onclick="switchTab('me')" title="我的">
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="10" cy="7" r="4"/>
+      <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+    </svg>
+    <span>我的</span>
+  </button>
+</div>
+
+<!-- ========== 相机弹窗 ========== -->
+<div class="camera-modal-overlay" id="camera-modal-overlay">
+  <div class="camera-modal">
+
+    <!-- 头部 -->
+    <div class="camera-header">
+      <button class="camera-cancel-btn" onclick="closeCameraModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <span class="camera-title" id="camera-modal-title">拍照记录美食</span>
+      <div style="width:24px"></div>
+    </div>
+
+    <!-- 状态引导文案 -->
+    <div class="camera-subtitle" id="camera-subtitle">随手拍一餐，轻松搞定卡路里计算，好好吃饭也能好好变瘦～</div>
+
+    <!-- 选择方式区域 -->
+    <div class="camera-choice-area" id="camera-choice-area">
+      <div class="choice-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+      <div class="choice-text">请选择拍摄方式</div>
+      <div class="choice-buttons">
+        <button class="choice-btn" onclick="chooseTakePhoto()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>拍照</span>
+        </button>
+        <button class="choice-btn" onclick="chooseGallery()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-4.5-4.5L12 15 3 6"/>
+          </svg>
+          <span>相册</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 处理中提示 -->
+    <div class="camera-processing hidden" id="camera-processing">
+      <div class="processing-spinner"></div>
+      <div class="processing-text" id="processing-text">正在处理图片...</div>
+      <div class="processing-tip" id="processing-tip">💡 健康小贴士：保持均衡饮食有助于身体健康</div>
+    </div>
+
+    <!-- 结果展示区域 -->
+    <div class="camera-result hidden" id="camera-result">
+      <!-- 顶部白色卡片 - 食物图片 -->
+      <div class="result-image-card">
+        <div class="result-image-wrapper">
+          <img id="result-food-image" src="" alt="食物图片" class="result-food-image">
+          <img id="result-sticker-image" src="" alt="卡通贴纸" class="result-sticker-image hidden">
+        </div>
+
+        <!-- 图片切换按钮 -->
+        <div class="image-toggle-buttons">
+          <button class="toggle-btn active" id="btn-show-original" onclick="toggleImageDisplay('original')">
+            原图
+          </button>
+          <button class="toggle-btn" id="btn-show-sticker" onclick="toggleImageDisplay('sticker')">
+            卡通贴纸
+          </button>
+        </div>
+      </div>
+
+      <!-- 食物信息区域 -->
+      <div class="result-food-info">
+        <!-- 食物名称 -->
+        <div class="result-food-name" id="result-food-name" contenteditable="true">香蕉</div>
+
+        <!-- 热量信息 -->
+        <div class="result-calorie-info">
+          <span class="result-cal-value" id="result-calories" contenteditable="true">100</span>
+          <span class="result-cal-unit">大卡</span>
+          <div class="result-weight-input-wrap">
+            <input type="number" id="result-weight" class="result-weight-input" placeholder="份量" min="1" value="100">
+            <span class="result-weight-unit">g</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 营养数据卡片 - 横向排列三个 -->
+      <div class="result-nutrient-cards">
+        <div class="nutrient-card">
+          <div class="nutrient-label">碳水化合物</div>
+          <div class="nutrient-value">
+            <span id="result-carbs" contenteditable="true">27</span>
+            <span class="nutrient-unit">g</span>
+          </div>
+        </div>
+        <div class="nutrient-card">
+          <div class="nutrient-label">蛋白质</div>
+          <div class="nutrient-value">
+            <span id="result-protein" contenteditable="true">1</span>
+            <span class="nutrient-unit">g</span>
+          </div>
+        </div>
+        <div class="nutrient-card">
+          <div class="nutrient-label">脂肪</div>
+          <div class="nutrient-value">
+            <span id="result-fat" contenteditable="true">0</span>
+            <span class="nutrient-unit">g</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 更多营养数据卡片 - 横向排列三个 -->
+      <div class="result-nutrient-cards">
+        <div class="nutrient-card">
+          <div class="nutrient-label">膳食纤维</div>
+          <div class="nutrient-value">
+            <span id="result-fiber" contenteditable="true">2</span>
+            <span class="nutrient-unit">g</span>
+          </div>
+        </div>
+        <div class="nutrient-card">
+          <div class="nutrient-label">糖</div>
+          <div class="nutrient-value">
+            <span id="result-sugar" contenteditable="true">12</span>
+            <span class="nutrient-unit">g</span>
+          </div>
+        </div>
+        <div class="nutrient-card">
+          <div class="nutrient-label">钠</div>
+          <div class="nutrient-value">
+            <span id="result-sodium" contenteditable="true">1</span>
+            <span class="nutrient-unit">mg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 营养小贴士 -->
+      <div class="result-tip-card">
+        <div class="result-tip-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+        </div>
+        <div class="result-tip-text" id="result-tip-text">香蕉富含钾元素，有助于维持正常血压和肌肉功能，适合运动前后食用。</div>
+      </div>
+
+      <!-- 日期时间显示 -->
+      <div class="result-datetime">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span id="result-datetime-text">2024-06-30 14:30</span>
+      </div>
+
+      <!-- 隐藏字段，用于保存时获取数据 -->
+      <input type="hidden" id="result-fiber-hidden" value="0">
+
+      <!-- 底部操作按钮 -->
+      <div class="result-actions">
+        <button class="result-btn result-btn-cancel" onclick="resetCamera()">取消</button>
+        <button class="result-btn result-btn-confirm" onclick="saveRecognizedFood()">记一笔</button>
+      </div>
+    </div>
+
+    <!-- 隐藏的文件输入 -->
+    <input type="file" id="camera-file-input" accept="image/*" capture="environment" hidden onchange="handleCameraFile(event)">
+  </div>
+</div>
+
 <!-- ========== 底部导航 ========== -->
 <nav class="tab-bar">
   <div class="tab-item active" data-tab="home" onclick="switchTab('home')">
@@ -630,39 +865,13 @@
     </div>
     <div class="modal-body">
 
-      <!-- 三段式 Tab -->
+      <!-- 二段式 Tab -->
       <div class="meal-tabs">
-        <button class="meal-tab" data-tab="camera" onclick="switchMealTab('camera')">拍照识别</button>
         <button class="meal-tab" data-tab="manual" onclick="switchMealTab('manual')">手动输入</button>
         <button class="meal-tab active" data-tab="common" onclick="switchMealTab('common')">常用食物</button>
       </div>
 
-      <!-- Tab1: 拍照识别 -->
-      <div class="meal-tab-content" id="meal-tab-camera">
-        <div class="ai-capture-wrapper">
-          <input type="file" id="ai-camera-input" accept="image/*" capture="environment" onchange="handleImageCapture(event)">
-          <div class="ai-capture-btn">
-            <svg class="ic-inline" width="20" height="20"><use href="#ic-camera"/></svg> 拍照识别食物
-          </div>
-        </div>
-        <div class="ai-preview hidden" id="ai-preview">
-          <canvas id="ai-preview-canvas"></canvas>
-          <div class="ai-loading hidden" id="ai-loading">
-            <div class="ai-spinner"></div>
-            <span>识别中...</span>
-          </div>
-          <div class="ai-results hidden" id="ai-results-inline">
-            <div class="ai-results-header">
-              <span class="ai-source-badge" id="ai-source-badge"></span>
-              <span class="ai-close-preview" onclick="clearAIPreview()"><svg width="16" height="16"><use href="#ic-close"/></svg></span>
-            </div>
-            <div id="ai-results-list"></div>
-            <button class="modal-btn" onclick="confirmAllAIRecognition()">添加到列表 (<span id="ai-total-cal">0</span> kcal)</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab2: 手动输入 -->
+      <!-- Tab1: 手动输入 -->
       <div class="meal-tab-content" id="meal-tab-manual">
         <div class="manual-input-group">
           <input type="text" id="manual-food-name" class="settings-input-wide" placeholder="食物名称">
@@ -671,7 +880,7 @@
         </div>
       </div>
 
-      <!-- Tab3: 常用食物 -->
+      <!-- Tab2: 常用食物 -->
       <div class="meal-tab-content active" id="meal-tab-common">
         <div class="food-grid" id="food-grid"></div>
         <div class="food-grid-actions">
@@ -978,10 +1187,10 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260624a"></script>
+<script src="js/data.js?v=20260629e"></script>
 <script src="js/mock.js?v=20260622a"></script>
 <script src="js/charts.js?v=20260622a"></script>
-<script src="js/app.js?v=20260624b"></script>
+<script src="js/app.js?v=20260629n"></script>
 </div><!-- end main-content -->
 </body>
 </html>

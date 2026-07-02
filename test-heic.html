@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><title>HEIC 测试</title></head>
+<body>
+<h1>HEIC 库测试</h1>
+<script src="js/heic2any.min.js"></script>
+<script>
+setTimeout(function() {
+  console.log('heic2any 类型:', typeof heic2any);
+  console.log('window.heic2any 类型:', typeof window.heic2any);
+  console.log('全局变量:', Object.keys(window).filter(k => k.includes('heic')).join(', '));
+
+  // 检查是否在模块中
+  if (typeof module !== 'undefined' && module.exports) {
+    console.log('模块导出:', typeof module.exports);
+  }
+}, 1000);
+</script>
+</body>
+</html>

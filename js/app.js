@@ -5,17 +5,16 @@ let currentRole = null;    // 'husband' 或 'wife'
 let isAdmin = false;
 let selectedFoods = [];     // [{key, name, calories, quantity, unit}]
 let selectedExercise = null;
-let aiRecognitionResults = [];
 let recordDate = today();
 let recordViewRole = null; // 记录页当前查看的角色，切换后可查看对方历史记录
-let mealTab = 'common';    // 'common' | 'camera' | 'manual'
+let mealTab = 'common';    // 'common' | 'manual'
 // ========== 日期导航辅助函数 ==========
 function getRecordDate() { return recordDate; }
 
 function goToPrevDay() {
   const d = new Date(recordDate);
   d.setDate(d.getDate() - 1);
-  recordDate = d.toISOString().split('T')[0];
+  recordDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   updateRecordPage();
 }
 
@@ -23,8 +22,9 @@ function goToNextDay() {
   const d = new Date(recordDate);
   d.setDate(d.getDate() + 1);
   const t = today();
-  if (d.toISOString().split('T')[0] > t) return;
-  recordDate = d.toISOString().split('T')[0];
+  const nextDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  if (nextDate > t) return;
+  recordDate = nextDate;
   updateRecordPage();
 }
 
@@ -44,9 +44,10 @@ function formatDateDisplay(d) {
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', async () => {
   await initData();
+  await syncFromServer();
   if (!checkAuth()) return;
-  initMockData();
-  updateAllUI();
+  await initMockData();
+  await updateAllUI();
   renderAllCharts();
   initHASync();
   initRandomAnimal();
@@ -102,22 +103,22 @@ function showRegister() {
   randomAuthBackground();
 }
 
-function doLogin() {
+async function doLogin() {
   const account = document.getElementById('login-account').value.trim();
   const password = document.getElementById('login-password').value;
   if (!account) {
     document.getElementById('login-error').textContent = '请输入账号名';
     return;
   }
-  const result = login(account, password);
+  const result = await login(account, password);
   if (result.success) {
     currentUser = account;
     currentRole = result.role;
     isAdmin = result.isAdmin;
     document.getElementById('auth-overlay').style.display = 'none';
     document.getElementById('main-content').style.display = '';
-    initMockData();
-    updateAllUI();
+    await initMockData();
+    await updateAllUI();
     renderAllCharts();
     initHASync();
     initRandomAnimal();
@@ -171,7 +172,7 @@ function checkFirstTimeSetup() {
   openModal('modal-first-setup');
 }
 
-function confirmFirstTimeSetup() {
+async function confirmFirstTimeSetup() {
   const initW = parseFloat(document.getElementById('setup-init-weight').value);
   const targetW = parseFloat(document.getElementById('setup-target-weight').value);
   const calB = parseInt(document.getElementById('setup-cal-budget').value);
@@ -190,7 +191,7 @@ function confirmFirstTimeSetup() {
 
   markSetupCompleted(currentRole);
   closeModal('modal-first-setup');
-  updateAllUI();
+  await updateAllUI();
   initRandomAnimal();
   showToast('目标已设定，开始你的减重之旅吧！');
 }
@@ -258,28 +259,42 @@ function showToast(msg) {
 }
 
 // ========== Tab 切换 ==========
-function switchTab(tab) {
+async function switchTab(tab) {
   document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
 
   const page = document.getElementById('tab-' + tab);
   if (page) page.classList.add('active');
-  const tabBtn = document.querySelector('.tab-item[data-tab="' + tab + '"]');
-  if (tabBtn) tabBtn.classList.add('active');
+  // diary tab 不是底部导航项，仅当 tab 是四个主Tab时才激活底部导航
+  if (tab !== 'diary') {
+    const tabBtn = document.querySelector('.tab-item[data-tab="' + tab + '"]');
+    if (tabBtn) tabBtn.classList.add('active');
+  }
+
+  // diary 页面隐藏居中「+」按钮和底部导航栏
+  var addBtn = document.getElementById('center-add-btn');
+  var tabBar = document.querySelector('.tab-bar');
+  if (tab === 'diary') {
+    if (addBtn) addBtn.style.display = 'none';
+    if (tabBar) tabBar.style.display = 'none';
+  } else {
+    if (addBtn) addBtn.style.display = '';
+    if (tabBar) tabBar.style.display = '';
+  }
 
   if (tab === 'home') updateHomePage();
   if (tab === 'record') { recordViewRole = currentRole; updateRecordPage(); }
   if (tab === 'stats') { destroyCharts(); renderAllCharts(); renderWaterStats(); }
-  if (tab === 'me') updateMePage();
+  if (tab === 'me') await updateMePage();
 }
 
 // ========== 全量UI更新 ==========
-function updateAllUI() {
+async function updateAllUI() {
   updateHeader();
   updateHomePage();
   updateRecordPage();
   updateMePage();
-  checkKillDuelPopup();
+  await checkKillDuelPopup();
   checkPkAutoSettle();
 }
 
@@ -494,7 +509,8 @@ function updateRecordPage() {
     summaryEl.innerHTML = '<span>摄入 ' + stats.calIn + ' kcal</span>' +
       '<span>消耗 ' + stats.calOut + ' kcal</span>' +
       '<span>饮水 ' + stats.waterTotal + ' ml</span>' +
-      '<span>得分 ' + stats.score + '</span>';
+      '<span>得分 ' + stats.score + '</span>' +
+      '<button class="diary-entry-btn inline" onclick="openDiaryDetail(\'' + dt + '\', \'' + viewRole + '\')">美食日记 →</button>';
   }
 
   // 查看对方数据时隐藏录入按钮；历史日期也隐藏
@@ -564,40 +580,38 @@ function updateRecordPage() {
 }
 
 // ========== 删除确认 ==========
-function confirmDeleteMeal(idx) {
+async function confirmDeleteMeal(idx) {
   if (!confirm('确定删除这条饮食记录吗？')) return;
   deleteMeal(today(), currentRole, idx);
-  updateAllUI();
+  await updateAllUI();
   showToast('已删除');
 }
 
-function confirmDeleteExercise(idx) {
+async function confirmDeleteExercise(idx) {
   if (!confirm('确定删除这条运动记录吗？')) return;
   deleteExercise(today(), currentRole, idx);
-  updateAllUI();
+  await updateAllUI();
   showToast('已删除');
 }
 
-function confirmDeleteWater(idx) {
+async function confirmDeleteWater(idx) {
   if (!confirm('确定删除这条饮水记录吗？')) return;
   deleteWater(getRecordDate(), currentRole, idx);
-  updateAllUI();
+  await updateAllUI();
   showToast('已删除');
 }
 
-function confirmDeleteWeight() {
+async function confirmDeleteWeight() {
   if (!confirm('确定删除今日体重记录吗？')) return;
   deleteWeight(today(), currentRole);
-  updateAllUI();
+  await updateAllUI();
   showToast('已删除');
 }
 
-// ========== 饮食记录弹窗（三段Tab式）==========
+// ========== 饮食记录弹窗（二段Tab式）==========
 function openMealModal() {
   selectedFoods = [];
   mealTab = 'common';
-  aiRecognitionResults = [];
-  clearAIPreview();
 
   // Tab 切换
   document.querySelectorAll('.meal-tab').forEach(t => t.classList.remove('active'));
@@ -771,7 +785,7 @@ function addManualFoodToList() {
 }
 
 // ========== 确认记录（遍历 selectedFoods）==========
-function confirmMeal() {
+async function confirmMeal() {
   if (selectedFoods.length === 0) {
     showToast('请添加至少一种食物');
     return;
@@ -784,7 +798,7 @@ function confirmMeal() {
   const totalCal = selectedFoods.reduce((s, f) => s + f.calories * f.quantity, 0);
   closeModal('modal-meal');
   showToast('已记录 ' + selectedFoods.length + ' 种食物，共 ' + totalCal + ' kcal');
-  updateAllUI();
+  await updateAllUI();
 }
 
 // ========== 自定义运动管理 ==========
@@ -847,195 +861,6 @@ function renderCustomExerciseGrid() {
   `).join('');
 }
 
-// ========== AI拍照识别 ==========
-function openCamera() {
-  const input = document.getElementById('ai-camera-input');
-  if (!input) {
-    showToast('相机组件未就绪，请刷新页面');
-    return;
-  }
-  input.click();
-}
-
-function handleImageCapture(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = function() {
-      compressAndPreview(img);
-      startAIRecognition(img);
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-  event.target.value = '';
-}
-
-function compressAndPreview(img) {
-  const canvas = document.getElementById('ai-preview-canvas');
-  const maxW = 512;
-  let w = img.width, h = img.height;
-  if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, w, h);
-
-  const preview = document.getElementById('ai-preview');
-  preview.classList.remove('hidden');
-  document.getElementById('ai-results-inline').classList.add('hidden');
-  document.getElementById('ai-loading').classList.remove('hidden');
-}
-
-async function startAIRecognition(img) {
-  const canvas = document.getElementById('ai-preview-canvas');
-  const base64 = canvas.toDataURL('image/jpeg', 0.7);
-
-  try {
-    const result = await analyzeFoodImage(base64);
-    if (result.error) {
-      showToast(result.error);
-    }
-    showRecognitionResults(result);
-  } catch (e) {
-    document.getElementById('ai-loading').classList.add('hidden');
-    showToast('识别失败，请重试');
-  }
-}
-
-function showRecognitionResults(result) {
-  document.getElementById('ai-loading').classList.add('hidden');
-  const resultsDiv = document.getElementById('ai-results-inline');
-  resultsDiv.classList.remove('hidden');
-
-  // Source badge
-  const badge = document.getElementById('ai-source-badge');
-  if (result.source === 'simulated') {
-    badge.textContent = '离线识别（未配置AI）';
-    badge.className = 'ai-source-badge badge-simulated';
-  } else {
-    badge.textContent = 'AI识别';
-    badge.className = 'ai-source-badge badge-ai';
-  }
-
-  aiRecognitionResults = result.foods.map(f => ({ ...f, checked: true, quantity: 1 }));
-
-  const list = document.getElementById('ai-results-list');
-  list.innerHTML = aiRecognitionResults.map((f, i) => `
-    <div class="ai-result-card" data-idx="${i}">
-      <label class="ai-result-check">
-        <input type="checkbox" checked onchange="toggleAIRecord(${i}, this.checked)">
-      </label>
-      <div class="ai-result-info">
-        <span class="ai-result-name">${f.name}</span>
-        <span class="ai-result-conf">置信度 ${Math.round(f.confidence * 100)}%</span>
-      </div>
-      <div class="food-stepper ai-stepper">
-        <button class="stepper-btn" onclick="changeAiQty(${i}, -1)">−</button>
-        <span class="stepper-val">${f.quantity}</span>
-        <button class="stepper-btn" onclick="changeAiQty(${i}, 1)">+</button>
-      </div>
-      <span class="ai-result-subtotal">${f.calories} kcal</span>
-    </div>
-  `).join('');
-
-  updateAITotalCal();
-}
-
-function changeAiQty(idx, delta) {
-  const f = aiRecognitionResults[idx];
-  if (!f) return;
-  f.quantity = Math.max(1, f.quantity + delta);
-
-  // 更新 DOM
-  const card = document.querySelector(`.ai-result-card[data-idx="${idx}"]`);
-  if (card) {
-    card.querySelector('.stepper-val').textContent = f.quantity;
-    card.querySelector('.ai-result-subtotal').textContent = (f.calories * f.quantity) + ' kcal';
-  }
-  updateAITotalCal();
-}
-
-function toggleAIRecord(idx, checked) {
-  aiRecognitionResults[idx].checked = checked;
-  updateAITotalCal();
-}
-
-function updateAICal(idx, val) {
-  aiRecognitionResults[idx].calories = parseInt(val) || 0;
-  // 同步更新单条 subtotal
-  const f = aiRecognitionResults[idx];
-  const card = document.querySelector(`.ai-result-card[data-idx="${idx}"]`);
-  if (card) {
-    card.querySelector('.ai-result-subtotal').textContent = (f.calories * f.quantity) + ' kcal';
-  }
-  updateAITotalCal();
-}
-
-function updateAITotalCal() {
-  const total = aiRecognitionResults.filter(f => f.checked).reduce((s, f) => s + f.calories * f.quantity, 0);
-  document.getElementById('ai-total-cal').textContent = total;
-}
-
-function clearAIPreview() {
-  document.getElementById('ai-preview').classList.add('hidden');
-  document.getElementById('ai-loading').classList.add('hidden');
-  document.getElementById('ai-results-inline').classList.add('hidden');
-  document.getElementById('ai-camera-input').value = '';
-}
-
-function confirmAllAIRecognition() {
-  const toAdd = aiRecognitionResults.filter(f => f.checked);
-  if (toAdd.length === 0) {
-    showToast('没有可添加的记录');
-    return;
-  }
-
-  toAdd.forEach(f => {
-    addAiFoodToList(f.name, f.calories);
-    // 如果 quantity > 1，额外增量
-    const existing = selectedFoods.find(item => item.name === f.name);
-    if (existing && f.quantity > 1) {
-      existing.quantity += f.quantity - 1;
-    }
-  });
-
-  // 清空 AI 预览
-  clearAIPreview();
-  aiRecognitionResults = [];
-  // 更新已选列表
-  updateSelectedList();
-  showToast('已添加 ' + toAdd.length + ' 种食物到列表');
-}
-
-// ========== 自定义食物管理弹窗 ==========
-function openCustomFoodModal() {
-  const listEl = document.getElementById('custom-food-list');
-  const customFoods = getCustomFoods();
-  const entries = Object.entries(customFoods);
-
-  if (entries.length === 0) {
-    listEl.innerHTML = '<div style="color:#999;font-size:13px;padding:8px;">暂无自定义食物</div>';
-  } else {
-    listEl.innerHTML = entries.map(([key, f]) => `
-      <div class="selected-food-item">
-        <div class="selected-food-info">
-          <span class="selected-food-name">${f.name}</span>
-          <span class="selected-food-unit">${f.cal} kcal/${f.unit}</span>
-        </div>
-        <button class="custom-food-del-btn" onclick="removeCustomFoodItem('${key}')">删除</button>
-      </div>
-    `).join('');
-  }
-
-  document.getElementById('custom-food-name').value = '';
-  document.getElementById('custom-food-cal').value = '';
-  document.getElementById('custom-food-unit').value = '';
-  openModal('modal-custom-food');
-}
 
 function addCustomFoodItem() {
   const name = document.getElementById('custom-food-name').value.trim();
@@ -1077,7 +902,7 @@ function selectExercise(exKey) {
   });
 }
 
-function confirmExercise() {
+async function confirmExercise() {
   if (!selectedExercise) {
     showToast('请选择运动类型');
     return;
@@ -1092,11 +917,11 @@ function confirmExercise() {
   const result = addExercise(today(), currentRole, selectedExercise, duration);
   closeModal('modal-exercise');
   showToast(getDisplayName(currentRole) + ' ' + result.name + ' ' + duration + '分钟 消耗' + result.calories + 'kcal');
-  updateAllUI();
+  await updateAllUI();
 }
 
 // ========== 快捷指令回调：解析 URL 参数中的运动数据 ==========
-function initHASync() {
+async function initHASync() {
   const params = new URLSearchParams(location.search);
   if (params.get('ha_sync') !== '1') return;
 
@@ -1119,7 +944,7 @@ function initHASync() {
   const cleanUrl = location.origin + location.pathname;
   history.replaceState(null, '', cleanUrl);
 
-  updateAllUI();
+  await updateAllUI();
 }
 
 // ========== 随机显示猫/狗图片 ==========
@@ -1135,15 +960,15 @@ function initRandomAnimal() {
 
 
 // ========== 喝水 ==========
-function addWater(ml) {
+async function addWater(ml) {
   window._dataAddWater(today(), currentRole, ml);
   const info = getAccountInfo(currentRole);
   showToast(info.name + ' +' + ml + 'ml');
-  updateAllUI();
+  await updateAllUI();
 }
 
 // ========== 体重记录 ==========
-function recordWeight() {
+async function recordWeight() {
   const input = document.getElementById('weight-input');
   const val = parseFloat(input.value);
   if (!val || val <= 0) {
@@ -1153,7 +978,7 @@ function recordWeight() {
   setWeight(getRecordDate(), currentRole, val);
   input.value = '';
   showToast(getDisplayName(currentRole) + ' 体重 ' + val + 'kg 已记录');
-  updateAllUI();
+  await updateAllUI();
 }
 
 // ========== 杀局弹窗：夫妻减肥PK ==========
@@ -1294,7 +1119,7 @@ function checkKillDuelPopup() {
 }
 
 // ========== 我的页面 ==========
-function updateMePage() {
+async function updateMePage() {
   const account = currentRole;
   const info = getAccountInfo(account);
 
@@ -1318,7 +1143,7 @@ function updateMePage() {
     if (isAdmin) {
       const select = document.getElementById('admin-target-account');
       if (select) {
-        const users = loadUsers();
+        const users = loadUsers() || {};
         select.innerHTML = '';
         Object.keys(users).forEach(name => {
           const opt = document.createElement('option');
@@ -1330,123 +1155,30 @@ function updateMePage() {
     }
   }
 
-  // AI设置
-  const aiConfig = loadAIConfig();
-  document.getElementById('ai-api-endpoint').value = aiConfig.apiEndpoint || '';
-  document.getElementById('ai-api-key').value = aiConfig.apiKey || '';
-  document.getElementById('ai-model').value = aiConfig.model || '';
-
   // 自律大PK卡片
-  renderPkCard();
+  await renderPkCard();
   renderPkHistoryInline();
 }
 
-function saveCalorieBudget() {
+async function saveCalorieBudget() {
   const val = parseInt(document.getElementById('cal-budget-input').value) || 2000;
   updateAccountInfo(currentRole, { dailyCalorieBudget: val });
   showToast('卡路里预算已更新：' + val + ' kcal');
-  updateAllUI();
+  await updateAllUI();
 }
 
-function saveInitWeight() {
+async function saveInitWeight() {
   const val = parseFloat(document.getElementById('init-weight-input').value) || 70;
   updateAccountInfo(currentRole, { initialWeight: val });
   showToast('初始体重已更新：' + val + ' kg');
-  updateAllUI();
+  await updateAllUI();
 }
 
-function saveTargetWeight() {
+async function saveTargetWeight() {
   const val = parseFloat(document.getElementById('target-weight-input').value) || 60;
   updateAccountInfo(currentRole, { targetWeight: val });
   showToast('目标体重已更新：' + val + ' kg');
-  updateAllUI();
-}
-
-// ========== AI设置 ==========
-function saveAISettings() {
-  const config = {
-    apiEndpoint: document.getElementById('ai-api-endpoint').value.trim(),
-    apiKey: document.getElementById('ai-api-key').value.trim(),
-    model: document.getElementById('ai-model').value.trim()
-  };
-  saveAIConfig(config);
-  showToast('AI设置已保存');
-  document.getElementById('ai-test-result').classList.add('hidden');
-}
-
-async function testAIConnection() {
-  const endpoint = document.getElementById('ai-api-endpoint').value.trim();
-  const apiKey = document.getElementById('ai-api-key').value.trim();
-  const model = document.getElementById('ai-model').value.trim();
-
-  const resultDiv = document.getElementById('ai-test-result');
-  resultDiv.classList.remove('hidden');
-
-  if (!endpoint) {
-    resultDiv.textContent = '请填写 API 地址';
-    resultDiv.style.color = 'var(--orange-deep)';
-    return;
-  }
-
-  if (!apiKey) {
-    resultDiv.textContent = '请先输入 API Key';
-    resultDiv.style.color = 'var(--orange-deep)';
-    return;
-  }
-
-  resultDiv.textContent = '测试中...';
-  resultDiv.style.color = 'var(--text-muted)';
-
-  try {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [{ role: 'user', content: 'hi' }],
-        max_tokens: 5
-      })
-    });
-
-    if (res.ok) {
-      resultDiv.textContent = '连接成功';
-      resultDiv.style.color = 'var(--green)';
-      showToast('AI连接测试成功');
-    } else if (res.status === 401) {
-      resultDiv.textContent = '401 — API Key 无效，请检查 Key 是否正确';
-      resultDiv.style.color = 'var(--orange-deep)';
-    } else if (res.status === 404) {
-      resultDiv.textContent = '404 — API 地址错误，请检查 Endpoint 是否正确';
-      resultDiv.style.color = 'var(--orange-deep)';
-    } else if (res.status === 429) {
-      resultDiv.textContent = '429 — 请求频率超限，请稍后再试';
-      resultDiv.style.color = 'var(--orange-deep)';
-    } else {
-      const errData = await res.text().catch(() => '');
-      const snippet = errData.substring(0, 100);
-      resultDiv.textContent = res.status + ' 错误：' + snippet;
-      resultDiv.style.color = 'var(--orange-deep)';
-    }
-  } catch (e) {
-    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-      resultDiv.textContent = '网络错误：无法连接到服务器，请检查 API 地址';
-    } else {
-      resultDiv.textContent = '网络错误：' + e.message;
-    }
-    resultDiv.style.color = 'var(--orange-deep)';
-  }
-}
-
-function restoreAIDefaults() {
-  const config = getDefaultAIConfig();
-  document.getElementById('ai-api-endpoint').value = config.apiEndpoint;
-  document.getElementById('ai-api-key').value = config.apiKey;
-  document.getElementById('ai-model').value = config.model;
-  document.getElementById('ai-test-result').classList.add('hidden');
-  showToast('已恢复默认设置，请保存生效');
+  await updateAllUI();
 }
 
 // ========== 昵称编辑 ==========
@@ -1457,7 +1189,7 @@ function openNicknameModal() {
   openModal('modal-nickname');
 }
 
-function saveNickname() {
+async function saveNickname() {
   const val = document.getElementById('nickname-input').value.trim();
   const oldName = getDisplayName(currentRole);
   setNickname(currentRole, val);
@@ -1468,7 +1200,7 @@ function saveNickname() {
   } else if (!val && !getNickname(currentRole)) {
     showToast('已恢复默认名称：' + newName);
   }
-  updateAllUI();
+  await updateAllUI();
 }
 
 function closeNicknameModal() {
@@ -1476,7 +1208,7 @@ function closeNicknameModal() {
 }
 
 // ========== 账号设置保存（"我的"页面） ==========
-function saveAccountSettings() {
+async function saveAccountSettings() {
   const account = currentUser;
   const errEl = document.getElementById('me-settings-error');
   errEl.textContent = '';
@@ -1522,7 +1254,7 @@ function saveAccountSettings() {
     showToast('无变更');
   }
 
-  updateAllUI();
+  await updateAllUI();
 }
 
 // ========== PK模块 ==========
@@ -1556,7 +1288,7 @@ function openPkStartModal() {
   openModal('modal-pk-start');
 }
 
-function startPkRound() {
+async function startPkRound() {
   const scoreChecked = document.getElementById('pk-item-score').checked;
   const weightChecked = document.getElementById('pk-item-weight').checked;
   if (!scoreChecked && !weightChecked) { showToast('请至少选择一项PK'); return; }
@@ -1593,11 +1325,11 @@ function startPkRound() {
   savePkRound(round);
   closeModal('modal-pk-start');
   showToast('自律大PK已开启！' + startDate + ' ~ ' + endDate);
-  updateAllUI();
+  await updateAllUI();
 }
 
 // 渲染PK卡片（我的页面）
-function renderPkCard() {
+async function renderPkCard() {
   const area = document.getElementById('pk-status-area');
   if (!area) return;
   const active = getActivePkRound();
@@ -1622,8 +1354,8 @@ function renderPkCard() {
     else scoreLead = '暂时持平 (' + hTotal + ' vs ' + wTotal + ')';
   }
   if (active.items.includes('weight')) {
-    const hWt = getWeightForDate(todayDate, 'husband');
-    const wWt = getWeightForDate(todayDate, 'wife');
+    const hWt = await getWeightForDate(todayDate, 'husband');
+    const wWt = await getWeightForDate(todayDate, 'wife');
     if (hWt !== null && wWt !== null && active.startWeight.husband && active.startWeight.wife) {
       const hPct = calcWeightPct(active.startWeight.husband, hWt);
       const wPct = calcWeightPct(active.startWeight.wife, wWt);
@@ -1664,12 +1396,12 @@ function cancelActivePk() {
   openModal('modal-cancel-pk');
 }
 
-function confirmCancelPk() {
+async function confirmCancelPk() {
   if (!_cancelPkTargetId) return;
   cancelPkRound(_cancelPkTargetId);
   _cancelPkTargetId = null;
   closeModal('modal-cancel-pk');
-  updateAllUI();
+  await updateAllUI();
   showToast('PK已取消');
 }
 
@@ -1833,20 +1565,20 @@ function checkPkAutoSettle() {
 }
 
 // ========== 重置数据 ==========
-function resetAllData() {
+async function resetAllData() {
   if (confirm('确定要重置全部数据吗？此操作不可恢复！')) {
-    resetAll();
-    initMockData();
-    updateAllUI();
+    await resetAll();
+    await initMockData();
+    await updateAllUI();
     destroyCharts();
     renderAllCharts();
     showToast('数据已重置');
   }
 }
 
-function clearDataKeepAccount() {
+async function clearDataKeepAccount() {
   if (!confirm('确定要清空运动记录与设置数据吗？\n\n将清除：运动记录、积分、热量/体重设置、昵称、AI配置\n将保留：已注册的账号密码\n\n此操作不可恢复！')) return;
-  clearAllData();
+  await clearAllData();
   location.reload();
 }
 
@@ -2223,4 +1955,1073 @@ function renderWaterMark(dayData, isOk) {
   const cls = isOk ? 'wh-check' : 'wh-cross';
   const icon = isOk ? '✓' : '✗';
   return '<span class="' + cls + '">' + icon + '</span> <span class="wh-ml">' + ml + 'ml (' + pct + '%)</span>';
+}
+
+// ========== 食物拍照识别面板 ==========
+let foodPanelData = null;
+
+const MOCK_FOODS = [
+  // === 中餐热菜 ===
+  { foodName:'宫保鸡丁', calories:450, carbs:22, protein:32, fat:24, fiber:3, sugar:6, sodium:720, tip:'鸡肉高蛋白低脂肪，但宫保做法油糖偏多，建议搭配清炒蔬菜' },
+  { foodName:'清蒸鲈鱼', calories:280, carbs:2, protein:42, fat:12, fiber:0, sugar:1, sodium:380, tip:'清蒸做法锁住营养，鱼肉富含Omega-3，减脂期优选' },
+  { foodName:'糖醋排骨', calories:520, carbs:36, protein:26, fat:32, fiber:1, sugar:18, sodium:650, tip:'糖醋汁含糖量高，偶尔解馋即可，不宜常吃' },
+  { foodName:'麻婆豆腐', calories:350, carbs:15, protein:20, fat:24, fiber:4, sugar:3, sodium:880, tip:'豆腐是优质植物蛋白来源，但麻婆做法钠含量偏高，注意控盐' },
+  { foodName:'西红柿炒蛋', calories:220, carbs:10, protein:14, fat:14, fiber:2, sugar:5, sodium:320, tip:'家常快手菜，番茄红素搭配鸡蛋蛋白，营养全面又低卡' },
+  // === 面食主食 ===
+  { foodName:'红烧牛肉面', calories:580, carbs:68, protein:32, fat:22, fiber:4, sugar:5, sodium:920, tip:'牛肉补铁补蛋白，面条碳水较高，建议汤少喝以减少钠摄入' },
+  { foodName:'蛋炒饭', calories:480, carbs:56, protein:16, fat:22, fiber:2, sugar:3, sodium:560, tip:'炒饭油脂吸收多，热量偏高，搭配一盘青菜更均衡' },
+  { foodName:'猪肉白菜饺子(10个)', calories:420, carbs:48, protein:18, fat:18, fiber:3, sugar:4, sodium:610, tip:'饺子荤素搭配合理，蘸醋可延缓血糖上升' },
+  { foodName:'炸酱面', calories:610, carbs:75, protein:20, fat:26, fiber:5, sugar:6, sodium:980, tip:'炸酱油脂多、钠含量高，减脂期建议半份即可' },
+  // === 饮品 ===
+  { foodName:'拿铁咖啡(中杯)', calories:190, carbs:15, protein:8, fat:9, fiber:0, sugar:12, sodium:120, tip:'适量饮用提神醒脑，建议不加糖，可选脱脂奶降低热量' },
+  { foodName:'珍珠奶茶(中杯)', calories:380, carbs:58, protein:4, fat:14, fiber:0, sugar:42, sodium:90, tip:'含糖量和热量双高，珍珠本质是淀粉，建议用无糖纯茶替代' },
+  { foodName:'鲜榨橙汁(300ml)', calories:135, carbs:31, protein:2, fat:0, fiber:1, sugar:25, sodium:5, tip:'维生素C丰富但果糖浓缩，直接吃橙子更有饱腹感' },
+  { foodName:'无糖豆浆(300ml)', calories:90, carbs:6, protein:9, fat:4, fiber:2, sugar:1, sodium:15, tip:'优质植物蛋白，含大豆异黄酮，早餐搭配佳选' },
+  // === 水果 ===
+  { foodName:'苹果(1个)', calories:95, carbs:25, protein:1, fat:0, fiber:5, sugar:19, sodium:2, tip:'富含果胶和膳食纤维，饱腹感强，适合加餐食用' },
+  { foodName:'香蕉(1根)', calories:105, carbs:27, protein:1, fat:0, fiber:3, sugar:14, sodium:1, tip:'运动后补钾首选，天然能量棒，但碳水密度偏高' },
+  { foodName:'西瓜(200g)', calories:60, carbs:15, protein:1, fat:0, fiber:1, sugar:12, sodium:2, tip:'水分含量超90%，消暑解渴，但升糖指数较高不宜过量' },
+  // === 零食甜点 ===
+  { foodName:'巧克力蛋糕(1块)', calories:380, carbs:42, protein:5, fat:23, fiber:2, sugar:32, sodium:180, tip:'精制糖+饱和脂肪双重负担，偶尔犒劳自己一块足矣' },
+  { foodName:'香草冰淇淋(1球)', calories:210, carbs:24, protein:3, fat:12, fiber:0, sugar:20, sodium:60, tip:'乳脂含量高，天气热来一球解暑，但控量是关键' },
+  { foodName:'原味薯片(50g)', calories:270, carbs:28, protein:3, fat:17, fiber:2, sugar:1, sodium:350, tip:'油炸淀粉+高钠，空热量零食，建议用坚果替代' },
+  // === 西餐/快餐 ===
+  { foodName:'芝士汉堡', calories:540, carbs:42, protein:28, fat:30, fiber:2, sugar:8, sodium:820, tip:'蛋白质尚可但饱和脂肪和钠超标，去掉芝士和酱料可减约100kcal' },
+  { foodName:'意式腊肠披萨(1片)', calories:285, carbs:32, protein:12, fat:13, fiber:2, sugar:4, sodium:650, tip:'单片热量尚可控，但很少有人只吃一片，建议配大份沙拉' },
+  { foodName:'凯撒鸡肉沙拉', calories:320, carbs:14, protein:28, fat:18, fiber:5, sugar:3, sodium:560, tip:'鸡肉高蛋白，生菜高纤维，但凯撒酱热量不低，建议酱料减半' },
+  // === 早餐 ===
+  { foodName:'油条+豆浆', calories:350, carbs:38, protein:12, fat:18, fiber:2, sugar:3, sodium:420, tip:'经典中式早餐，油条油炸热量高，豆浆选无糖更健康' },
+  { foodName:'火腿三明治', calories:340, carbs:36, protein:16, fat:16, fiber:3, sugar:5, sodium:680, tip:'碳水蛋白脂肪比例均衡的便携早餐，可选全麦面包增加纤维' },
+  { foodName:'煎饼果子', calories:390, carbs:44, protein:14, fat:18, fiber:3, sugar:5, sodium:750, tip:'鸡蛋+薄脆+酱料组合，碳水为主，多加生菜少刷酱更健康' },
+];
+
+function openFoodCard() {
+  // 打开 AI 食物识别营养卡片页面
+  window.location.href = 'food-card.html';
+}
+
+
+// ========== 美食日记详情 ==========
+let diaryCurrentDate = '';
+let diaryCurrentRole = '';
+
+function openDiaryDetail(date, account) {
+  diaryCurrentDate = date || today();
+  diaryCurrentRole = account || currentRole;
+  renderDiaryNavBar();
+  renderDiaryDetail();
+  switchTab('diary');
+}
+
+function closeDiaryDetail() {
+  switchTab('record');
+}
+
+function renderDiaryNavBar() {
+  var scroll = document.getElementById('date-nav-scroll');
+  if (!scroll) return;
+
+  var weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  var dates = [];
+  // 正确解析本地时区的日期
+  var base = new Date();
+  var dateParts = diaryCurrentDate.split('-');
+  base.setFullYear(parseInt(dateParts[0]));
+  base.setMonth(parseInt(dateParts[1]) - 1);
+  base.setDate(parseInt(dateParts[2]));
+  base.setHours(0, 0, 0, 0);
+
+  for (var i = -3; i <= 3; i++) {
+    var d = new Date(base);
+    d.setDate(d.getDate() + i);
+    var ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    var dow = weekDays[d.getDay()];
+    var isToday = ds === today();
+    dates.push({ date: ds, dow: dow, day: d.getDate(), isToday: isToday });
+  }
+
+  scroll.innerHTML = dates.map(function(item) {
+    var isActive = item.date === diaryCurrentDate;
+    var cls = 'date-nav-capsule' + (isActive ? ' active' : '');
+    var todayTag = item.isToday ? ' (今)' : '';
+    return '<button class="' + cls + '" onclick="diarySelectDate(\'' + item.date + '\')">' +
+      '<div class="capsule-dow">' + item.dow + todayTag + '</div>' +
+      '<div class="capsule-day">' + item.day + '</div>' +
+    '</button>';
+  }).join('');
+
+  setTimeout(function() {
+    var active = scroll.querySelector('.active');
+    if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, 50);
+}
+
+function diarySelectDate(date) {
+  diaryCurrentDate = date;
+  renderDiaryNavBar();
+  renderDiaryDetail();
+}
+
+function diaryShiftDate(delta) {
+  // 正确解析本地时区的日期
+  var d = new Date();
+  var dateParts = diaryCurrentDate.split('-');
+  d.setFullYear(parseInt(dateParts[0]));
+  d.setMonth(parseInt(dateParts[1]) - 1);
+  d.setDate(parseInt(dateParts[2]));
+  d.setHours(0, 0, 0, 0);
+
+  d.setDate(d.getDate() + delta);
+  diaryCurrentDate = d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+  renderDiaryNavBar();
+  renderDiaryDetail();
+}
+
+function renderDiaryDetail() {
+  var headerTitle = document.getElementById('diary-header-title');
+  var headerAccount = document.getElementById('diary-header-account');
+  var totalCalEl = document.getElementById('diary-total-cal');
+  var budgetValEl = document.getElementById('diary-budget-val');
+  var remainValEl = document.getElementById('diary-remain-val');
+  var remainLabelEl = document.getElementById('diary-remain-label');
+  var progressFillEl = document.getElementById('diary-progress-fill');
+  var foodListEl = document.getElementById('diary-food-list');
+
+  if (!window.getDiaryByDate) return;
+
+  var data = window.getDiaryByDate(diaryCurrentDate, diaryCurrentRole);
+  var accountName = getDisplayName(diaryCurrentRole);
+
+  // 头部日期
+  if (headerTitle) {
+    // 正确解析本地时区的日期
+    var dateParts = diaryCurrentDate.split('-');
+    var d = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]), 0, 0, 0, 0);
+    var weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+    headerTitle.textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + weekDays[d.getDay()] + (diaryCurrentDate === today() ? ' (今天)' : '');
+  }
+  if (headerAccount) headerAccount.textContent = accountName;
+
+  // 总热量
+  var total = data.totalCalories;
+  var budget = data.budget;
+  var remain = Math.max(0, budget - total);
+  var ratio = budget > 0 ? total / budget : 0;
+
+  if (totalCalEl) totalCalEl.textContent = total;
+  if (budgetValEl) budgetValEl.textContent = budget;
+  if (remainValEl) remainValEl.textContent = remain;
+  if (remainLabelEl) remainLabelEl.textContent = total >= budget ? '已超出' : '剩余';
+
+  // 进度条
+  if (progressFillEl) {
+    var pct = Math.min(100, ratio * 100);
+    progressFillEl.style.width = pct + '%';
+    progressFillEl.classList.remove('caution', 'danger');
+    if (ratio > 1) progressFillEl.classList.add('danger');
+    else if (ratio > 0.8) progressFillEl.classList.add('caution');
+  }
+
+  // 食物列表
+  if (!foodListEl) return;
+
+  if (data.meals.length === 0) {
+    foodListEl.innerHTML = '<div class="diary-food-empty">暂无饮食记录</div>';
+    return;
+  }
+
+  foodListEl.innerHTML = data.meals.map(function(m, index) {
+    var imgSrc = m.imageBase64 || m.processedImage;
+    var hasImg = imgSrc && imgSrc.length > 0;
+
+    var nutritionData = m.nutritionInfo ? JSON.stringify(m.nutritionInfo).replace(/"/g, '&quot;') : '';
+
+    var imgHTML = '';
+    if (hasImg) {
+      imgHTML = '<div class="diary-food-img-wrap" onclick="showMealDetail(' + index + ', \'' + escHtml(m.name) + '\', ' + m.calories + ', \'' + (imgSrc || '') + '\', \'' + nutritionData + '\')">' +
+        '<img src="' + imgSrc + '" alt="' + escHtml(m.name) + '" loading="lazy" class="processed">' +
+      '</div>';
+    }
+
+    return '<div class="diary-food-card' + (hasImg ? '' : ' no-image') + '">' +
+      imgHTML +
+      '<div class="diary-food-info">' +
+        '<div class="diary-food-name">' + escHtml(m.name) + '</div>' +
+        '<div class="diary-food-cal"><strong>' + m.calories + '</strong> kcal</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ========== 相机功能 ==========
+let currentImageBase64 = null;
+let currentProcessedImage = null;
+let currentRecognizedData = null;
+let currentStickerImage = null;
+let isGeneratingSticker = false;
+
+// 打开相机弹窗
+function openCameraModal() {
+  const overlay = document.getElementById('camera-modal-overlay');
+  if (overlay) {
+    overlay.classList.add('show');
+    resetCamera();
+  }
+}
+
+// 关闭相机弹窗
+function closeCameraModal() {
+  const overlay = document.getElementById('camera-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('show');
+    resetCamera();
+  }
+}
+
+// 重置相机状态
+function resetCamera() {
+  currentImageBase64 = null;
+  currentProcessedImage = null;
+  currentRecognizedData = null;
+
+  // 重置UI
+  const choiceArea = document.getElementById('camera-choice-area');
+  const processing = document.getElementById('camera-processing');
+  const result = document.getElementById('camera-result');
+  const fileInput = document.getElementById('camera-file-input');
+
+  if (choiceArea) choiceArea.classList.remove('hidden');
+  if (processing) processing.classList.add('hidden');
+  if (result) result.classList.add('hidden');
+  if (fileInput) fileInput.value = '';
+
+  // 清空表单
+  document.getElementById('result-food-name').value = '';
+  document.getElementById('result-calories').value = '';
+  document.getElementById('result-carbs').value = '';
+  document.getElementById('result-protein').value = '';
+  document.getElementById('result-fat').value = '';
+  document.getElementById('result-fiber').value = '';
+}
+
+// 选择拍照
+function chooseTakePhoto() {
+  const fileInput = document.getElementById('camera-file-input');
+  if (fileInput) {
+    fileInput.setAttribute('capture', 'environment');
+    fileInput.click();
+  }
+}
+
+// 选择相册
+function chooseGallery() {
+  const fileInput = document.getElementById('camera-file-input');
+  if (fileInput) {
+    fileInput.removeAttribute('capture');
+    fileInput.click();
+  }
+}
+
+// 处理选择的文件
+async function handleCameraFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    currentImageBase64 = e.target.result;
+    await processImage(currentImageBase64);
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+const healthTips = [
+  '💡 多吃蔬菜可以补充维生素',
+  '💧 每天喝8杯水保持身体水分',
+  '🥗 均衡饮食让营养更全面',
+  '🍎 苹果富含膳食纤维',
+  '🍊 橙子是维生素C的好来源',
+  '🥛 牛奶提供优质蛋白质',
+  '🥦 西兰花营养价值很高',
+  '🍌 香蕉能快速补充能量',
+  '🥑 牛油果富含健康脂肪',
+  '🍚 适量粗粮有益肠道健康',
+  '🍗 鸡胸肉是优质蛋白来源',
+  '🥕 胡萝卜富含胡萝卜素'
+];
+
+function showRandomHealthTip() {
+  const tipEl = document.getElementById('processing-tip');
+  if (!tipEl) return;
+  const randomTip = healthTips[Math.floor(Math.random() * healthTips.length)];
+  tipEl.textContent = randomTip;
+}
+
+let healthTipInterval = null;
+
+// 处理图片（抠图 + AI识别 + 异步生成贴纸）
+async function processImage(imageBase64) {
+  console.log('[相机] 开始处理图片...');
+  const totalStart = Date.now();
+  const choiceArea = document.getElementById('camera-choice-area');
+  const processing = document.getElementById('camera-processing');
+  const processingText = document.getElementById('processing-text');
+  const cameraResult = document.getElementById('camera-result');
+  const cameraTitle = document.getElementById('camera-modal-title');
+  const cameraSubtitle = document.getElementById('camera-subtitle');
+
+  if (choiceArea) choiceArea.classList.add('hidden');
+  if (processing) processing.classList.remove('hidden');
+
+  if (cameraTitle) cameraTitle.textContent = '正在解析你的美味佳肴';
+  if (cameraSubtitle) cameraSubtitle.textContent = 'AI 正在认真识别菜品中，马上为你算出热量、碳水、蛋白质三大营养数据哦，请稍等片刻～';
+
+  showRandomHealthTip();
+  healthTipInterval = setInterval(showRandomHealthTip, 2500);
+
+  try {
+    // 步骤0：立即显示原图（0秒反馈）
+    console.log('[相机] 步骤0：显示原图...');
+    if (processingText) processingText.textContent = '正在准备图片...';
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 步骤1：抠图去除背景
+    console.log('[相机] 步骤1：抠图去除背景...');
+    if (processingText) processingText.textContent = '正在精准抠图...';
+    const t1 = Date.now();
+    const processedImage = await removeBackground(imageBase64);
+    currentProcessedImage = processedImage;
+    console.log('[相机] 抠图完成，耗时:', (Date.now() - t1) + 'ms');
+
+    // 步骤2：显示抠图结果（即时反馈）
+    console.log('[相机] 步骤2：显示抠图结果...');
+    if (processing) processing.classList.add('hidden');
+    if (cameraResult) cameraResult.classList.remove('hidden');
+    
+    const resultImg = document.getElementById('result-food-image');
+    if (resultImg) {
+      resultImg.src = processedImage;
+      resultImg.classList.remove('hidden');
+    }
+
+    // 步骤3：AI识别食物（后台进行）
+    console.log('[相机] 步骤3：AI识别食物...');
+    const resultFoodName = document.getElementById('result-food-name');
+    if (resultFoodName) resultFoodName.textContent = '识别中...';
+    
+    const t2 = Date.now();
+    const recognizedData = await recognizeFood(processedImage);
+    currentRecognizedData = recognizedData;
+    console.log('[相机] AI识别完成，耗时:', (Date.now() - t2) + 'ms, 结果:', recognizedData);
+
+    // 步骤4：显示识别结果（即时反馈）
+    console.log('[相机] 步骤4：显示识别结果...');
+    if (cameraTitle) cameraTitle.textContent = '本次美食小档案';
+    if (cameraSubtitle) cameraSubtitle.textContent = '';
+    
+    showRecognitionResult(null, { ...recognizedData, isSticker: false });
+    console.log('[相机] 识别流程完成，用户可操作，耗时:', (Date.now() - totalStart) + 'ms (约' + ((Date.now() - totalStart)/1000).toFixed(1) + '秒)');
+
+    // 步骤5：后台异步生图（不阻塞用户操作）
+    console.log('[相机] 后台异步生成卡通贴纸...');
+    generateStickerAsync(processedImage, recognizedData.foodName);
+
+  } catch (error) {
+    console.error('[相机] 图片处理失败:', error);
+    showToast('识别失败，请重试');
+    closeCameraModal();
+  } finally {
+    if (healthTipInterval) {
+      clearInterval(healthTipInterval);
+      healthTipInterval = null;
+    }
+  }
+}
+
+// 后台异步生成贴纸
+async function generateStickerAsync(imageBase64, foodName) {
+  isGeneratingSticker = true;
+  const t0 = Date.now();
+  
+  // 更新按钮状态提示生图中
+  const stickerBtn = document.getElementById('btn-show-sticker');
+  if (stickerBtn) stickerBtn.textContent = '卡通贴纸生成中...';
+  
+  try {
+    const stickerImage = await generateSticker(imageBase64, foodName);
+    console.log('[相机] 后台生图完成，耗时:', (Date.now() - t0) + 'ms');
+    
+    if (stickerImage) {
+      currentStickerImage = stickerImage;
+      
+      // 更新UI显示
+      const stickerImg = document.getElementById('result-sticker-image');
+      const resultImg = document.getElementById('result-food-image');
+      const originalBtn = document.getElementById('btn-show-original');
+      
+      if (stickerImg) {
+        stickerImg.src = stickerImage;
+        stickerImg.classList.remove('hidden');
+      }
+      if (resultImg) {
+        resultImg.classList.add('hidden');
+      }
+      if (stickerBtn) {
+        stickerBtn.classList.add('active');
+        stickerBtn.textContent = '卡通贴纸';
+      }
+      if (originalBtn) originalBtn.classList.remove('active');
+      
+      showToast('卡通贴纸已生成');
+    } else {
+      if (stickerBtn) stickerBtn.textContent = '卡通贴纸';
+    }
+  } catch (error) {
+    console.error('[相机] 后台生图失败:', error);
+    if (stickerBtn) stickerBtn.textContent = '卡通贴纸';
+  } finally {
+    isGeneratingSticker = false;
+  }
+}
+
+// 抠图去除背景
+async function removeBackground(base64Image, noBorder = false) {
+  try {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const apiUrl = `${protocol}//${hostname}:3001/api/remove-bg`;
+
+    let imageData = base64Image;
+    if (imageData.startsWith('data:')) {
+      imageData = imageData.split(',')[1];
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData, no_border: noBorder })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.image) {
+        // 如果返回的数据已经包含前缀，直接返回；否则添加前缀
+        if (data.image.startsWith('data:')) {
+          return data.image;
+        }
+        return 'data:image/png;base64,' + data.image;
+      }
+    }
+  } catch (error) {
+    console.warn('服务端抠图失败:', error);
+  }
+
+  // 兜底：返回原图
+  return base64Image;
+}
+
+// AI识别食物
+async function recognizeFood(imageBase64) {
+  try {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const apiUrl = `${protocol}//${hostname}:3001/api/food-recognize`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageBase64 })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data;
+      }
+    }
+  } catch (error) {
+    console.warn('AI识别失败，使用模拟数据:', error);
+  }
+
+  return generateMockFoodData();
+}
+
+// 根据食物名称获取营养信息
+async function getFoodInfoByName(foodName) {
+  try {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const apiUrl = `${protocol}//${hostname}:3001/api/food-info`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foodName: foodName })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.data) {
+        return data.data;
+      }
+    }
+  } catch (error) {
+    console.warn('获取食物营养信息失败:', error);
+  }
+  return null;
+}
+
+// 生成卡通冰箱贴
+async function generateSticker(imageBase64, foodName) {
+  try {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const apiUrl = `${protocol}//${hostname}:3001/api/generate-sticker`;
+
+    let imageData = imageBase64;
+    if (imageData.startsWith('data:')) {
+      imageData = imageData.split(',')[1];
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: imageData,
+        foodName: foodName || '美食'
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.image) {
+        console.log('[冰箱贴] 生成成功，来源:', data.source);
+        return data.image;
+      }
+    }
+  } catch (error) {
+    console.warn('[冰箱贴] 生成失败，使用原图:', error);
+  }
+
+  // 降级：返回原图
+  return null;
+}
+
+// 生成本地模拟数据
+function generateMockFoodData() {
+  const mockFoods = [
+    { foodName: '宫保鸡丁', calories: 450, carbs: 25, protein: 30, fat: 28, fiber: 3, sugar: 8, sodium: 1200, tip: '建议搭配蔬菜一起食用，控制油脂摄入' },
+    { foodName: '清炒时蔬', calories: 120, carbs: 8, protein: 3, fat: 8, fiber: 4, sugar: 4, sodium: 400, tip: '蔬菜富含维生素，建议每餐都有' },
+    { foodName: '红烧肉', calories: 580, carbs: 15, protein: 20, fat: 52, fiber: 1, sugar: 12, sodium: 800, tip: '高脂高热量，建议适量食用' },
+    { foodName: '蒸蛋羹', calories: 150, carbs: 5, protein: 12, fat: 10, fiber: 0, sugar: 3, sodium: 300, tip: '优质蛋白来源，适合减脂期' },
+    { foodName: '凉拌黄瓜', calories: 60, carbs: 8, protein: 2, fat: 3, fiber: 2, sugar: 4, sodium: 500, tip: '清爽低卡，适合夏季食用' },
+    { foodName: '西红柿鸡蛋面', calories: 380, carbs: 55, protein: 15, fat: 12, fiber: 3, sugar: 8, sodium: 900, tip: '主食搭配蛋白质，营养均衡' }
+  ];
+  return mockFoods[Math.floor(Math.random() * mockFoods.length)];
+}
+
+// 显示识别结果
+function showRecognitionResult(stickerBase64, data) {
+  const processing = document.getElementById('camera-processing');
+  const result = document.getElementById('camera-result');
+
+  if (processing) processing.classList.add('hidden');
+  if (result) result.classList.remove('hidden');
+
+  // 设置图片 - 原图使用 currentProcessedImage，冰箱贴使用 stickerBase64
+  const resultImage = document.getElementById('result-food-image');
+  const stickerImage = document.getElementById('result-sticker-image');
+
+  // 设置原图（抠图后的图片）
+  if (resultImage && currentProcessedImage) {
+    resultImage.src = currentProcessedImage;
+  }
+
+  // 判断是否成功生成并处理了冰箱贴
+  const hasSticker = !!stickerBase64;
+
+  if (hasSticker && stickerImage) {
+    // 显示去除背景后的贴纸
+    stickerImage.src = stickerBase64;
+    stickerImage.classList.remove('hidden');
+    resultImage.classList.add('hidden');
+
+    // 更新按钮状态 - 默认显示贴纸
+    document.getElementById('btn-show-original').classList.remove('active');
+    document.getElementById('btn-show-sticker').classList.add('active');
+
+    // 保存贴纸图片引用
+    currentStickerImage = stickerBase64;
+  } else {
+    // 没有冰箱贴，只显示原图
+    stickerImage.classList.add('hidden');
+    resultImage.classList.remove('hidden');
+
+    // 更新按钮状态
+    document.getElementById('btn-show-original').classList.add('active');
+    document.getElementById('btn-show-sticker').classList.remove('active');
+
+    currentStickerImage = null;
+  }
+
+  // 填充数据 - 使用textContent而不是value，因为是contenteditable元素
+  const nameEl = document.getElementById('result-food-name');
+  const calEl = document.getElementById('result-calories');
+  const carbsEl = document.getElementById('result-carbs');
+  const proteinEl = document.getElementById('result-protein');
+  const fatEl = document.getElementById('result-fat');
+  const fiberEl = document.getElementById('result-fiber');
+  const sugarEl = document.getElementById('result-sugar');
+  const sodiumEl = document.getElementById('result-sodium');
+  const tipEl = document.getElementById('result-tip-text');
+  const datetimeEl = document.getElementById('result-datetime-text');
+  const weightEl = document.getElementById('result-weight');
+
+  if (nameEl) nameEl.textContent = data.foodName || '未知食物';
+  if (calEl) calEl.textContent = data.calories || '0';
+  if (carbsEl) carbsEl.textContent = data.carbs || '0';
+  if (proteinEl) proteinEl.textContent = data.protein || '0';
+  if (fatEl) fatEl.textContent = data.fat || '0';
+  if (fiberEl) fiberEl.textContent = data.fiber || '0';
+  if (sugarEl) sugarEl.textContent = data.sugar || '0';
+  if (sodiumEl) sodiumEl.textContent = data.sodium || '0';
+  if (weightEl) weightEl.value = data.estimatedWeight || 100;
+
+  // 设置小贴士
+  if (tipEl) {
+    tipEl.textContent = data.tip || '记得均衡饮食，适量运动';
+  }
+
+  // 设置当前日期时间
+  if (datetimeEl) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    datetimeEl.textContent = `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+
+  // 设置份量调整监听
+  setupWeightChangeListener();
+
+  // 添加食物名称修改监听，自动更新营养信息
+  setupFoodNameChangeListener();
+}
+
+// 设置食物名称修改监听
+function setupFoodNameChangeListener() {
+  const nameEl = document.getElementById('result-food-name');
+  if (!nameEl) return;
+
+  nameEl.addEventListener('blur', async (e) => {
+    const newName = e.target.textContent.trim();
+    if (!newName || newName === '未知食物') return;
+    if (newName === currentRecognizedData?.foodName) return;
+
+    console.log('[食物名称] 修改为:', newName);
+    await updateFoodInfoByNewName(newName);
+  });
+}
+
+// 设置份量调整监听
+function setupWeightChangeListener() {
+  const weightEl = document.getElementById('result-weight');
+  if (!weightEl) return;
+
+  weightEl.addEventListener('change', (e) => {
+    const weight = parseInt(e.target.value) || 100;
+    updateNutritionByWeight(weight);
+  });
+
+  weightEl.addEventListener('input', (e) => {
+    const weight = parseInt(e.target.value) || 100;
+    updateNutritionByWeight(weight);
+  });
+}
+
+// 根据份量更新营养信息
+function updateNutritionByWeight(weight) {
+  if (!currentRecognizedData) return;
+
+  const data = currentRecognizedData;
+  const currentWeight = data.estimatedWeight || 100;
+  
+  let calsPer100g, carbsPer100g, proteinPer100g, fatPer100g, fiberPer100g, sugarPer100g, sodiumPer100g;
+  
+  if (data.caloriesPer100g) {
+    calsPer100g = data.caloriesPer100g;
+    carbsPer100g = data.carbsPer100g || 0;
+    proteinPer100g = data.proteinPer100g || 0;
+    fatPer100g = data.fatPer100g || 0;
+    fiberPer100g = data.fiberPer100g || 0;
+    sugarPer100g = data.sugarPer100g || 0;
+    sodiumPer100g = data.sodiumPer100g || 0;
+  } else {
+    const ratio = 100 / currentWeight;
+    calsPer100g = Math.round((data.calories || 0) * ratio);
+    carbsPer100g = Math.round((data.carbs || 0) * ratio);
+    proteinPer100g = Math.round((data.protein || 0) * ratio);
+    fatPer100g = Math.round((data.fat || 0) * ratio);
+    fiberPer100g = Math.round((data.fiber || 0) * ratio);
+    sugarPer100g = Math.round((data.sugar || 0) * ratio);
+    sodiumPer100g = Math.round((data.sodium || 0) * ratio);
+  }
+  
+  const newRatio = weight / 100;
+  
+  const calEl = document.getElementById('result-calories');
+  const carbsEl = document.getElementById('result-carbs');
+  const proteinEl = document.getElementById('result-protein');
+  const fatEl = document.getElementById('result-fat');
+  const fiberEl = document.getElementById('result-fiber');
+  const sugarEl = document.getElementById('result-sugar');
+  const sodiumEl = document.getElementById('result-sodium');
+
+  if (calEl) calEl.textContent = Math.round(calsPer100g * newRatio);
+  if (carbsEl) carbsEl.textContent = Math.round(carbsPer100g * newRatio);
+  if (proteinEl) proteinEl.textContent = Math.round(proteinPer100g * newRatio);
+  if (fatEl) fatEl.textContent = Math.round(fatPer100g * newRatio);
+  if (fiberEl) fiberEl.textContent = Math.round(fiberPer100g * newRatio);
+  if (sugarEl) sugarEl.textContent = Math.round(sugarPer100g * newRatio);
+  if (sodiumEl) sodiumEl.textContent = Math.round(sodiumPer100g * newRatio);
+}
+
+// 根据新名称更新营养信息
+async function updateFoodInfoByNewName(newName) {
+  if (!newName) return;
+
+  const nameEl = document.getElementById('result-food-name');
+  if (nameEl) nameEl.style.opacity = '0.6';
+
+  showToast('正在获取营养信息...');
+
+  try {
+    const foodInfo = await getFoodInfoByName(newName);
+    if (foodInfo) {
+      currentRecognizedData = foodInfo;
+      console.log('[食物营养] 更新成功:', foodInfo);
+
+      // 更新UI显示
+      const calEl = document.getElementById('result-calories');
+      const carbsEl = document.getElementById('result-carbs');
+      const proteinEl = document.getElementById('result-protein');
+      const fatEl = document.getElementById('result-fat');
+      const fiberEl = document.getElementById('result-fiber');
+      const sugarEl = document.getElementById('result-sugar');
+      const sodiumEl = document.getElementById('result-sodium');
+      const tipEl = document.getElementById('result-tip-text');
+
+      if (calEl) calEl.textContent = foodInfo.calories || '0';
+      if (carbsEl) carbsEl.textContent = foodInfo.carbs || '0';
+      if (proteinEl) proteinEl.textContent = foodInfo.protein || '0';
+      if (fatEl) fatEl.textContent = foodInfo.fat || '0';
+      if (fiberEl) fiberEl.textContent = foodInfo.fiber || '0';
+      if (sugarEl) sugarEl.textContent = foodInfo.sugar || '0';
+      if (sodiumEl) sodiumEl.textContent = foodInfo.sodium || '0';
+      if (tipEl) tipEl.textContent = foodInfo.tip || '记得均衡饮食，适量运动';
+
+      showToast('营养信息已更新');
+    }
+  } catch (error) {
+    console.error('[食物营养] 更新失败:', error);
+  } finally {
+    if (nameEl) nameEl.style.opacity = '1';
+  }
+}
+
+// 保存识别的食物
+async function saveRecognizedFood() {
+  const nameEl = document.getElementById('result-food-name');
+  const calEl = document.getElementById('result-calories');
+  const carbsEl = document.getElementById('result-carbs');
+  const proteinEl = document.getElementById('result-protein');
+  const fatEl = document.getElementById('result-fat');
+  const fiberEl = document.getElementById('result-fiber');
+  const sugarEl = document.getElementById('result-sugar');
+  const sodiumEl = document.getElementById('result-sodium');
+  const tipEl = document.getElementById('result-tip-text');
+
+  const name = (nameEl?.textContent || '').trim();
+  const calories = parseInt(calEl?.textContent || '0') || 0;
+  const carbs = parseInt(carbsEl?.textContent || '0') || 0;
+  const protein = parseInt(proteinEl?.textContent || '0') || 0;
+  const fat = parseInt(fatEl?.textContent || '0') || 0;
+  const fiber = parseInt(fiberEl?.textContent || '0') || 0;
+  const sugar = parseInt(sugarEl?.textContent || '0') || 0;
+  const sodium = parseInt(sodiumEl?.textContent || '0') || 0;
+  const tip = tipEl?.textContent || '';
+
+  if (!name || name === '未知食物') {
+    showToast('请输入食物名称');
+    return;
+  }
+
+  if (calories <= 0) {
+    showToast('请输入有效的热量');
+    return;
+  }
+
+  // 生图未完成时提示用户
+  if (isGeneratingSticker) {
+    const confirmed = confirm('卡通贴纸正在生成中，当前保存将使用原图。是否继续保存？');
+    if (!confirmed) return;
+  }
+
+  // 添加到今日记录（优先使用卡通贴纸图片）
+  const imageToUse = currentStickerImage || currentProcessedImage;
+
+  // 构建完整营养信息
+  const nutritionInfo = {
+    carbs: carbs,
+    protein: protein,
+    fat: fat,
+    fiber: fiber,
+    sugar: sugar,
+    sodium: sodium,
+    tip: tip
+  };
+
+  await addMeal(getRecordDate(), currentRole, null, name, calories, 1, false, imageToUse, nutritionInfo);
+
+  showToast(name + ' 已添加到今日记录');
+  closeCameraModal();
+  await updateAllUI();
+
+  // 立即更新美食日记页面
+  if (typeof renderDiaryDetail === 'function') {
+    renderDiaryDetail();
+  }
+
+  // 显示保存后的详情
+  setTimeout(() => {
+    if (typeof showSavedFoodDetail === 'function') {
+      showSavedFoodDetail();
+    }
+  }, 300);
+}
+
+// 切换图片显示（原图/冰箱贴）
+function toggleImageDisplay(type) {
+  const originalImage = document.getElementById('result-food-image');
+  const stickerImage = document.getElementById('result-sticker-image');
+  const btnOriginal = document.getElementById('btn-show-original');
+  const btnSticker = document.getElementById('btn-show-sticker');
+
+  if (type === 'original') {
+    originalImage.classList.remove('hidden');
+    stickerImage.classList.add('hidden');
+    btnOriginal.classList.add('active');
+    btnSticker.classList.remove('active');
+  } else if (type === 'sticker') {
+    // 检查是否有冰箱贴图片
+    if (!currentStickerImage || !stickerImage.src) {
+      showToast('卡通贴纸正在生成中，请稍候...');
+      return;
+    }
+    originalImage.classList.add('hidden');
+    stickerImage.classList.remove('hidden');
+    btnOriginal.classList.remove('active');
+    btnSticker.classList.add('active');
+  }
+}
+
+// 显示食物详情
+function showMealDetail(index, name, calories, imageSrc, nutritionDataJson) {
+  // 解析营养信息
+  let nutrition = null;
+  if (nutritionDataJson) {
+    try {
+      nutrition = JSON.parse(nutritionDataJson.replace(/&quot;/g, '"'));
+    } catch (e) {
+      console.error('解析营养信息失败:', e);
+    }
+  }
+
+  // 创建详情弹窗
+  const overlay = document.createElement('div');
+  overlay.className = 'meal-detail-overlay';
+  overlay.innerHTML = `
+    <div class="meal-detail-modal">
+      <div class="meal-detail-header">
+        <span class="meal-detail-title">食物详情</span>
+        <button class="meal-detail-close" onclick="this.closest('.meal-detail-overlay').remove()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="meal-detail-content">
+        ${imageSrc ? `
+          <div class="meal-detail-image">
+            <img src="${imageSrc}" alt="${name}">
+          </div>
+        ` : ''}
+        <div class="meal-detail-info">
+          <div class="meal-detail-name">${name}</div>
+          <div class="meal-detail-calories">${calories} 大卡</div>
+        </div>
+        ${nutrition ? `
+          <div class="meal-detail-nutrition">
+            <div class="nutrition-row">
+              <span class="nutrition-label">碳水化合物</span>
+              <span class="nutrition-value">${nutrition.carbs || 0}g</span>
+            </div>
+            <div class="nutrition-row">
+              <span class="nutrition-label">蛋白质</span>
+              <span class="nutrition-value">${nutrition.protein || 0}g</span>
+            </div>
+            <div class="nutrition-row">
+              <span class="nutrition-label">脂肪</span>
+              <span class="nutrition-value">${nutrition.fat || 0}g</span>
+            </div>
+            <div class="nutrition-row">
+              <span class="nutrition-label">膳食纤维</span>
+              <span class="nutrition-value">${nutrition.fiber || 0}g</span>
+            </div>
+            ${nutrition.sugar ? `
+              <div class="nutrition-row">
+                <span class="nutrition-label">糖分</span>
+                <span class="nutrition-value">${nutrition.sugar}g</span>
+              </div>
+            ` : ''}
+            ${nutrition.sodium ? `
+              <div class="nutrition-row">
+                <span class="nutrition-label">钠</span>
+                <span class="nutrition-value">${nutrition.sodium}mg</span>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+        ${nutrition && nutrition.tip ? `
+          <div class="meal-detail-tip">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text">${nutrition.tip}</span>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.classList.add('show'), 10);
+}
+
+// 点击关闭详情弹窗
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('meal-detail-overlay')) {
+    e.target.remove();
+  }
+});
+
+
+// 显示保存后的食物详情
+function showSavedFoodDetail() {
+  if (!currentRecognizedData || !currentProcessedImage) return;
+
+  const name = currentRecognizedData.foodName || '未知食物';
+  const calories = currentRecognizedData.calories || 0;
+  const carbs = currentRecognizedData.carbs || 0;
+  const protein = currentRecognizedData.protein || 0;
+  const fat = currentRecognizedData.fat || 0;
+  const fiber = currentRecognizedData.fiber || 0;
+  const sugar = currentRecognizedData.sugar || 0;
+  const sodium = currentRecognizedData.sodium || 0;
+  const tip = currentRecognizedData.tip || '';
+  
+  const originalImage = currentProcessedImage;
+  const stickerImage = currentStickerImage;
+
+  // 创建详情弹窗
+  const overlay = document.createElement('div');
+  overlay.className = 'meal-detail-overlay saved-detail-overlay';
+  overlay.innerHTML = `
+    <div class="meal-detail-modal">
+      <div class="meal-detail-header">
+        <span class="meal-detail-title">已保存 - ${name}</span>
+        <button class="meal-detail-close" onclick="this.closest('.meal-detail-overlay').remove()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="meal-detail-content">
+        <div class="saved-images-container">
+          <div class="saved-image-item">
+            <div class="saved-image-label">原图</div>
+            <div class="saved-image-wrapper">
+              <img src="${originalImage}" alt="原图">
+            </div>
+          </div>
+          ${stickerImage ? `
+            <div class="saved-image-item">
+              <div class="saved-image-label">卡通贴纸</div>
+              <div class="saved-image-wrapper">
+                <img src="${stickerImage}" alt="卡通贴纸">
+              </div>
+            </div>
+          ` : ''}
+        </div>
+        <div class="meal-detail-info">
+          <div class="meal-detail-name">${name}</div>
+          <div class="meal-detail-calories">${calories} 大卡</div>
+        </div>
+        <div class="meal-detail-nutrition">
+          <div class="nutrition-row">
+            <span class="nutrition-label">碳水化合物</span>
+            <span class="nutrition-value">${carbs}g</span>
+          </div>
+          <div class="nutrition-row">
+            <span class="nutrition-label">蛋白质</span>
+            <span class="nutrition-value">${protein}g</span>
+          </div>
+          <div class="nutrition-row">
+            <span class="nutrition-label">脂肪</span>
+            <span class="nutrition-value">${fat}g</span>
+          </div>
+          <div class="nutrition-row">
+            <span class="nutrition-label">膳食纤维</span>
+            <span class="nutrition-value">${fiber}g</span>
+          </div>
+          ${sugar ? `
+            <div class="nutrition-row">
+              <span class="nutrition-label">糖分</span>
+              <span class="nutrition-value">${sugar}g</span>
+            </div>
+          ` : ''}
+          ${sodium ? `
+            <div class="nutrition-row">
+              <span class="nutrition-label">钠</span>
+              <span class="nutrition-value">${sodium}mg</span>
+            </div>
+          ` : ''}
+        </div>
+        ${tip ? `
+          <div class="meal-detail-tip">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text">${tip}</span>
+          </div>
+        ` : ''}
+        <div class="saved-detail-actions">
+          <button class="saved-detail-btn" onclick="this.closest('.meal-detail-overlay').remove()">关闭</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.classList.add('show'), 10);
 }

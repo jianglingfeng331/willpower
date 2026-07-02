@@ -1,13 +1,13 @@
 // ========== Mock Data Initialization ==========
 // 生成过去7天的模拟数据，让首次打开有演示效果
 
-function initMockData() {
-  const data = loadData();
+async function initMockData() {
+  const data = await loadData();
   // 如果已有记录，跳过
   if (Object.keys(data.records).length > 0) return;
 
   const now = new Date();
-  const accounts = loadAccounts();
+  const accounts = await loadAccounts();
 
   // 生成过去7天数据
   for (let i = 7; i >= 0; i--) {
@@ -17,20 +17,20 @@ function initMockData() {
 
     // 燃脂侠数据
     data.records[ds] = data.records[ds] || {};
-    data.records[ds].husband = generateMockRecord('husband', d, i === 0);
-    data.records[ds].wife = generateMockRecord('wife', d, i === 0);
+    data.records[ds].husband = generateMockRecord('husband', d, i === 0, i);
+    data.records[ds].wife = generateMockRecord('wife', d, i === 0, i);
   }
 
   // 预设账号信息
   const defAccounts = getDefaultAccounts();
-  saveAccounts(defAccounts);
+  await saveAccounts(defAccounts);
 
   // 设置当前账号
   data.currentAccount = 'husband';
-  saveData(data);
+  await saveData(data);
 }
 
-function generateMockRecord(account, date, isToday) {
+function generateMockRecord(account, date, isToday, dayIndex) {
   const meals = [];
   const water = [];
   const exercises = [];
@@ -91,7 +91,7 @@ function generateMockRecord(account, date, isToday) {
     meals,
     water,
     exercises,
-    weight: date.getDate() % 2 === 0 ? weight(i, account) : null
+    weight: date.getDate() % 2 === 0 ? weight(dayIndex, account) : null
   };
 }
 

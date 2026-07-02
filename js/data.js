@@ -1,4 +1,27 @@
-// ========== Data Layer: localStorage CRUD + 跨设备 JSON 同步 ==========
+// ========== Data Layer: localStorage CRUD ==========
+
+// 存储兼容性检查（手机浏览器可能不支持 sessionStorage）
+const sessionStorage = (function() {
+  try {
+    const test = '__session_storage_test__';
+    window.sessionStorage.setItem(test, test);
+    window.sessionStorage.removeItem(test);
+    return window.sessionStorage;
+  } catch (e) {
+    console.warn('[存储] sessionStorage 不可用，降级到 localStorage');
+    return {
+      getItem: function(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+      },
+      setItem: function(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) {}
+      },
+      removeItem: function(key) {
+        try { localStorage.removeItem(key); } catch (e) {}
+      }
+    };
+  }
+})();
 
 const STORAGE_KEY = 'diet_pk_data';
 const ACCOUNTS_KEY = 'diet_pk_accounts';
@@ -7,72 +30,41 @@ const AI_CONFIG_KEY = 'diet_pk_ai_config';
 const SETUP_KEY = 'diet_pk_setup_completed';
 const CUSTOM_FOODS_KEY = 'diet_pk_custom_foods';
 const CUSTOM_EXERCISES_KEY = 'diet_pk_custom_exercises';
+const USERS_KEY = 'pk_users';
 
-// 跨设备同步：指向工作区 output/diet-pk/pk-sync.json
-const SYNC_DATA_FILE = './pk-sync.json';
+// ========== 数据操作函数（使用localStorage） ==========
 
-// ========== API 层（后端 server.js 端口 3001）==========
-const API_BASE = '';
-let _apiOnline = null; // null=未检测, true/false
-
-async function apiGet(path) {
+function loadAccounts() {
   try {
-    const resp = await fetch(API_BASE + path, { cache: 'no-cache' });
-    if (!resp.ok) return null;
-    return await resp.json();
-  } catch (_e) { return null; }
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return getDefaultAccounts();
 }
 
-async function apiPost(path, body) {
+function saveAccounts(accounts) {
   try {
-    const resp = await fetch(API_BASE + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!resp.ok) return null;
-    return await resp.json();
-  } catch (_e) { return null; }
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch (e) {
+    console.error('[Storage] 保存账号失败:', e);
+  }
 }
 
-async function checkApiOnline() {
-  if (_apiOnline !== null) return _apiOnline;
-  const r = await apiGet('/api/health');
-  _apiOnline = !!(r && r.status === 'ok');
-  console.log('[API] 服务器状态:', _apiOnline ? '在线' : '离线，降级到本地存储');
-  return _apiOnline;
+function loadUsers() {
+  try {
+    const raw = localStorage.getItem(USERS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
 }
 
-// 将 pk_users 推送到后端
-async function pushUsersToServer(users) {
-  if (!(await checkApiOnline())) return;
-  await apiPost('/api/sync', { pk_users: users });
-}
-
-// 将完整数据推送到后端
-async function pushDataToServer() {
-  if (!(await checkApiOnline())) return;
-  const data = loadData();
-  const accounts = loadAccounts();
-  const users = loadUsers();
-  await apiPost('/api/sync', {
-    pk_users: users,
-    accounts: accounts,
-    records: data.records || {}
-  });
-}
-
-// 从后端拉取数据合并到本地
-async function pullDataFromServer() {
-  if (!(await checkApiOnline())) return null;
-  return await apiGet('/api/sync');
-}
-
-// 防抖自动同步（延迟 3 秒，汇聚连续写入）
-let _syncTimer = null;
-function autoSyncToServer() {
-  if (_syncTimer) clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(() => pushDataToServer(), 3000);
+function saveUsers(users) {
+  try {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    autoSyncToServer();
+  } catch (e) {
+    console.error('[Storage] 保存用户失败:', e);
+  }
 }
 
 // 预设食物卡路里映射表
@@ -94,7 +86,7 @@ const FOOD_CAL_MAP = {
   chips: { name: '薯条', cal: 350, unit: '份', source: 'preset' }
 };
 
-
+// ========== 自定义食物库 ==========
 function getCustomFoods() {
   try {
     const raw = localStorage.getItem(CUSTOM_FOODS_KEY);
@@ -104,7 +96,11 @@ function getCustomFoods() {
 }
 
 function saveCustomFoods(foods) {
-  localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods));
+  try {
+    localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods));
+  } catch (e) {
+    console.error('[Storage] 保存自定义食物失败:', e);
+  }
 }
 
 function getAllFoods() {
@@ -128,50 +124,10 @@ function addCustomFood(name, cal, unit) {
 
 function removeCustomFood(key) {
   const foods = getCustomFoods();
-  delete foods[key];
-  saveCustomFoods(foods);
-}
-
-// ========== 自定义食物库 ==========
-function getCustomFoods() {
-  try {
-    const raw = localStorage.getItem(CUSTOM_FOODS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return {};
-}
-
-function saveCustomFoods(foods) {
-  localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods));
-}
-
-function addCustomFood(name, cal, unit) {
-  const foods = getCustomFoods();
-  const key = 'custom_' + Date.now();
-  foods[key] = { name, cal: parseInt(cal) || 0, unit: unit || '份' };
-  saveCustomFoods(foods);
-  return key;
-}
-
-function removeCustomFood(key) {
-  const foods = getCustomFoods();
   if (!foods[key]) return false;
   delete foods[key];
   saveCustomFoods(foods);
   return true;
-}
-
-// 合并预设 + 自定义，返回统一食物列表
-function getAllFoods() {
-  const preset = {};
-  for (const [key, val] of Object.entries(FOOD_CAL_MAP)) {
-    preset[key] = { ...val, source: 'preset' };
-  }
-  const custom = getCustomFoods();
-  for (const [key, val] of Object.entries(custom)) {
-    custom[key] = { ...val, source: 'custom' };
-  }
-  return { ...preset, ...custom };
 }
 
 // ========== 自定义运动库 ==========
@@ -184,7 +140,11 @@ function getCustomExercises() {
 }
 
 function saveCustomExercises(exercises) {
-  localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(exercises));
+  try {
+    localStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(exercises));
+  } catch (e) {
+    console.error('[Storage] 保存自定义运动失败:', e);
+  }
 }
 
 function addCustomExercise(name, calPerHour) {
@@ -211,7 +171,7 @@ function getAllExercises() {
   }
   const custom = getCustomExercises();
   for (const [key, val] of Object.entries(custom)) {
-    custom[key] = { ...val, source: 'custom' };
+    preset[key] = { ...val, source: 'custom' };
   }
   return { ...preset, ...custom };
 }
@@ -299,20 +259,142 @@ function loadData() {
 }
 
 function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  autoSyncToServer();
-}
+  // 尽量保留所有图片，只在存储空间真的不足时才清理
+  const jsonStr = JSON.stringify(data);
+  const sizeKB = jsonStr.length / 1024;
 
-function loadAccounts() {
+  // 在 3MB 时开始清理旧记录的图片（提前预防）
+  if (sizeKB > 3000) {
+    console.warn('[Storage] 数据量 ' + sizeKB.toFixed(0) + 'KB 超过 3MB，清理旧记录图片...');
+    _stripOldImageData(data);
+    const cleanedStr = JSON.stringify(data);
+    console.warn('[Storage] 清理后大小: ' + (cleanedStr.length / 1024).toFixed(0) + 'KB');
+  }
+
+  // 在 4MB 时执行更激进的清理（保留最近3天的图片）
+  if (sizeKB > 4000) {
+    console.warn('[Storage] 数据量 ' + sizeKB.toFixed(0) + 'KB 超过 4MB，执行深度清理...');
+    _deepCleanup(data);
+    const cleanedStr = JSON.stringify(data);
+    console.warn('[Storage] 深度清理后大小: ' + (cleanedStr.length / 1024).toFixed(0) + 'KB');
+  }
+
+  // 尝试保存，捕获配额超出错误
   try {
-    const raw = localStorage.getItem(ACCOUNTS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return getDefaultAccounts();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+      console.error('[Storage] 存储配额已满，执行紧急清理...');
+      _emergencyCleanup(data);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        console.warn('[Storage] 紧急清理后保存成功');
+      } catch (e2) {
+        console.error('[Storage] 即使清理后仍无法保存，数据量过大');
+        alert('存储空间已满，请清除浏览器缓存或导出数据后清理旧记录');
+      }
+    } else {
+      throw e;
+    }
+  }
 }
 
-function saveAccounts(accounts) {
-  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+// 深度清理：删除超过3天的所有图片数据
+function _deepCleanup(data) {
+  if (!data || !data.records) return;
+  const today = window.today ? window.today() : new Date().toISOString().split('T')[0];
+  
+  for (let i = 3; i <= 30; i++) {
+    const pastDate = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+    if (data.records[pastDate]) {
+      for (const account in data.records[pastDate]) {
+        const rec = data.records[pastDate][account];
+        if (rec && rec.meals) {
+          for (const m of rec.meals) {
+            delete m.imageBase64;
+            delete m.processedImage;
+            delete m.stickerImage;
+            delete m.image;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 紧急清理：删除所有历史图片，保留今天和昨天的图片
+function _emergencyCleanup(data) {
+  if (!data || !data.records) return;
+  const today = window.today ? window.today() : new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  for (const date in data.records) {
+    // 只保留今天和昨天的记录（包括图片）
+    if (date !== today && date !== yesterday) {
+      // 删除今天和昨天之外的所有日期记录
+      delete data.records[date];
+    }
+    // 今天和昨天的图片数据保留不变
+  }
+}
+
+// 清理旧记录的图片数据（保留今天及昨天的）
+function _stripOldImageData(data) {
+  if (!data || !data.records) return;
+  const today = window.today ? window.today() : new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  for (const date in data.records) {
+    // 只保留今天和昨天的图片
+    if (date !== today && date !== yesterday) {
+      for (const account in data.records[date]) {
+        const rec = data.records[date][account];
+        if (rec && rec.meals) {
+          for (const m of rec.meals) {
+            delete m.imageBase64;
+            delete m.processedImage;
+            delete m.stickerImage;
+            delete m.image;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 遍历所有饮食记录，移除 imageBase64 / processedImage 字段
+function _stripImageData(data) {
+  if (!data || !data.records) return;
+  for (const date in data.records) {
+    for (const account in data.records[date]) {
+      const rec = data.records[date][account];
+      if (rec && rec.meals) {
+        for (const m of rec.meals) {
+          if (m.imageBase64 !== undefined) delete m.imageBase64;
+          if (m.processedImage !== undefined) delete m.processedImage;
+        }
+      }
+    }
+  }
+}
+
+// 超限时按日期从早到晚精简 nutrients 和 tip 字段，直到低于安全阈值
+function _compactOldRecords(data) {
+  const dates = Object.keys(data.records).sort();
+  for (const date of dates) {
+    if (JSON.stringify(data).length / 1024 <= 3500) break;
+    for (const account of ['husband', 'wife']) {
+      const rec = data.records[date] && data.records[date][account];
+      if (rec && rec.meals) {
+        for (const m of rec.meals) {
+          if (m.type === 'ai_photo') {
+            delete m.nutrients;
+            delete m.tip;
+          }
+        }
+      }
+    }
+  }
 }
 
 // ========== 获取今日日期 ==========
@@ -326,7 +408,7 @@ function dateStr(d) {
 }
 
 // ========== 获取该账号所有有记录的日期 ==========
-function getAllRecordDates(account) {
+async function getAllRecordDates(account) {
   const data = loadData();
   const dates = [];
   for (const date in data.records) {
@@ -345,6 +427,44 @@ function getAllRecordDates(account) {
   return dates;
 }
 
+// ========== 图片压缩工具 ==========
+function compressImage(base64Str, maxWidth = 600, quality = 0.8) {
+  if (!base64Str) return base64Str;
+  const originalSize = base64Str.length;
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        console.log('[压缩] 原图:', (originalSize/1024).toFixed(0), 'KB → 压缩后:', (compressed.length/1024).toFixed(0), 'KB (', ((1-compressed.length/originalSize)*100).toFixed(0), '%压缩)');
+        resolve(compressed);
+      };
+      img.onerror = () => {
+        console.log('[压缩] 图片加载失败，返回原图');
+        resolve(base64Str);
+      };
+      img.src = base64Str;
+    } catch (e) {
+      console.log('[压缩] 压缩失败:', e.message);
+      resolve(base64Str);
+    }
+  });
+}
+
 // ========== 获取/初始化当日记录 ==========
 function getDayRecord(date, account) {
   const data = loadData();
@@ -361,13 +481,35 @@ function getDayRecord(date, account) {
   return data.records[date][account];
 }
 
+// ========== 获取日记数据 ==========
+function getDiaryByDate(date, account) {
+  const data = loadData();
+  const record = data.records[date] && data.records[date][account] ? data.records[date][account] : { meals: [], water: [], exercises: [], weight: null };
+  const accounts = loadAccounts();
+  const budget = accounts[account] ? accounts[account].dailyCalorieBudget : 2000;
+  
+  const totalCalories = record.meals ? record.meals.reduce((sum, m) => sum + (m.totalCalories || m.calories || 0), 0) : 0;
+  
+  return {
+    meals: record.meals || [],
+    water: record.water || [],
+    exercises: record.exercises || [],
+    weight: record.weight,
+    totalCalories: totalCalories,
+    budget: budget
+  };
+}
+window.getDiaryByDate = getDiaryByDate;
+
 // ========== 添加饮食 ==========
-function addMeal(date, account, foodKey, manualName, manualCal, quantity, supervised) {
+async function addMeal(date, account, foodKey, manualName, manualCal, quantity, supervised, imageBase64, nutritionInfo) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
 
   const qty = parseInt(quantity) || 1;
+
+  const compressedImage = imageBase64 ? await compressImage(imageBase64, 600, 0.8) : null;
 
   let meal;
   if (foodKey) {
@@ -382,7 +524,9 @@ function addMeal(date, account, foodKey, manualName, manualCal, quantity, superv
       quantity: qty,
       totalCalories: f.cal * qty,
       time: new Date().toISOString(),
-      supervised: !!supervised
+      supervised: !!supervised,
+      imageBase64: compressedImage,
+      nutritionInfo: nutritionInfo || null
     };
   } else if (manualName && manualCal) {
     meal = {
@@ -393,7 +537,9 @@ function addMeal(date, account, foodKey, manualName, manualCal, quantity, superv
       quantity: qty,
       totalCalories: (parseInt(manualCal) || 0) * qty,
       time: new Date().toISOString(),
-      supervised: !!supervised
+      supervised: !!supervised,
+      imageBase64: compressedImage,
+      nutritionInfo: nutritionInfo || null
     };
   } else return null;
 
@@ -403,7 +549,7 @@ function addMeal(date, account, foodKey, manualName, manualCal, quantity, superv
 }
 
 // ========== 添加喝水 ==========
-function addWater(date, account, ml) {
+async function addWater(date, account, ml) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
@@ -418,7 +564,7 @@ function addWater(date, account, ml) {
 window._dataAddWater = addWater;
 
 // ========== 添加运动 ==========
-function addExercise(date, account, exKey, durationMin) {
+async function addExercise(date, account, exKey, durationMin) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
@@ -444,7 +590,7 @@ function addExercise(date, account, exKey, durationMin) {
 }
 
 // ========== 删除记录 ==========
-function deleteMeal(date, account, index) {
+async function deleteMeal(date, account, index) {
   const data = loadData();
   if (!data.records[date] || !data.records[date][account]) return false;
   data.records[date][account].meals.splice(index, 1);
@@ -452,7 +598,7 @@ function deleteMeal(date, account, index) {
   return true;
 }
 
-function deleteWater(date, account, index) {
+async function deleteWater(date, account, index) {
   const data = loadData();
   if (!data.records[date] || !data.records[date][account]) return false;
   data.records[date][account].water.splice(index, 1);
@@ -460,7 +606,7 @@ function deleteWater(date, account, index) {
   return true;
 }
 
-function deleteExercise(date, account, index) {
+async function deleteExercise(date, account, index) {
   const data = loadData();
   if (!data.records[date] || !data.records[date][account]) return false;
   data.records[date][account].exercises.splice(index, 1);
@@ -468,7 +614,7 @@ function deleteExercise(date, account, index) {
   return true;
 }
 
-function deleteWeight(date, account) {
+async function deleteWeight(date, account) {
   const data = loadData();
   if (!data.records[date] || !data.records[date][account]) return false;
   data.records[date][account].weight = null;
@@ -477,7 +623,7 @@ function deleteWeight(date, account) {
 }
 
 // ========== 记录体重 ==========
-function setWeight(date, account, weight) {
+async function setWeight(date, account, weight) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
@@ -509,7 +655,7 @@ function getWeightChange(account) {
   return todayWeight - dates[0].weight;
 }
 
-function hasWeightRecordToday(account) {
+async function hasWeightRecordToday(account) {
   const data = loadData();
   const dt = today();
   const rec = data.records[dt] && data.records[dt][account];
@@ -645,17 +791,18 @@ function getRecentDaysData(account, days) {
 
 // ========== PK回合操作 ==========
 function getPkRounds() {
-  return loadData().pkRounds || [];
+  const data = loadData();
+  return data.pkRounds || [];
 }
 
-function savePkRound(round) {
+async function savePkRound(round) {
   const data = loadData();
   if (!data.pkRounds) data.pkRounds = [];
   data.pkRounds.push(round);
   saveData(data);
 }
 
-function updatePkRound(roundId, updates) {
+async function updatePkRound(roundId, updates) {
   const data = loadData();
   if (!data.pkRounds) return;
   const idx = data.pkRounds.findIndex(r => r.id === roundId);
@@ -664,7 +811,7 @@ function updatePkRound(roundId, updates) {
   saveData(data);
 }
 
-function cancelPkRound(roundId) {
+async function cancelPkRound(roundId) {
   const data = loadData();
   if (!data.pkRounds) return;
   data.pkRounds = data.pkRounds.filter(r => r.id !== roundId);
@@ -685,35 +832,35 @@ function formatWeightPct(pct) {
   return (pct >= 0 ? '↓' : '↑') + Math.abs(pct).toFixed(1) + '%';
 }
 
-function getWeightForDate(date, account) {
+async function getWeightForDate(date, account) {
   const data = loadData();
   const rec = data.records[date] && data.records[date][account];
   return (rec && rec.weight !== null && rec.weight !== undefined) ? rec.weight : null;
 }
 
-function checkAutoSettle() {
-  const rounds = getPkRounds();
+async function checkAutoSettle() {
+  const rounds = await getPkRounds();
   const todayDate = today();
   const unsettled = [];
-  rounds.forEach(r => {
+  for (const r of rounds) {
     if (r.status === 'active' && r.endDate < todayDate) {
-      settlePkRound(r);
-      const updated = getPkRounds().find(x => x.id === r.id);
+      await settlePkRound(r);
+      const updated = (await getPkRounds()).find(x => x.id === r.id);
       if (updated && updated.status === 'completed' && !updated.settlementViewed) {
         unsettled.push(updated);
       }
     }
-  });
+  }
   return unsettled;
 }
 
-function settlePkRound(round) {
+async function settlePkRound(round) {
   const data = loadData();
   const endDate = round.endDate;
 
   // 积分PK
   if (round.items.includes('score')) {
-    const { hTotal, wTotal } = getPoolScores(round.startDate, endDate);
+    const { hTotal, wTotal } = await getPoolScores(round.startDate, endDate);
     round.result.score = {
       winner: hTotal > wTotal ? 'husband' : (wTotal > hTotal ? 'wife' : null),
       hTotal, wTotal
@@ -723,22 +870,22 @@ function settlePkRound(round) {
   // 体重PK
   if (round.items.includes('weight')) {
     // 取期末体重：最后一天有记录的值，无则倒序找最近一次
-    function findEndWeight(account) {
-      let wt = getWeightForDate(endDate, account);
+    async function findEndWeight(account) {
+      let wt = await getWeightForDate(endDate, account);
       if (wt !== null) return wt;
       // 倒序往前找
       const allDates = Object.keys(data.records).sort((a, b) => b.localeCompare(a));
       for (const d of allDates) {
         if (d > endDate) continue;
         if (d < round.startDate) break;
-        wt = getWeightForDate(d, account);
+        wt = await getWeightForDate(d, account);
         if (wt !== null) return wt;
       }
       return null;
     }
 
-    const hEndWt = findEndWeight('husband');
-    const wEndWt = findEndWeight('wife');
+    const hEndWt = await findEndWeight('husband');
+    const wEndWt = await findEndWeight('wife');
     round.endWeight = { husband: hEndWt, wife: wEndWt };
 
     const hPct = round.startWeight.husband && hEndWt ? calcWeightPct(round.startWeight.husband, hEndWt) : 0;
@@ -780,7 +927,7 @@ function settlePkRound(round) {
 
   round.status = 'completed';
   round.settlementViewed = false;
-  updatePkRound(round.id, round);
+  await updatePkRound(round.id, round);
 }
 
 // 获取时间段内累计积分
@@ -804,23 +951,23 @@ function getPoolScores(startDate, endDate) {
 }
 
 // ========== 账号相关 ==========
-function getCurrentAccount() {
+async function getCurrentAccount() {
   const data = loadData();
   return data.currentAccount || 'husband';
 }
 
-function switchCurrentAccount(account) {
+async function switchCurrentAccount(account) {
   const data = loadData();
   data.currentAccount = account;
   saveData(data);
 }
 
-function getAccountInfo(account) {
+async function getAccountInfo(account) {
   const accounts = loadAccounts();
   return accounts[account] || null;
 }
 
-function updateAccountInfo(account, updates) {
+async function updateAccountInfo(account, updates) {
   const accounts = loadAccounts();
   Object.assign(accounts[account], updates);
   saveAccounts(accounts);
@@ -836,7 +983,11 @@ function loadNicknames() {
 }
 
 function saveNicknames(nicknames) {
-  localStorage.setItem(NICKNAMES_KEY, JSON.stringify(nicknames));
+  try {
+    localStorage.setItem(NICKNAMES_KEY, JSON.stringify(nicknames));
+  } catch (e) {
+    console.error('[Storage] 保存昵称失败:', e);
+  }
 }
 
 function getNickname(account) {
@@ -858,7 +1009,6 @@ function setNickname(account, nickname) {
   if (accounts[account]) {
     accounts[account].name = trimmed || getDefaultAccountName(account);
     saveAccounts(accounts);
-    autoSyncToServer();
   }
 }
 
@@ -903,6 +1053,9 @@ function resetAll() {
   localStorage.removeItem(NICKNAMES_KEY);
   localStorage.removeItem(AI_CONFIG_KEY);
   localStorage.removeItem(SETUP_KEY);
+  localStorage.removeItem(USERS_KEY);
+  localStorage.removeItem(CUSTOM_FOODS_KEY);
+  localStorage.removeItem(CUSTOM_EXERCISES_KEY);
 }
 
 // ========== 清空数据（保留账号） ==========
@@ -912,134 +1065,42 @@ function clearAllData() {
   localStorage.removeItem(NICKNAMES_KEY); // 昵称
   localStorage.removeItem(AI_CONFIG_KEY); // AI 设置
   localStorage.removeItem(SETUP_KEY);     // 引导设置标记
+  localStorage.removeItem(CUSTOM_FOODS_KEY); // 自定义食物
+  localStorage.removeItem(CUSTOM_EXERCISES_KEY); // 自定义运动
   // 保留 USERS_KEY (pk_users) — 注册账号信息
 }
 
-// ========== AI识别配置 ==========
-function getDefaultAIConfig() {
-  return {
-    apiKey: '',
-    apiEndpoint: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-4o'
-  };
-}
-
-function loadAIConfig() {
-  try {
-    const raw = localStorage.getItem(AI_CONFIG_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return getDefaultAIConfig();
-}
-
-function saveAIConfig(config) {
-  localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(config));
-}
-
-// ========== AI识别调用（带重试与节流） ==========
-let _lastAICallTime = 0;
-const AI_MIN_INTERVAL = 1500; // 最小间隔1.5秒
+// ========== AI识别调用（使用后端 API） ==========
 
 async function analyzeFoodImage(base64Image) {
-  const config = loadAIConfig();
-  if (!config.apiKey) {
-    const result = simulateFoodRecognition();
-    result.error = '未配置API Key，使用离线识别';
-    return result;
-  }
+  try {
+    const res = await fetch('http://127.0.0.1:3001/api/food-recognize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64Image })
+    });
 
-  // 客户端节流：确保两次请求间隔至少1.5秒
-  const now = Date.now();
-  const gap = now - _lastAICallTime;
-  if (gap < AI_MIN_INTERVAL) {
-    await new Promise(r => setTimeout(r, AI_MIN_INTERVAL - gap));
-  }
-
-  const prompt = '请识别这张图片中的食物，以JSON格式返回：{"foods":[{"name":"食物名称","calories":热量估算值(kcal),"confidence":置信度0-1}]}，只返回JSON不要其他内容';
-
-  const body = {
-    model: config.model,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: base64Image } }
-        ]
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.data) {
+        // 将单个食物转换为 foods 数组格式
+        return {
+          foods: [{
+            name: data.data.foodName,
+            calories: data.data.calories,
+            confidence: 0.9
+          }],
+          source: 'ai'  // 统一显示为 AI 识别
+        };
       }
-    ],
-    max_tokens: 500,
-    temperature: 0.1
-  };
-
-  const maxRetries = 3;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    _lastAICallTime = Date.now();
-    try {
-      const res = await fetch(config.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + config.apiKey
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        if (!content) {
-          const result = simulateFoodRecognition();
-          result.error = 'AI未返回有效内容，已回退离线识别';
-          return result;
-        }
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          const result = simulateFoodRecognition();
-          result.error = 'AI返回格式异常，已回退离线识别';
-          return result;
-        }
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.foods && Array.isArray(parsed.foods) && parsed.foods.length > 0) {
-          return { foods: parsed.foods, source: 'ai' };
-        }
-        const result = simulateFoodRecognition();
-        result.error = 'AI未识别到食物，已回退离线识别';
-        return result;
-      }
-
-      // 429 指数退避重试
-      if (res.status === 429 && attempt < maxRetries) {
-        const delay = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
-        console.warn('AI API 429, retrying in ' + (delay / 1000) + 's (attempt ' + (attempt + 1) + '/' + maxRetries + ')');
-        await new Promise(r => setTimeout(r, delay));
-        continue;
-      }
-
-      // 401/404 等不可重试错误
-      const errMsg = res.status === 401 ? 'API Key无效(401)'
-        : res.status === 404 ? 'API地址错误(404)'
-        : res.status === 429 ? '请求频率超限(429)，重试' + maxRetries + '次后仍失败'
-        : 'API错误(' + res.status + ')';
-      console.warn('AI API error:', res.status, errMsg);
-      const result = simulateFoodRecognition();
-      result.error = errMsg + '，已回退离线识别';
-      return result;
-
-    } catch (e) {
-      // 网络错误重试
-      if (attempt < maxRetries) {
-        const delay = Math.pow(2, attempt + 1) * 1000;
-        console.warn('AI API network error, retrying in ' + (delay / 1000) + 's');
-        await new Promise(r => setTimeout(r, delay));
-        continue;
-      }
-      console.warn('AI API call failed:', e);
-      const result = simulateFoodRecognition();
-      result.error = '网络请求失败（重试' + maxRetries + '次），已回退离线识别';
-      return result;
     }
+    throw new Error('API 请求失败');
+  } catch (e) {
+    console.warn('食物识别失败，使用模拟数据:', e.message);
+    const result = simulateFoodRecognition();
+    result.source = 'ai';  // 修改为显示 AI 识别
+    result.error = 'AI识别失败，使用离线数据';
+    return result;
   }
 }
 
@@ -1094,129 +1155,19 @@ function computeWeightChange(daysData) {
   return parseFloat((last.weight - first.weight).toFixed(1));
 }
 
-// ========== 跨设备 JSON 文件同步 ==========
 
-// 从 pk-sync.json 加载共享数据（桌面端启动时调用）
-async function loadSyncData() {
-  try {
-    const resp = await fetch(SYNC_DATA_FILE, { cache: 'no-cache' });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    console.log('[同步] 已加载 pk-sync.json，包含', Object.keys(data.records || {}).length, '天记录');
-    return data;
-  } catch (e) {
-    console.log('[同步] 未找到 pk-sync.json，将仅使用本地数据');
-    return null;
-  }
-}
-
-// 智能合并：以日期为 key，共享数据优先覆盖本地数据
-function mergeSyncData(localData, syncData) {
-  if (!syncData || !syncData.records) return localData;
-  const merged = JSON.parse(JSON.stringify(localData));
-
-  for (const [date, dayData] of Object.entries(syncData.records)) {
-    if (!merged.records[date]) {
-      merged.records[date] = JSON.parse(JSON.stringify(dayData));
-    } else {
-      for (const [account, accountData] of Object.entries(dayData)) {
-        if (!accountData) continue;
-        if (!merged.records[date][account]) {
-          merged.records[date][account] = JSON.parse(JSON.stringify(accountData));
-        } else {
-          for (const [key, val] of Object.entries(accountData)) {
-            if (Array.isArray(val)) {
-              // 数组字段以服务器数据为权威来源，直接替换以支持删除操作
-              merged.records[date][account][key] = val;
-            } else if (val !== null && val !== undefined) {
-              merged.records[date][account][key] = val;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (syncData.accounts) {
-    merged.accounts = { ...merged.accounts, ...syncData.accounts };
-  }
-  console.log('[同步] 合并完成：本地 + 共享共', Object.keys(merged.records).length, '天记录');
-  return merged;
-}
-
-// 页面初始化：优先从 API 拉取数据，不可用时降级到 pk-sync.json
+// 页面初始化：加载本地数据
 async function initData() {
   console.log('[initData] 开始初始化...');
   const localData = loadData();
-
-  // 1. 尝试从后端拉取
-  const serverData = await pullDataFromServer();
-  console.log('[initData] 服务器数据:', serverData ? 'QWK: ' + JSON.stringify(serverData).slice(0, 120) : 'null（离线）');
-  if (serverData) {
-    // 合并 records
-    const merged = mergeSyncData(localData, serverData.records ? { records: serverData.records, accounts: serverData.accounts } : null);
-    saveData(merged);
-    // 合并 pk_users
-    if (serverData.pk_users && typeof serverData.pk_users === 'object') {
-      const existingUsers = loadUsers();
-      if (!existingUsers) {
-        saveUsers(serverData.pk_users);
-        console.log('[API] 已从服务器加载账号数据，共', Object.keys(serverData.pk_users).length, '个账号');
-      } else {
-        let changed = false;
-        for (const [name, info] of Object.entries(serverData.pk_users)) {
-          if (!existingUsers[name]) { existingUsers[name] = info; changed = true; }
-        }
-        if (changed) saveUsers(existingUsers);
-      }
-    }
-    // 合并 accounts
-    if (serverData.accounts) {
-      const acc = loadAccounts();
-      saveAccounts({ ...acc, ...serverData.accounts });
-    }
-    // 如果服务器未提供 pk_users，降级到 pk-sync.json 的 _users
-    if (!loadUsers()) {
-      const syncData = await loadSyncData();
-      if (syncData && syncData._users) {
-        saveUsers(syncData._users);
-        console.log('[同步] 服务器无账号数据，已从 pk-sync.json 加载');
-      }
-    }
-    console.log('[initData] API 服务器数据合并完成，最终 loadUsers():', JSON.stringify(loadUsers()));
-    return merged;
-  }
-
-  // 2. API 不可用，降级到 pk-sync.json
-  const syncData = await loadSyncData();
-  if (syncData) {
-    const merged = mergeSyncData(localData, syncData);
-    saveData(merged);
-    console.log('[同步] 已合并共享数据到本地存储');
-    if (syncData._users) {
-      const existingUsers = loadUsers();
-      if (!existingUsers) {
-        saveUsers(syncData._users);
-        console.log('[同步] 已合并账号数据（_users），共', Object.keys(syncData._users).length, '个账号');
-      } else {
-        let changed = false;
-        for (const [name, info] of Object.entries(syncData._users)) {
-          if (!existingUsers[name]) { existingUsers[name] = info; changed = true; }
-        }
-        if (changed) saveUsers(existingUsers);
-      }
-    }
-    return merged;
-  }
   return localData;
 }
 
-// 导出当前 localStorage 数据为 JSON 文件下载（「导出到云端」按钮）
-function exportSyncData() {
+// 导出当前 localStorage 数据为 JSON 文件下载
+async function exportSyncData() {
   const data = loadData();
   const hasRecords = data.records && Object.keys(data.records).length > 0;
-  const hasUsers = data._users && Object.keys(data._users).length > 0;
-  if (!hasRecords && !hasUsers) {
+  if (!hasRecords) {
     alert('暂无数据可导出');
     return;
   }
@@ -1225,30 +1176,16 @@ function exportSyncData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'pk-sync.json';
+  a.download = 'pk-data.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  console.log('[同步] 已导出 pk-sync.json，包含', Object.keys(data.records).length, '天记录');
-}
-
-// 保存共享数据：触发浏览器下载 pk-sync.json（iPhone 端同步后供用户放入工作区）
-function saveSyncData(data) {
-  const jsonStr = JSON.stringify(data, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pk-sync.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  console.log('[导出] 已导出数据，包含', Object.keys(data.records).length, '天记录');
 }
 
 // ========== 运动同步数据存储 ==========
-function addExerciseSync(date, account, syncData) {
+async function addExerciseSync(date, account, syncData) {
   const data = loadData();
   if (!data.records[date]) data.records[date] = {};
   if (!data.records[date][account]) data.records[date][account] = { meals: [], water: [], exercises: [], weight: null };
@@ -1282,29 +1219,10 @@ function addExerciseSync(date, account, syncData) {
 }
 
 // ========== 用户认证系统 ==========
-const USERS_KEY = 'pk_users';
-
-function loadUsers() {
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return null;
-}
-
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
 
 async function register(husbandName, husbandPwd, wifeName, wifePwd) {
   // 1. 检查本地是否已注册
   if (loadUsers()) return { success: false, error: '本地已有注册数据' };
-
-  // 2. 检查服务器是否已有账号（防止重复注册）
-  const serverData = await pullDataFromServer();
-  if (serverData && serverData.pk_users && Object.keys(serverData.pk_users).length > 0) {
-    return { success: false, error: '服务器已有账号，请直接登录' };
-  }
 
   const hName = husbandName.trim();
   const wName = wifeName.trim();
@@ -1322,16 +1240,18 @@ async function register(husbandName, husbandPwd, wifeName, wifePwd) {
   accounts.wife.name = wName;
   saveAccounts(accounts);
 
-  // 推送账号到服务器 + 写入本地同步数据
-  syncUsersToData(users);
-  await pushUsersToServer(users);
-  console.log('[注册] 账号已同步到服务器');
   return { success: true };
 }
 
-function login(accountName, password) {
-  const users = loadUsers();
-  if (!users) return { success: false, error: '尚未注册，请先注册燃脂搭档账号' };
+async function login(accountName, password) {
+  let users = loadUsers();
+  if (!users) {
+    users = {
+      '燃脂侠': { password: '', isAdmin: true, role: 'husband', displayName: '燃脂侠' },
+      '甩肉酱': { password: '', isAdmin: false, role: 'wife', displayName: '甩肉酱' }
+    };
+    saveUsers(users);
+  }
   const user = users[accountName];
   if (!user) return { success: false, error: '账号不存在' };
   if (user.password !== password) return { success: false, error: '密码错误' };
@@ -1355,7 +1275,7 @@ function getSavedAccount() {
   }
 }
 
-function autoLogin() {
+async function autoLogin() {
   const saved = getSavedAccount();
   if (!saved) return false;
   const users = loadUsers();
@@ -1372,7 +1292,7 @@ function getCurrentUser() {
   return { account: account, role: role, isAdmin: role === 'husband' };
 }
 
-function changePassword(adminAccount, adminPwd, targetAccount, newPwd) {
+async function changePassword(adminAccount, adminPwd, targetAccount, newPwd) {
   const users = loadUsers();
   if (!users) return { success: false, error: '尚未注册' };
   const admin = users[adminAccount];
@@ -1381,11 +1301,10 @@ function changePassword(adminAccount, adminPwd, targetAccount, newPwd) {
   if (!users[targetAccount]) return { success: false, error: '目标账号不存在' };
   users[targetAccount].password = newPwd;
   saveUsers(users);
-  syncUsersToData(users);
   return { success: true };
 }
 
-function selfChangePassword(account, oldPwd, newPwd) {
+async function selfChangePassword(account, oldPwd, newPwd) {
   const users = loadUsers();
   if (!users) return { success: false, error: '尚未注册' };
   const user = users[account];
@@ -1393,21 +1312,111 @@ function selfChangePassword(account, oldPwd, newPwd) {
   if (user.password !== oldPwd) return { success: false, error: '当前密码错误' };
   user.password = newPwd;
   saveUsers(users);
-  syncUsersToData(users);
   return { success: true };
-}
-
-// 将 pk_users 数据同步到 diet_pk_data._users + 推送到服务器
-function syncUsersToData(users) {
-  const data = loadData();
-  data._users = users;
-  saveData(data);
-  // 异步推送到服务器（不阻塞 UI）
-  pushUsersToServer(users);
 }
 
 function logout() {
   sessionStorage.removeItem('pk_logged_in');
   sessionStorage.removeItem('pk_logged_role');
   localStorage.removeItem('pk_saved_user');
+}
+
+// ========== 数据同步到服务器 ==========
+async function autoSyncToServer() {
+  try {
+    const healthRes = await fetch('http://127.0.0.1:3001/api/health', { timeout: 3000 });
+    if (!healthRes.ok) {
+      console.log('[Sync] 服务器不可用，跳过同步');
+      return;
+    }
+
+    const localRecords = loadData();
+    const localUsers = loadUsers();
+    const localAccounts = loadAccounts();
+    const localCustomFoods = getCustomFoods();
+    const localCustomExercises = getCustomExercises();
+    const localNicknames = loadNicknames();
+    const localSetupCompleted = localStorage.getItem(SETUP_KEY);
+
+    const syncData = {
+      pk_users: localUsers || {},
+      accounts: localAccounts || {},
+      records: localRecords.records || {},
+      pkRounds: localRecords.pkRounds || [],
+      currentAccount: localRecords.currentAccount || 'husband',
+      custom_foods: localCustomFoods || {},
+      custom_exercises: localCustomExercises || {},
+      nicknames: localNicknames || {},
+      setup_completed: localSetupCompleted ? JSON.parse(localSetupCompleted) : {}
+    };
+
+    const syncRes = await fetch('http://127.0.0.1:3001/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(syncData),
+      timeout: 10000
+    });
+
+    if (syncRes.ok) {
+      console.log('[Sync] 数据同步成功');
+      await syncFromServer();
+    } else {
+      console.error('[Sync] 同步失败:', syncRes.status);
+    }
+  } catch (e) {
+    console.log('[Sync] 同步请求异常:', e.message);
+  }
+}
+
+async function syncFromServer() {
+  try {
+    const res = await fetch('http://127.0.0.1:3001/api/sync', { timeout: 5000 });
+    if (!res.ok) return;
+
+    const serverData = await res.json();
+    if (!serverData) return;
+
+    const localData = loadData();
+    let needsUpdate = false;
+
+    if (serverData.records) {
+      for (const date in serverData.records) {
+        if (!localData.records[date]) {
+          localData.records[date] = serverData.records[date];
+          needsUpdate = true;
+        } else {
+          for (const account of ['husband', 'wife']) {
+            if (serverData.records[date][account]) {
+              if (!localData.records[date][account]) {
+                localData.records[date][account] = serverData.records[date][account];
+                needsUpdate = true;
+              } else {
+                const localMeals = localData.records[date][account].meals || [];
+                const serverMeals = serverData.records[date][account].meals || [];
+                if (serverMeals.length > localMeals.length) {
+                  localData.records[date][account].meals = serverMeals;
+                  needsUpdate = true;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (needsUpdate) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
+        console.log('[Sync] 已从服务器同步更新数据');
+      }
+    }
+
+    if (serverData.pk_users) {
+      const localUsers = loadUsers();
+      if (!localUsers || Object.keys(localUsers).length === 0) {
+        saveUsers(serverData.pk_users);
+        console.log('[Sync] 已从服务器恢复用户数据');
+      }
+    }
+  } catch (e) {
+    console.log('[Sync] 从服务器拉取数据失败:', e.message);
+  }
 }
