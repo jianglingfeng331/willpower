@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Camera Test - With Label</title>
+<style>
+.ai-capture-btn { width:100%; padding:14px; background:#d4a574; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+</style>
+</head>
+<body>
+<h3>Test 1: Label for hidden input (recommended)</h3>
+<input type="file" id="cam1" accept="image/*" style="display:none" onchange="alert('Test1 file selected: ' + this.files[0].name)">
+<label class="ai-capture-btn" for="cam1">📷 拍照识别食物 (Label)</label>
+
+<h3>Test 2: Button onclick → input.click()</h3>
+<input type="file" id="cam2" accept="image/*" style="display:none" onchange="alert('Test2 file selected: ' + this.files[0].name)">
+<button class="ai-capture-btn" onclick="document.getElementById('cam2').click()">📷 拍照识别食物 (Button+click)</button>
+
+<h3>Test 3: Visible file input</h3>
+<input type="file" accept="image/*" onchange="alert('Test3 file selected: ' + this.files[0].name)">
+</body></html>

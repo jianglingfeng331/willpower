@@ -1,0 +1,9 @@
+node_modules/
+*.log
+*.bak
+.env
+data/
+.u2net/
+.DS_Store
+__pycache__/
+*.pyc

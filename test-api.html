@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>API Test</title></head>
+<body>
+<h1>测试 API 调用</h1>
+<button onclick="testAPI()">点击测试</button>
+<pre id="result"></pre>
+
+<script>
+async function testAPI() {
+  const result = document.getElementById('result');
+  result.textContent = '测试中...';
+
+  try {
+    const res = await fetch('http://127.0.0.1:3001/api/food-recognize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' })
+    });
+
+    const data = await res.json();
+    result.textContent = '成功：\n' + JSON.stringify(data, null, 2);
+  } catch (e) {
+    result.textContent = '失败：' + e.message;
+  }
+}
+</script>
+</body>
+</html>

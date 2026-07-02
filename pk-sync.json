@@ -1,0 +1,659 @@
+{
+  "pk_users": {
+    "燃脂侠": {
+      "password": "",
+      "isAdmin": true,
+      "role": "husband",
+      "displayName": "燃脂侠"
+    },
+    "甩肉酱": {
+      "password": "",
+      "isAdmin": false,
+      "role": "wife",
+      "displayName": "甩肉酱"
+    }
+  },
+  "accounts": {
+    "husband": {
+      "name": "燃脂侠",
+      "icon": "",
+      "dailyCalorieBudget": 2000,
+      "initialWeight": 98,
+      "targetWeight": 90
+    },
+    "wife": {
+      "name": "甩肉酱",
+      "icon": "",
+      "dailyCalorieBudget": 1500,
+      "initialWeight": 60,
+      "targetWeight": 52
+    }
+  },
+  "records": {
+    "2026-07-01": {
+      "husband": {
+        "meals": [
+          {
+            "type": "manual",
+            "name": "美式咖啡(杯)",
+            "calories": 5,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 5,
+            "time": "2026-07-01T04:27:48.760Z",
+            "supervised": false,
+            "nutritionInfo": {
+              "carbs": 0,
+              "protein": 0,
+              "fat": 0,
+              "fiber": 0,
+              "sugar": 0,
+              "sodium": 10,
+              "tip": "适量饮用，注意糖分摄入"
+            }
+          },
+          {
+            "type": "manual",
+            "name": "柠檬茶",
+            "calories": 80,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 80,
+            "time": "2026-07-01T04:31:19.921Z",
+            "supervised": false,
+            "nutritionInfo": {
+              "carbs": 20,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 2,
+              "sugar": 15,
+              "sodium": 50,
+              "tip": "适量饮用，注意糖分摄入"
+            }
+          },
+          {
+            "type": "manual",
+            "name": "香蕉",
+            "calories": 100,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-07-01T05:03:32.262Z",
+            "supervised": false,
+            "nutritionInfo": {
+              "carbs": 27,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 3,
+              "sugar": 14,
+              "sodium": 1,
+              "tip": "香蕉是快速能量的好来源。"
+            }
+          },
+          {
+            "type": "manual",
+            "name": "柠檬茶",
+            "calories": 80,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 80,
+            "time": "2026-07-01T05:58:18.275Z",
+            "supervised": false,
+            "nutritionInfo": {
+              "carbs": 20,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 2,
+              "sugar": 15,
+              "sodium": 50,
+              "tip": "适量饮用，注意糖分摄入"
+            }
+          }
+        ],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    },
+    "2026-06-22": {
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
+      "husband": {
+        "meals": [],
+        "water": [
+          {
+            "amount": 500,
+            "time": "2026-06-22T06:18:07.040Z"
+          }
+        ],
+        "exercises": [
+          {
+            "type": "custom_ex_1782129666494",
+            "name": "无绳跳绳",
+            "duration": 15,
+            "calories": 25,
+            "time": "2026-06-22T12:03:01.998Z"
+          }
+        ],
+        "weight": null
+      }
+    },
+    "2026-06-23": {
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": 80
+      },
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": 55
+      }
+    },
+    "2026-06-24": {
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": 78
+      },
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": 55.5
+      }
+    },
+    "2026-06-21": {
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    },
+    "2026-06-25": {
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    },
+    "2026-06-29": {
+      "husband": {
+        "meals": [
+          {
+            "mealId": "meal_1782723578322_yvqj",
+            "type": "ai_photo",
+            "name": "无糖豆浆(300ml)",
+            "calories": 90,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 90,
+            "time": "2026-06-29T08:59:38.322Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 6,
+              "protein": 9,
+              "fat": 4,
+              "fiber": 2,
+              "sugar": 1,
+              "sodium": 15
+            },
+            "tip": "优质植物蛋白，含大豆异黄酮，早餐搭配佳选"
+          },
+          {
+            "mealId": "meal_1782724047139_iga2",
+            "type": "ai_photo",
+            "name": "麻婆豆腐",
+            "calories": 350,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 350,
+            "time": "2026-06-29T09:07:27.139Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 15,
+              "protein": 20,
+              "fat": 24,
+              "fiber": 4,
+              "sugar": 3,
+              "sodium": 880
+            },
+            "tip": "豆腐是优质植物蛋白来源，但麻婆做法钠含量偏高，注意控盐"
+          },
+          {
+            "mealId": "meal_1782736582844_pg4v",
+            "type": "ai_photo",
+            "name": "苹果(1个)",
+            "calories": 95,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 95,
+            "time": "2026-06-29T12:36:22.844Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 25,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 5,
+              "sugar": 19,
+              "sodium": 2
+            },
+            "tip": "富含果胶和膳食纤维，饱腹感强，适合加餐食用"
+          },
+          {
+            "mealId": "meal_1782737053154_s6l5",
+            "type": "ai_photo",
+            "name": "苹果(1个)",
+            "calories": 95,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 95,
+            "time": "2026-06-29T12:44:13.154Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 25,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 5,
+              "sugar": 19,
+              "sodium": 2
+            },
+            "tip": "富含果胶和膳食纤维，饱腹感强，适合加餐食用"
+          },
+          {
+            "type": "manual",
+            "name": "香蕉",
+            "calories": 100,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-06-29T14:55:12.315Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "113",
+            "calories": 100,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 100,
+            "time": "2026-06-29T15:13:20.961Z",
+            "supervised": false
+          }
+        ],
+        "water": [],
+        "exercises": [],
+        "weight": 98
+      },
+      "wife": {
+        "meals": [
+          {
+            "type": "ai_photo",
+            "name": "拿铁咖啡",
+            "calories": 190,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 190,
+            "time": "2026-06-29T07:37:55.335Z",
+            "nutrients": {
+              "carbs": 15,
+              "protein": 8,
+              "fat": 9,
+              "fiber": 0,
+              "sugar": 12,
+              "sodium": 120
+            },
+            "tip": "适量饮用提神醒脑，建议不加糖"
+          },
+          {
+            "type": "ai_photo",
+            "name": "红烧肉",
+            "calories": 580,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 580,
+            "time": "2026-06-29T08:06:13.492Z",
+            "nutrients": {
+              "carbs": 38,
+              "protein": 28,
+              "fat": 42,
+              "fiber": 2,
+              "sugar": 5,
+              "sodium": 680
+            },
+            "tip": "红烧肉脂肪含量较高，建议搭配蔬菜食用"
+          },
+          {
+            "mealId": "meal_1782723380820_mp1a",
+            "type": "ai_photo",
+            "name": "糖醋排骨",
+            "calories": 520,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 520,
+            "time": "2026-06-29T08:56:20.820Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 36,
+              "protein": 26,
+              "fat": 32,
+              "fiber": 1,
+              "sugar": 18,
+              "sodium": 650
+            },
+            "tip": "糖醋汁含糖量高，偶尔解馋即可，不宜常吃"
+          },
+          {
+            "mealId": "meal_1782739456202_wtmq",
+            "type": "ai_photo",
+            "name": "清蒸鲈鱼",
+            "calories": 280,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 280,
+            "time": "2026-06-29T13:24:16.202Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 2,
+              "protein": 42,
+              "fat": 12,
+              "fiber": 0,
+              "sugar": 1,
+              "sodium": 380
+            },
+            "tip": "清蒸做法锁住营养，鱼肉富含Omega-3，减脂期优选"
+          },
+          {
+            "mealId": "meal_1782739802982_sukv",
+            "type": "ai_photo",
+            "name": "拿铁咖啡(中杯)",
+            "calories": 190,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 190,
+            "time": "2026-06-29T13:30:02.982Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 15,
+              "protein": 8,
+              "fat": 9,
+              "fiber": 0,
+              "sugar": 12,
+              "sodium": 120
+            },
+            "tip": "适量饮用提神醒脑，建议不加糖，可选脱脂奶降低热量"
+          },
+          {
+            "mealId": "meal_1782740879427_oh0y",
+            "type": "ai_photo",
+            "name": "香蕉(1根)",
+            "calories": 105,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 105,
+            "time": "2026-06-29T13:47:59.427Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 27,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 3,
+              "sugar": 14,
+              "sodium": 1
+            },
+            "tip": "运动后补钾首选，天然能量棒，但碳水密度偏高"
+          }
+        ],
+        "water": [],
+        "exercises": [],
+        "weight": 70
+      }
+    },
+    "2026-06-28": {
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    },
+    "2026-06-26": {
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    },
+    "2026-06-27": {
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
+      "husband": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    },
+    "2026-06-30": {
+      "husband": {
+        "meals": [
+          {
+            "mealId": "meal_1782797862763_e8nv",
+            "type": "ai_photo",
+            "name": "草莓蛋糕卷",
+            "calories": 300,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 300,
+            "time": "2026-06-30T05:37:42.764Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 50,
+              "protein": 5,
+              "fat": 10,
+              "fiber": 2,
+              "sugar": 20,
+              "sodium": 200
+            },
+            "tip": "适量食用，享受美味的同时注意控制摄入量"
+          },
+          {
+            "mealId": "meal_1782798776266_ig2f",
+            "type": "ai_photo",
+            "name": "柠檬茶",
+            "calories": 80,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 80,
+            "time": "2026-06-30T05:52:56.339Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 20,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 2,
+              "sugar": 15,
+              "sodium": 50
+            },
+            "tip": "适量饮用，注意糖分摄入"
+          },
+          {
+            "mealId": "meal_1782798832368_y43h",
+            "type": "ai_photo",
+            "name": "柠檬茶",
+            "calories": 200,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-30T05:53:52.401Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 50,
+              "protein": 2,
+              "fat": 0,
+              "fiber": 5,
+              "sugar": 40,
+              "sodium": 100
+            },
+            "tip": "适量饮用，注意糖分摄入"
+          },
+          {
+            "mealId": "meal_1782799675394_0539",
+            "type": "ai_photo",
+            "name": "柠檬茶",
+            "calories": 80,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 80,
+            "time": "2026-06-30T06:07:55.480Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 20,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 2,
+              "sugar": 15,
+              "sodium": 50
+            },
+            "tip": "适量饮用，注意糖分摄入"
+          },
+          {
+            "mealId": "meal_1782801250846_kcko",
+            "type": "ai_photo",
+            "name": "饮料",
+            "calories": 200,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-30T06:34:10.948Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 50,
+              "protein": 0,
+              "fat": 0,
+              "fiber": 0,
+              "sugar": 40,
+              "sodium": 100
+            },
+            "tip": "适量饮用含糖饮料"
+          },
+          {
+            "mealId": "meal_1782801710081_7wvv",
+            "type": "ai_photo",
+            "name": "桃子",
+            "calories": 60,
+            "unit": "份",
+            "quantity": 1,
+            "totalCalories": 60,
+            "time": "2026-06-30T06:41:50.160Z",
+            "imageStored": true,
+            "nutrients": {
+              "carbs": 15,
+              "protein": 1,
+              "fat": 0,
+              "fiber": 2,
+              "sugar": 10,
+              "sodium": 1
+            },
+            "tip": "桃子富含维生素C和膳食纤维，有助于消化健康。"
+          },
+          {
+            "type": "preset",
+            "name": "鸡胸肉",
+            "calories": 200,
+            "unit": "份(100g)",
+            "quantity": 1,
+            "totalCalories": 200,
+            "time": "2026-06-30T10:05:38.202Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蜜桃乌龙茶饮料",
+            "calories": 150,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 150,
+            "time": "2026-06-30T15:00:27.925Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蜜桃乌龙茶",
+            "calories": 50,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 50,
+            "time": "2026-06-30T15:08:39.549Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蜜桃乌龙茶",
+            "calories": 50,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 50,
+            "time": "2026-06-30T15:09:49.592Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蜜桃乌龙茶饮料",
+            "calories": 120,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-30T15:25:41.862Z",
+            "supervised": false
+          },
+          {
+            "type": "manual",
+            "name": "蜜桃乌龙茶饮料",
+            "calories": 120,
+            "unit": "",
+            "quantity": 1,
+            "totalCalories": 120,
+            "time": "2026-06-30T16:01:53.214Z",
+            "supervised": false
+          }
+        ],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      },
+      "wife": {
+        "meals": [],
+        "water": [],
+        "exercises": [],
+        "weight": null
+      }
+    }
+  }
+}

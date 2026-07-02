@@ -1,0 +1,13 @@
+{
+  "name": "该减肥le",
+  "short_name": "该减肥le",
+  "description": "燃脂搭档减肥PK打卡",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#7FC3DD",
+  "theme_color": "#7FC3DD",
+  "icons": [
+    {"src": "img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "img/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

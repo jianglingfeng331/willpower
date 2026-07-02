@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>注入历史PK数据</title></head>
+<body style="font-family:sans-serif;text-align:center;padding:40px;">
+<h2>历史PK数据注入</h2>
+<p id="msg">正在注入...</p>
+<script>
+const rounds = [
+  {id:'pk_h1',initiator:'husband',startDate:'2026-06-01',endDate:'2026-06-07',durationDays:7,items:['score','weight'],status:'completed',startWeight:{husband:82,wife:56},endWeight:{husband:80,wife:55},result:{score:{winner:'husband',hTotal:210,wTotal:165},weight:{winner:'husband',hPct:2.44,wPct:1.79,hKg:2,wKg:1},overall:'husband'},settlementViewed:true},
+  {id:'pk_h2',initiator:'wife',startDate:'2026-06-10',endDate:'2026-06-23',durationDays:14,items:['score'],status:'completed',startWeight:{husband:80,wife:55},endWeight:{husband:null,wife:null},result:{score:{winner:'wife',hTotal:380,wTotal:425},weight:{winner:null,hPct:0,wPct:0,hKg:0,wKg:0},overall:'wife'},settlementViewed:true},
+  {id:'pk_h3',initiator:'husband',startDate:'2026-06-15',endDate:'2026-06-21',durationDays:7,items:['score','weight'],status:'completed',startWeight:{husband:80,wife:55},endWeight:{husband:79,wife:54},result:{score:{winner:null,hTotal:245,wTotal:245},weight:{winner:'wife',hPct:1.25,wPct:1.82,hKg:1,wKg:1},overall:'wife'},settlementViewed:true}
+];
+let d = JSON.parse(localStorage.getItem('diet_pk_data')||'{}');
+d.pkRounds = d.pkRounds||[];
+d.pkRounds = d.pkRounds.filter(r => !['pk_h1','pk_h2','pk_h3'].includes(r.id));
+d.pkRounds = [...rounds, ...d.pkRounds];
+localStorage.setItem('diet_pk_data', JSON.stringify(d));
+document.getElementById('msg').textContent = '已注入3条历史PK记录！即将跳转...';
+setTimeout(() => location.href = '/', 1500);
+</script>
+</body></html>

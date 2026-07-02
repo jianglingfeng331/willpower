@@ -1,0 +1,43 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 4699a67f42add1cd3343bb390e6f0373_d61b32146f7411f195af5254002afed2
+    ReservedCode1: 8+wlMwNr7S/ZbdZVnxEZ9Jt5itWcZFGi5umdJoS6qwZ0Zp6qBuwqPFT/LLzBcUfSf+s7VERw3voDd6il4ELPPIu11P3xqUELL4EiUD81zcfSqoovYR3tmE2fmGOckv5olyHQoxY8Dy8yhVEVfmWyD5kMT3MaqFegNS/ZnAfepF+oPaCxcpBDlM6Sm98=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 4699a67f42add1cd3343bb390e6f0373_d61b32146f7411f195af5254002afed2
+    ReservedCode2: 8+wlMwNr7S/ZbdZVnxEZ9Jt5itWcZFGi5umdJoS6qwZ0Zp6qBuwqPFT/LLzBcUfSf+s7VERw3voDd6il4ELPPIu11P3xqUELL4EiUD81zcfSqoovYR3tmE2fmGOckv5olyHQoxY8Dy8yhVEVfmWyD5kMT3MaqFegNS/ZnAfepF+oPaCxcpBDlM6Sm98=
+---
+
+# 该减肥le 更新日志
+
+## 2026-06-24
+
+### 新功能
+
+**统计页 — 体重优先**
+
+统计页顶部双人对比卡片重新设计，核心指标从「总积分」改为「体重及变化」。
+
+- 卡片主数字显示最新体重（kg）
+- 体重变化以颜色区分：绿色 ↓（下降）、橙色 ↑（上升）、灰色（持平）
+- 周期标签自动适配「本周」/「本月」
+- VS 对比改为基于减重幅度：减得更多的一方标记为领先，显示「多减 X.X kg」
+- 领先方卡片高亮
+
+**记录页 — 查看对方历史记录**
+
+记录页新增角色切换按钮，可查看另一方的历史饮食、运动、饮水、体重记录。
+
+- 默认显示自己的数据
+- 点击对方名字按钮切换查看
+- 查看对方时自动隐藏录入按钮和删除按钮（只读模式）
+- 日期切换保持当前查看角色不变
+- 离开记录页再回来自动重置为查看自己
+
+### 技术细节
+
+- `data.js`：新增 `computeWeightChange()` 函数，基于周期内首末次体重记录计算变化
+- `charts.js`：新增 `formatWtChange()` / `formatWtChangeSmall()`，重写 `renderOverviewCards()`
+- `app.js`：新增 `recordViewRole` 变量和 `toggleRecordViewRole()` 函数
+*（内容由AI生成，仅供参考）*
