@@ -1338,7 +1338,7 @@ async function autoSyncToServer() {
     const localNicknames = loadNicknames();
     const localSetupCompleted = localStorage.getItem(SETUP_KEY);
 
-    const syncData = {
+    let syncData = {
       pk_users: localUsers || {},
       accounts: localAccounts || {},
       records: localRecords.records || {},
@@ -1349,6 +1349,54 @@ async function autoSyncToServer() {
       nicknames: localNicknames || {},
       setup_completed: localSetupCompleted ? JSON.parse(localSetupCompleted) : {}
     };
+
+    try {
+      const serverRes = await fetch('/api/sync', { timeout: 3000 });
+      if (serverRes.ok) {
+        const serverData = await serverRes.json();
+        if (serverData) {
+          if (serverData.records) {
+            for (const date in serverData.records) {
+              if (!syncData.records[date]) {
+                syncData.records[date] = serverData.records[date];
+              } else {
+                for (const account of ['husband', 'wife']) {
+                  if (serverData.records[date][account] && !syncData.records[date][account]) {
+                    syncData.records[date][account] = serverData.records[date][account];
+                  } else if (serverData.records[date][account] && syncData.records[date][account]) {
+                    const serverMeals = serverData.records[date][account].meals || [];
+                    const localMeals = syncData.records[date][account].meals || [];
+                    if (serverMeals.length > localMeals.length) {
+                      syncData.records[date][account] = serverData.records[date][account];
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if (serverData.pkRounds && serverData.pkRounds.length > 0) {
+            const localRoundIds = new Set(syncData.pkRounds.map(r => r.id));
+            for (const round of serverData.pkRounds) {
+              if (!localRoundIds.has(round.id)) {
+                syncData.pkRounds.push(round);
+              }
+            }
+          }
+          if (serverData.accounts) {
+            for (const role of ['husband', 'wife']) {
+              if (serverData.accounts[role] && !syncData.accounts[role]) {
+                syncData.accounts[role] = serverData.accounts[role];
+              }
+            }
+          }
+          if (serverData.nicknames) {
+            syncData.nicknames = { ...serverData.nicknames, ...syncData.nicknames };
+          }
+        }
+      }
+    } catch (e) {
+      console.log('[Sync] 读取服务器数据失败，直接上传本地数据:', e.message);
+    }
 
     const syncRes = await fetch('/api/sync', {
       method: 'POST',
@@ -1393,7 +1441,7 @@ async function syncFromServer() {
               } else {
                 const localMeals = localData.records[date][account].meals || [];
                 const serverMeals = serverData.records[date][account].meals || [];
-                if (serverMeals.length > localMeals.length || true) {
+                if (serverMeals.length > localMeals.length) {
                   localData.records[date][account] = serverData.records[date][account];
                   needsUpdate = true;
                 }
