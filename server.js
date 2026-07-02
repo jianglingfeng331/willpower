@@ -134,7 +134,13 @@ app.post('/api/sync', (req, res) => {
     const data = {
       pk_users: req.body.pk_users || {},
       accounts: req.body.accounts || {},
-      records: req.body.records || {}
+      records: req.body.records || {},
+      pkRounds: req.body.pkRounds || [],
+      currentAccount: req.body.currentAccount || 'husband',
+      custom_foods: req.body.custom_foods || {},
+      custom_exercises: req.body.custom_exercises || {},
+      nicknames: req.body.nicknames || {},
+      setup_completed: req.body.setup_completed || {}
     };
     fs.writeFileSync(SYNC_FILE, JSON.stringify(data, null, 2), 'utf8');
     res.json({ success: true });
